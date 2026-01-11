@@ -1,0 +1,8 @@
+# 示例开发环境变量文件
+# 复制此文件为 dev.vars 并填入实际值
+
+# JWT 密钥 (请使用随机生成的长字符串)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# 管理员默认密码
+ADMIN_PASSWORD=your-admin-password-here

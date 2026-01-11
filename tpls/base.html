@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{blogTitle}} - {{pageTitle}}</title>
+    <meta name="description" content="{{metaDescription}}">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">{{blogTitle}}</a>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="/" {{#isHome}}class="active"{{/isHome}}>首页</a></li>
+                        <li><a href="/category/all" {{#isCategory}}class="active"{{/isCategory}}>分类</a></li>
+                        <li><a href="/tag/all" {{#isTags}}class="active"{{/isTags}}>标签</a></li>
+                        <li><a href="/feedback" {{#isFeedback}}class="active"{{/isFeedback}}>留言板</a></li>
+                        <li><a href="/search">搜索</a></li>
+                        {{#isLoggedIn}}
+                        <li><a href="/admin">管理后台</a></li>
+                        <li><a href="/api/user/logout">退出</a></li>
+                        {{/isLoggedIn}}
+                        {{^isLoggedIn}}
+                        <li><a href="/login">登录</a></li>
+                        {{/isLoggedIn}}
+                    </ul>
+                </nav>
+                <div class="search-toggle">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+            <div class="search-form" id="search-form">
+                <form action="/search" method="GET">
+                    <input type="text" name="q" placeholder="搜索文章..." value="{{searchQuery}}">
+                    <button type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {{#isHome}}
+            <section class="hero">
+                <h1>{{blogTitle}}</h1>
+                <p>{{blogDescription}}</p>
+            </section>
+            {{/isHome}}
+
+            {{{content}}}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; {{currentYear}} {{blogTitle}}. 使用 <a href="https://workers.cloudflare.com/" target="_blank">Cloudflare Workers</a> 驱动</p>
+                <p>
+                    <a href="/sitemap.xml">网站地图</a> | 
+                    <a href="/feed">RSS 订阅</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

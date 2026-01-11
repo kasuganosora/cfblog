@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{pageTitle}} - {{blogTitle}} 管理后台</title>
+    <meta name="description" content="{{metaDescription}}">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+</head>
+<body class="admin-body">
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="admin-header-content">
+                <div class="admin-logo">
+                    <h1><a href="/admin">{{blogTitle}} 管理</a></h1>
+                </div>
+                <div class="admin-user-menu">
+                    <span class="admin-username">{{currentUser.username}}</span>
+                    <span class="admin-role">{{currentUser.roleText}}</span>
+                    <a href="/" class="admin-logout" target="_blank">查看前台</a>
+                    <a href="/api/user/logout" class="admin-logout">退出登录</a>
+                </div>
+            </div>
+        </header>
+        
+        <div class="admin-body-content">
+            <nav class="admin-sidebar">
+                <ul class="admin-menu">
+                    <li class="menu-item {{#isDashboard}}active{{/isDashboard}}">
+                        <a href="/admin">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>仪表盘</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isPosts}}active{{/isPosts}}">
+                        <a href="/admin/posts">
+                            <i class="fas fa-file-alt"></i>
+                            <span>文章管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isCreatePost}}active{{/isCreatePost}}">
+                        <a href="/admin/posts/create">
+                            <i class="fas fa-plus"></i>
+                            <span>写文章</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isCategories}}active{{/isCategories}}">
+                        <a href="/admin/categories">
+                            <i class="fas fa-folder"></i>
+                            <span>分类管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isTags}}active{{/isTags}}">
+                        <a href="/admin/tags">
+                            <i class="fas fa-tags"></i>
+                            <span>标签管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isComments}}active{{/isComments}}">
+                        <a href="/admin/comments">
+                            <i class="fas fa-comments"></i>
+                            <span>评论管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isFeedbacks}}active{{/isFeedbacks}}">
+                        <a href="/admin/feedbacks">
+                            <i class="fas fa-envelope"></i>
+                            <span>留言管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isAttachments}}active{{/isAttachments}}">
+                        <a href="/admin/attachments">
+                            <i class="fas fa-paperclip"></i>
+                            <span>附件管理</span>
+                        </a>
+                    </li>
+                    {{#isAdmin}}
+                    <li class="menu-item {{#isUsers}}active{{/isUsers}}">
+                        <a href="/admin/users">
+                            <i class="fas fa-users"></i>
+                            <span>用户管理</span>
+                        </a>
+                    </li>
+                    <li class="menu-item {{#isSettings}}active{{/isSettings}}">
+                        <a href="/admin/settings">
+                            <i class="fas fa-cog"></i>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                    {{/isAdmin}}
+                </ul>
+            </nav>
+            
+            <main class="admin-main">
+                {{#flashMessage}}
+                <div class="flash-message {{flashMessageType}}">
+                    {{flashMessage}}
+                </div>
+                {{/flashMessage}}
+                
+                {{#pageTitle}}
+                <div class="admin-page-header">
+                    <h2>{{pageTitle}}</h2>
+                </div>
+                {{/pageTitle}}
+                
+                {{{content}}}
+            </main>
+        </div>
+    </div>
+    
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

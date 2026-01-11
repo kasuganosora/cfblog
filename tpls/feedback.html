@@ -1,0 +1,78 @@
+{{> base}}
+
+<div class="feedback-header">
+    <h1>留言板</h1>
+    <p>欢迎在这里留下您的宝贵意见或建议</p>
+</div>
+
+<div class="feedback-form-section">
+    {{#isLoggedIn}}
+    <div class="feedback-form">
+        <h3>发表留言</h3>
+        <form action="/api/feedback" method="POST" class="feedback-form-element">
+            <div class="form-group">
+                <label for="content">留言内容</label>
+                <textarea id="content" name="content" placeholder="写下您的留言..." required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">提交留言</button>
+            </div>
+        </form>
+    </div>
+    {{/isLoggedIn}}
+    {{^isLoggedIn}}
+    <div class="login-prompt">
+        <p><a href="/login">登录</a>后发表留言</p>
+    </div>
+    {{/isLoggedIn}}
+</div>
+
+<div class="feedback-list">
+    {{#hasFeedbacks}}
+        {{#feedbacks}}
+        <div class="feedback-item">
+            <div class="feedback-header">
+                <div class="feedback-author">
+                    {{#author.avatar}}
+                    <img src="{{author.avatar}}" alt="{{author.username}}" class="author-avatar">
+                    {{/author.avatar}}
+                    <strong>{{author.username}}</strong>
+                </div>
+                <time datetime="{{createdAt}}">{{formattedDate}}</time>
+                <span class="feedback-status status-{{status}}">{{statusText}}</span>
+            </div>
+            <div class="feedback-content">
+                <p>{{content}}</p>
+            </div>
+            {{#reply}}
+            <div class="feedback-reply">
+                <div class="reply-header">
+                    <strong>管理员回复</strong>
+                    <time datetime="{{reply.createdAt}}">{{reply.formattedDate}}</time>
+                </div>
+                <div class="reply-content">
+                    <p>{{reply.content}}</p>
+                </div>
+            </div>
+            {{/reply}}
+        </div>
+        {{/feedbacks}}
+        
+        <div class="pagination">
+            {{#hasPrevPage}}
+            <a href="?page={{prevPage}}" class="prev-page">上一页</a>
+            {{/hasPrevPage}}
+            
+            <span class="page-info">第 {{currentPage}} 页，共 {{totalPages}} 页</span>
+            
+            {{#hasNextPage}}
+            <a href="?page={{nextPage}}" class="next-page">下一页</a>
+            {{/hasNextPage}}
+        </div>
+    {{/hasFeedbacks}}
+    {{^hasFeedbacks}}
+        <div class="no-feedbacks">
+            <p>还没有留言，来说点什么吧？</p>
+        </div>
+    {{/hasFeedbacks}}
+</div>

@@ -1,0 +1,112 @@
+{{> admin/base}}
+
+<div class="post-form-container">
+    <form action="{{formAction}}" method="POST" class="post-form" id="post-form">
+        <input type="hidden" name="id" value="{{post.id}}">
+        
+        <div class="form-tabs">
+            <ul class="tabs-nav">
+                <li class="tab-item active" data-tab="content">文章内容</li>
+                <li class="tab-item" data-tab="settings">发布设置</li>
+            </ul>
+            
+            <div class="tab-content active" id="content-tab">
+                <div class="form-group">
+                    <label for="title">标题 <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" value="{{post.title}}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="slug">URL别名</label>
+                    <input type="text" id="slug" name="slug" value="{{post.slug}}" placeholder="留空自动生成">
+                </div>
+                
+                <div class="form-group">
+                    <label for="excerpt">摘要</label>
+                    <textarea id="excerpt" name="excerpt" rows="3" placeholder="文章摘要，留空自动从正文提取">{{post.excerpt}}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">正文 <span class="required">*</span></label>
+                    <textarea id="content" name="content" rows="15" required>{{post.content}}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tags">标签</label>
+                    <input type="text" id="tags" name="tags" value="{{postTagsText}}" placeholder="多个标签用英文逗号分隔">
+                </div>
+                
+                <div class="form-group">
+                    <label>附件</label>
+                    <div class="attachments-section">
+                        {{#postAttachments}}
+                        <div class="attachment-item">
+                            <span class="attachment-name">{{filename}}</span>
+                            <span class="attachment-size">({{formatFileSize size}})</span>
+                            <button type="button" class="remove-attachment" data-id="{{id}}" title="移除">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {{/postAttachments}}
+                        
+                        <div class="upload-section">
+                            <button type="button" id="upload-attachment" class="btn btn-secondary">
+                                <i class="fas fa-upload"></i> 上传附件
+                            </button>
+                            <input type="file" id="attachment-file" multiple style="display: none;">
+                        </div>
+                        
+                        <div id="upload-progress" class="upload-progress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <span class="progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="settings-tab">
+                <div class="form-group">
+                    <label for="categoryId">分类</label>
+                    <select id="categoryId" name="categoryId">
+                        <option value="">选择分类</option>
+                        {{#categories}}
+                        <option value="{{id}}" {{#selected}}selected{{/selected}}>{{name}}</option>
+                        {{/categories}}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="status">状态</label>
+                    <select id="status" name="status">
+                        <option value="draft" {{#isDraft}}selected{{/isDraft}}>草稿</option>
+                        <option value="published" {{#isPublished}}selected{{/isPublished}}>已发布</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="featured">是否推荐</label>
+                    <select id="featured" name="featured">
+                        <option value="0" {{#notFeatured}}selected{{/notFeatured}}>否</option>
+                        <option value="1" {{#isFeatured}}selected{{/isFeatured}}>是</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="allowComments">允许评论</label>
+                    <select id="allowComments" name="allowComments">
+                        <option value="1" {{#allowComments}}selected{{/allowComments}}>是</option>
+                        <option value="0" {{#notAllowComments}}selected{{/notAllowComments}}>否</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="button" id="save-draft" class="btn btn-secondary">保存草稿</button>
+            <button type="submit" class="btn btn-primary">{{#isEdit}}更新文章{{/isEdit}}{{^isEdit}}发布文章{{/isEdit}}</button>
+            <a href="/admin/posts" class="btn btn-outline">取消</a>
+        </div>
+    </form>
+</div>

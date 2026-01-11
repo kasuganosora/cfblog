@@ -1,0 +1,99 @@
+{{> base}}
+
+<article class="post-full">
+    <header class="post-header">
+        <h1 class="post-title">{{title}}</h1>
+        <div class="post-meta">
+            <time datetime="{{createdAt}}">{{formattedDate}}</time>
+            {{#category}}
+            <span class="post-category">
+                <a href="/category/{{slug}}">{{name}}</a>
+            </span>
+            {{/category}}
+            {{#author}}
+            <span class="post-author">作者: <strong>{{username}}</strong></span>
+            {{/author}}
+        </div>
+    </header>
+
+    <div class="post-content">
+        {{{content}}}
+    </div>
+
+    {{#hasAttachments}}
+    <div class="post-attachments">
+        <h3>附件</h3>
+        <ul>
+            {{#attachments}}
+            <li>
+                <a href="/api/attachment/{{id}}" download="{{filename}}" target="_blank">
+                    <i class="fas fa-download"></i> {{filename}} ({{formatFileSize size}})
+                </a>
+            </li>
+            {{/attachments}}
+        </ul>
+    </div>
+    {{/hasAttachments}}
+
+    {{#tags}}
+    <div class="post-tags">
+        <h3>标签</h3>
+        {{#.}}
+        <a href="/tag/{{slug}}" class="tag">#{{name}}</a>
+        {{/.}}
+    </div>
+    {{/tags}}
+
+    <div class="post-navigation">
+        {{#prevPost}}
+        <div class="prev-post">
+            <a href="/post/{{slug}}">&laquo; {{title}}</a>
+        </div>
+        {{/prevPost}}
+        {{#nextPost}}
+        <div class="next-post">
+            <a href="/post/{{slug}}">{{title}} &raquo;</a>
+        </div>
+        {{/nextPost}}
+    </div>
+
+    <section class="comments-section" id="comments">
+        <h3>{{commentsCount}} 条评论</h3>
+        
+        {{#isLoggedIn}}
+        <div class="comment-form">
+            <h4>发表评论</h4>
+            <form action="/api/comment" method="POST" class="comment-form-element">
+                <input type="hidden" name="postId" value="{{id}}">
+                <input type="hidden" name="parentId" value="" id="parent-id">
+                
+                <div class="form-group">
+                    <textarea name="content" placeholder="写下你的评论..." required></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="submit-comment" class="btn">发表评论</button>
+                    <button type="button" id="cancel-reply" class="btn btn-secondary" style="display: none;">取消回复</button>
+                </div>
+            </form>
+        </div>
+        {{/isLoggedIn}}
+        
+        {{^isLoggedIn}}
+        <div class="login-prompt">
+            <p><a href="/login">登录</a>后发表评论</p>
+        </div>
+        {{/isLoggedIn}}
+
+        <div class="comments-list">
+            {{#hasComments}}
+                {{> commentsList}}
+            {{/hasComments}}
+            {{^hasComments}}
+                <div class="no-comments">
+                    <p>还没有评论，来说点什么吧？</p>
+                </div>
+            {{/hasComments}}
+        </div>
+    </section>
+</article>

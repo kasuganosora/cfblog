@@ -1,0 +1,40 @@
+{
+  "name": "cfblog",
+  "version": "1.0.0",
+  "description": "A blog platform built with Cloudflare Workers, R2, D1, and KV",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "db:migrate": "wrangler d1 migrations apply cfblog-database",
+    "db:local": "wrangler d1 migrations apply cfblog-database --local",
+    "test": "node test-api.js",
+    "test:all": "node test-all.js",
+    "test:simple": "node test-simple.js",
+    "test:auth": "node tests/test-auth-standalone.mjs",
+    "test:response": "node tests/test-response-standalone.mjs",
+    "test:unit": "node tests/test-auth-standalone.mjs && node tests/test-response-standalone.mjs",
+    "test:integration": "node tests/integration/run-tests.js",
+    "test:run-unit": "powershell -ExecutionPolicy Bypass -File run-tests.ps1",
+    "test:run-integration": "powershell -ExecutionPolicy Bypass -File run-integration-test.ps1",
+    "test:frontend": "node tests/test-frontend-pages.mjs",
+    "test:frontend:auto": "node tests/test-frontend-pages-with-server.mjs",
+    "test:admin": "node tests/test-admin-pages.mjs",
+    "test:admin:auto": "node tests/test-admin-pages-with-server.mjs",
+    "test:frontend-interactive": "node tests/test-frontend-interactive.mjs",
+    "test:interactive:auto": "node tests/test-frontend-interactive-with-server.mjs",
+    "test:run-frontend": "powershell -ExecutionPolicy Bypass -File run-frontend-tests.ps1",
+    "test:coverage": "node tests/coverage.js"
+  },
+  "devDependencies": {
+    "undici": "^7.18.2",
+    "wrangler": "^4.54.0"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.0",
+    "markdown-it": "^13.0.2",
+    "marked": "^9.1.6"
+  }
+}

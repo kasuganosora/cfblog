@@ -1,0 +1,150 @@
+{{> admin/base}}
+
+<div class="comments-management">
+    <div class="page-actions">
+        <div class="search-form">
+            <form action="/admin/comments" method="GET">
+                <input type="text" name="q" placeholder="搜索评论内容..." value="{{searchQuery}}">
+                <button type="submit" class="btn">搜索</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="filter-options">
+        <form action="/admin/comments" method="GET" class="filter-form">
+            {{#statusFilter}}
+            <select name="status" class="filter-select">
+                <option value="">所有状态</option>
+                <option value="pending" {{#isPending}}selected{{/isPending}}>待审核</option>
+                <option value="approved" {{#isApproved}}selected{{/isApproved}}>已通过</option>
+                <option value="spam" {{#isSpam}}selected{{/isSpam}}>垃圾评论</option>
+                <option value="trash" {{#isTrash}}selected{{/isTrash}}>已删除</option>
+            </select>
+            {{/statusFilter}}
+            
+            <button type="submit" class="btn">筛选</button>
+            <a href="/admin/comments" class="btn btn-secondary">重置</a>
+        </form>
+    </div>
+    
+    <div class="comments-table-container">
+        {{#hasComments}}
+        <table class="comments-table">
+            <thead>
+                <tr>
+                    <th>评论者</th>
+                    <th>内容</th>
+                    <th>文章</th>
+                    <th>状态</th>
+                    <th>评论时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#comments}}
+                <tr>
+                    <td class="comment-author">
+                        {{#author.avatar}}
+                        <img src="{{author.avatar}}" alt="{{author.username}}" class="author-avatar-small">
+                        {{/author.avatar}}
+                        {{author.username}}
+                    </td>
+                    <td class="comment-content">
+                        <p>{{content}}</p>
+                        {{#parent}}
+                        <div class="reply-to">回复 @{{parent.author.username}}</div>
+                        {{/parent}}
+                    </td>
+                    <td class="comment-post">
+                        <a href="/post/{{postSlug}}" target="_blank">{{postTitle}}</a>
+                    </td>
+                    <td>
+                        <span class="status status-{{status}}">{{statusText}}</span>
+                    </td>
+                    <td>{{formattedCreatedAt}}</td>
+                    <td class="comment-actions">
+                        <button class="action-btn edit-btn" data-id="{{id}}" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        {{#isPending}}
+                        <button class="action-btn approve-btn" data-id="{{id}}" title="通过">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn spam-btn" data-id="{{id}}" title="标记垃圾">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                        {{/isPending}}
+                        {{#isApproved}}
+                        <button class="action-btn spam-btn" data-id="{{id}}" title="标记垃圾">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                        {{/isApproved}}
+                        {{#isSpam}}
+                        <button class="action-btn approve-btn" data-id="{{id}}" title="取消垃圾">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        {{/isSpam}}
+                        <button class="action-btn delete-btn" data-id="{{id}}" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{/comments}}
+            </tbody>
+        </table>
+        {{/hasComments}}
+        {{^hasComments}}
+        <div class="no-comments">
+            <p>{{#searchQuery}}没有找到与 "{{searchQuery}}" 相关的评论。{{/searchQuery}}{{^searchQuery}}还没有收到任何评论。{{/searchQuery}}</p>
+        </div>
+        {{/hasComments}}
+    </div>
+    
+    {{#hasPagination}}
+    <div class="pagination">
+        {{#hasPrevPage}}
+        <a href="?{{paginationParams}}page={{prevPage}}" class="prev-page">上一页</a>
+        {{/hasPrevPage}}
+        
+        <span class="page-info">第 {{currentPage}} 页，共 {{totalPages}} 页</span>
+        
+        {{#hasNextPage}}
+        <a href="?{{paginationParams}}page={{nextPage}}" class="next-page">下一页</a>
+        {{/hasNextPage}}
+    </div>
+    {{/hasPagination}}
+</div>
+
+<!-- 编辑评论对话框 -->
+<div id="comment-form" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>编辑评论</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="comment-form-element" action="/api/comment" method="POST">
+                <input type="hidden" name="id" id="comment-id">
+                
+                <div class="form-group">
+                    <label for="comment-content">评论内容 <span class="required">*</span></label>
+                    <textarea id="comment-content" name="content" rows="5" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comment-status">状态</label>
+                    <select id="comment-status" name="status">
+                        <option value="pending">待审核</option>
+                        <option value="approved">已通过</option>
+                        <option value="spam">垃圾评论</option>
+                        <option value="trash">已删除</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="save-comment" class="btn btn-primary">保存</button>
+            <button class="modal-close btn btn-secondary">取消</button>
+        </div>
+    </div>
+</div>
