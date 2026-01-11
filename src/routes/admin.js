@@ -18,43 +18,51 @@ export async function handleAdminRoutes(request) {
     const method = request.method;
     const acceptHeader = request.headers.get('Accept') || '';
 
-    // 对于页面请求（GET 且 Accept 包含 text/html），不需要服务端认证
+    // 对于页面请求（GET 且 Accept 包含 text/html），不强制要求认证
     // 页面会在前端 JavaScript 中检查 localStorage 的 token
     const isPageRequest = method === 'GET' && acceptHeader.includes('text/html');
 
-    // API 调用需要认证
-    if (!isPageRequest) {
-      // 验证用户令牌
-      let token = null;
+    // 尝试获取并验证用户令牌
+    let token = null;
 
-      // 尝试从 Authorization 头获取
-      const authHeader = request.headers.get('Authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
-      }
+    // 尝试从 Authorization 头获取
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
 
-      // 尝试从 cookie 获取
-      if (!token) {
-        const cookieHeader = request.headers.get('Cookie');
-        if (cookieHeader) {
-          const cookies = cookieHeader.split(';').map(c => c.trim());
-          const tokenCookie = cookies.find(c => c.startsWith('token='));
-          if (tokenCookie) {
-            token = tokenCookie.substring(6);
-          }
+    // 尝试从 cookie 获取
+    if (!token) {
+      const cookieHeader = request.headers.get('Cookie');
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';').map(c => c.trim());
+        const tokenCookie = cookies.find(c => c.startsWith('token='));
+        if (tokenCookie) {
+          token = tokenCookie.substring(6);
         }
       }
+    }
 
-      if (!token) {
-        return unauthorizedResponse();
-      }
+    // API 调用必须认证
+    if (!isPageRequest && !token) {
+      return unauthorizedResponse();
+    }
 
+    // 如果有 token，尝试验证
+    if (token) {
       try {
         const payload = await verifyToken(token, env.JWT_SECRET);
         request.user = payload;
       } catch (error) {
-        return unauthorizedResponse();
+        // 对于 API 调用，认证失败则拒绝
+        if (!isPageRequest) {
+          return unauthorizedResponse();
+        }
+        // 对于页面请求，认证失败不影响页面渲染
+        request.user = null;
       }
+    } else {
+      request.user = null;
     }
     
     // 管理后台首页
@@ -205,31 +213,39 @@ async function handlePostsManagement(request, env) {
       const page = parseInt(url.searchParams.get('page')) || 1;
       const limit = 20;
       const status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : undefined;
-      
+
+      // 从浏览器请求中获取 Cookie
+      const cookieHeader = request.headers.get('Cookie');
+
       // 获取文章列表
       const postsResponse = await fetch(`${url.origin}/api/post/list?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const postsData = await postsResponse.json();
-      
+
       // 获取分类列表
       const categoriesResponse = await fetch(`${url.origin}/api/category/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
-      
+
       const categoriesData = await categoriesResponse.json();
-      
+
+      // 提取实际数据（API 返回的格式是 { success, message, data: { success, data, pagination } }）
+      const posts = postsData.success && postsData.data ? postsData.data.data || [] : [];
+      const pagination = postsData.success && postsData.data ? postsData.data.pagination : null;
+      const categories = categoriesData.success && categoriesData.data ? categoriesData.data.data || [] : [];
+
       // 渲染页面
       const html = renderPostsPage({
         user: request.user,
-        posts: postsData.data,
-        pagination: postsData.pagination,
-        categories: categoriesData.data,
+        posts,
+        pagination,
+        categories,
         currentStatus: status
       });
       
@@ -240,7 +256,55 @@ async function handlePostsManagement(request, env) {
       });
     } catch (err) {
       console.error('Posts management error:', err);
-      return errorResponse('获取文章列表失败', 500);
+      // 即使出错也返回一个友好的 HTML 页面
+      const errorHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 文章管理</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .error-message {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .error-message h1 {
+      color: #d32f2f;
+    }
+    .error-message p {
+      color: #666;
+    }
+    .error-message a {
+      color: #007cba;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-message">
+    <h1>错误</h1>
+    <p>获取文章列表失败，请稍后重试。</p>
+    <p><a href="/admin/dashboard">返回仪表板</a></p>
+  </div>
+</body>
+</html>`;
+      return new Response(errorHtml, {
+        status: 500,
+        headers: {
+          'Content-Type': 'text/html',
+        }
+      });
     }
   }
   
@@ -249,45 +313,52 @@ async function handlePostsManagement(request, env) {
     try {
       const postId = path.split('/')[4];
       const isNew = postId === 'new';
-      
+
+      // 从浏览器请求中获取 Cookie
+      const cookieHeader = request.headers.get('Cookie');
+
       let post = null;
       if (!isNew) {
         // 获取文章详情
         const postResponse = await fetch(`${url.origin}/api/post/${postId}`, {
           headers: {
-            'Authorization': request.headers.get('Authorization'),
+            'Cookie': cookieHeader || '',
           }
         });
-        
+
         if (postResponse.ok) {
           post = await postResponse.json();
         }
       }
-      
+
       // 获取分类列表
       const categoriesResponse = await fetch(`${url.origin}/api/category/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
-      
+
       const categoriesData = await categoriesResponse.json();
-      
+
       // 获取标签列表
       const tagsResponse = await fetch(`${url.origin}/api/tag/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
-      
+
       const tagsData = await tagsResponse.json();
-      
+
+      // 提取实际数据
+      const categories = categoriesData.success && categoriesData.data ? categoriesData.data.data || [] : [];
+      const tags = tagsData.success && tagsData.data ? tagsData.data.data || [] : [];
+
       // 渲染页面
       const html = renderPostEditPage({
         user: request.user,
-        post,
-        categories: categoriesData.data,
-        tags: tagsData.data,
+        post: post && post.data ? post.data : null,
+        categories,
+        tags,
         isNew
       });
       
@@ -310,23 +381,29 @@ async function handleCategoriesManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 分类列表页面
   if (path === '/admin/categories' && method === 'GET') {
     try {
       // 获取分类列表
       const categoriesResponse = await fetch(`${url.origin}/api/category/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const categoriesData = await categoriesResponse.json();
-      
+
+      // 提取实际数据
+      const categories = categoriesData.success && categoriesData.data ? categoriesData.data.data || [] : [];
+
       // 渲染页面
       const html = renderCategoriesPage({
         user: request.user,
-        categories: categoriesData.data
+        categories
       });
       
       return new Response(html, {
@@ -348,23 +425,32 @@ async function handleTagsManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 标签列表页面
   if (path === '/admin/tags' && method === 'GET') {
     try {
       // 获取标签列表
       const tagsResponse = await fetch(`${url.origin}/api/tag/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const tagsData = await tagsResponse.json();
       
       // 渲染页面
+      const tagsData = await tagsResponse.json();
+
+      // 提取实际数据
+      const tags = tagsData.success && tagsData.data ? tagsData.data.data || [] : [];
+
+      // 渲染页面
       const html = renderTagsPage({
         user: request.user,
-        tags: tagsData.data
+        tags
       });
       
       return new Response(html, {
@@ -386,28 +472,35 @@ async function handleCommentsManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 评论列表页面
   if (path === '/admin/comments' && method === 'GET') {
     try {
       const page = parseInt(url.searchParams.get('page')) || 1;
       const limit = 20;
       const status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : undefined;
-      
+
       // 获取评论列表
       const commentsResponse = await fetch(`${url.origin}/api/comment/list?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const commentsData = await commentsResponse.json();
-      
+
+      // 提取实际数据
+      const comments = commentsData.success && commentsData.data ? commentsData.data.data || [] : [];
+      const pagination = commentsData.success && commentsData.data ? commentsData.data.pagination : null;
+
       // 渲染页面
       const html = renderCommentsPage({
         user: request.user,
-        comments: commentsData.data,
-        pagination: commentsData.pagination,
+        comments,
+        pagination,
         currentStatus: status
       });
       
@@ -430,34 +523,41 @@ async function handleUsersManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 用户列表页面
   if (path === '/admin/users' && method === 'GET') {
     // 只有管理员可以访问用户管理
-    if (request.user.role !== 'admin') {
+    if (request.user && request.user.role !== 'admin') {
       return errorResponse('权限不足', 403);
     }
-    
+
     try {
       const page = parseInt(url.searchParams.get('page')) || 1;
       const limit = 20;
       const role = url.searchParams.get('role');
       const status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : undefined;
-      
+
       // 获取用户列表
       const usersResponse = await fetch(`${url.origin}/api/user/list?page=${page}&limit=${limit}${role ? `&role=${role}` : ''}${status ? `&status=${status}` : ''}`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const usersData = await usersResponse.json();
-      
+
+      // 提取实际数据
+      const users = usersData.success && usersData.data ? usersData.data.data || [] : [];
+      const pagination = usersData.success && usersData.data ? usersData.data.pagination : null;
+
       // 渲染页面
       const html = renderUsersPage({
         user: request.user,
-        users: usersData.data,
-        pagination: usersData.pagination,
+        users,
+        pagination,
         currentRole: role,
         currentStatus: status
       });
@@ -481,33 +581,40 @@ async function handleFeedbackManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 反馈列表页面
   if (path === '/admin/feedback' && method === 'GET') {
     // 只有管理员可以访问反馈管理
-    if (request.user.role !== 'admin') {
+    if (request.user && request.user.role !== 'admin') {
       return errorResponse('权限不足', 403);
     }
-    
+
     try {
       const page = parseInt(url.searchParams.get('page')) || 1;
       const limit = 20;
       const status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : undefined;
-      
+
       // 获取反馈列表
       const feedbackResponse = await fetch(`${url.origin}/api/feedback/list?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const feedbackData = await feedbackResponse.json();
-      
+
+      // 提取实际数据
+      const feedback = feedbackData.success && feedbackData.data ? feedbackData.data.data || [] : [];
+      const pagination = feedbackData.success && feedbackData.data ? feedbackData.data.pagination : null;
+
       // 渲染页面
       const html = renderFeedbackPage({
         user: request.user,
-        feedback: feedbackData.data,
-        pagination: feedbackData.pagination,
+        feedback,
+        pagination,
         currentStatus: status
       });
       
@@ -530,27 +637,34 @@ async function handleAttachmentsManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 附件列表页面
   if (path === '/admin/attachments' && method === 'GET') {
     try {
       const page = parseInt(url.searchParams.get('page')) || 1;
       const limit = 20;
-      
+
       // 获取附件列表
       const attachmentsResponse = await fetch(`${url.origin}/api/upload/list?page=${page}&limit=${limit}`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       const attachmentsData = await attachmentsResponse.json();
-      
+
+      // 提取实际数据
+      const attachments = attachmentsData.success && attachmentsData.data ? attachmentsData.data.data || [] : [];
+      const pagination = attachmentsData.success && attachmentsData.data ? attachmentsData.data.pagination : null;
+
       // 渲染页面
       const html = renderAttachmentsPage({
         user: request.user,
-        attachments: attachmentsData.data,
-        pagination: attachmentsData.pagination
+        attachments,
+        pagination
       });
       
       return new Response(html, {
@@ -572,31 +686,36 @@ async function handleSettingsManagement(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
-  
+
+  // 从浏览器请求中获取 Cookie
+  const cookieHeader = request.headers.get('Cookie');
+
   // 设置页面
   if (path === '/admin/settings' && method === 'GET') {
     // 只有管理员可以访问设置管理
-    if (request.user.role !== 'admin') {
+    if (request.user && request.user.role !== 'admin') {
       return errorResponse('权限不足', 403);
     }
-    
+
     try {
       // 获取设置
       const settingsResponse = await fetch(`${url.origin}/api/settings/list`, {
         headers: {
-          'Authorization': request.headers.get('Authorization'),
+          'Cookie': cookieHeader || '',
         }
       });
       
       let settingsData = {};
       if (settingsResponse.ok) {
-        settingsData = await settingsResponse.json();
+        const jsonData = await settingsResponse.json();
+        // 提取实际数据
+        settingsData = jsonData.data || [];
       }
-      
+
       // 渲染页面
       const html = renderSettingsPage({
         user: request.user,
-        settings: settingsData.data || []
+        settings: settingsData
       });
       
       return new Response(html, {
