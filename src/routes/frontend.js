@@ -27,10 +27,30 @@ export async function handleFrontendRoutes(request) {
     if (path.startsWith('/category/')) {
       return await handleCategoryPosts(request, env);
     }
+
+    // 分类列表页面
+    if (path === '/categories') {
+      return await handleCategoriesList(request, env);
+    }
     
     // 标签页面
     if (path.startsWith('/tag/')) {
       return await handleTagPosts(request, env);
+    }
+
+    // 标签列表页面
+    if (path === '/tags') {
+      return await handleTagsList(request, env);
+    }
+
+    // 留言/反馈页面
+    if (path === '/feedback') {
+      return await handleFeedbackPage(request, env);
+    }
+
+    // 登录页面
+    if (path === '/login') {
+      return await handleLoginPage(request, env);
     }
     
     // 搜索页面
@@ -592,8 +612,10 @@ function renderHomePage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -674,8 +696,10 @@ function renderPostPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -761,8 +785,10 @@ function renderCategoryPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -821,8 +847,10 @@ function renderTagPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -880,8 +908,10 @@ function renderSearchPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -945,8 +975,10 @@ function renderAboutPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -980,8 +1012,10 @@ function renderContactPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -1077,8 +1111,10 @@ function renderNotFoundPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -1112,8 +1148,10 @@ function renderErrorPage(data) {
     <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
     <nav>
       <a href="/">首页</a>
-      <a href="/about">关于</a>
-      <a href="/contact">联系</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/feedback">留言</a>
+      <a href="/login">登录</a>
     </nav>
   </header>
   
@@ -1128,6 +1166,354 @@ function renderErrorPage(data) {
   <footer>
     <p>&copy; ${new Date().getFullYear()} ${settings.site_title || 'Cloudflare Blog'}. Powered by Cloudflare Workers.</p>
   </footer>
+</body>
+</html>`;
+}
+
+// 分类列表页面
+async function handleCategoriesList(request, env) {
+  try {
+    const categoryModel = new Category(env);
+    const categoriesResult = await categoryModel.getCategories();
+    
+    // 获取热门分类
+    const categoriesResult2 = await categoryModel.getPopularCategories(10);
+    
+    // 获取热门标签
+    const tagModel = new Tag(env);
+    const tagsResult = await tagModel.getPopularTags(20);
+    
+    // 获取网站设置
+    const settings = await getSiteSettings(env);
+    
+    const html = renderCategoriesListPage({
+      categories: categoriesResult.success ? categoriesResult.data : [],
+      hotCategories: categoriesResult2.success ? categoriesResult2.data : [],
+      tags: tagsResult.success ? tagsResult.data : [],
+      settings
+    });
+    
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'max-age=300',
+      }
+    });
+  } catch (err) {
+    console.error('Categories list error:', err);
+    return await handleServerError(request, env);
+  }
+}
+
+// 标签列表页面
+async function handleTagsList(request, env) {
+  try {
+    const tagModel = new Tag(env);
+    const tagsResult = await tagModel.getTags();
+    
+    // 获取热门分类
+    const categoryModel = new Category(env);
+    const categoriesResult = await categoryModel.getPopularCategories(10);
+    
+    const html = renderTagsListPage({
+      tags: tagsResult.success ? tagsResult.data : [],
+      categories: categoriesResult.success ? categoriesResult.data : [],
+      settings: await getSiteSettings(env)
+    });
+    
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'max-age=300',
+      }
+    });
+  } catch (err) {
+    console.error('Tags list error:', err);
+    return await handleServerError(request, env);
+  }
+}
+
+// 反馈页面
+async function handleFeedbackPage(request, env) {
+  try {
+    const settings = await getSiteSettings(env);
+    
+    const html = renderFeedbackPage({
+      settings
+    });
+    
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'max-age=60',
+      }
+    });
+  } catch (err) {
+    console.error('Feedback page error:', err);
+    return await handleServerError(request, env);
+  }
+}
+
+// 登录页面
+async function handleLoginPage(request, env) {
+  try {
+    const settings = await getSiteSettings(env);
+    
+    const html = renderLoginPage({
+      settings
+    });
+    
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+        'Cache-Control': 'max-age=60',
+      }
+    });
+  } catch (err) {
+    console.error('Login page error:', err);
+    return await handleServerError(request, env);
+  }
+}
+
+function renderCategoriesListPage(data) {
+  const { categories, hotCategories, tags, settings } = data;
+  
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类 - ${settings.site_title || 'Cloudflare Blog'}</title>
+</head>
+<body>
+  <header>
+    <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
+    <nav>
+      <a href="/">首页</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/about">关于</a>
+    </nav>
+  </header>
+  
+  <main>
+    <section class="categories">
+      <h2>所有分类</h2>
+      <ul>
+        ${categories.map(category => `
+          <li>
+            <a href="/category/${category.slug}">
+              ${category.name} (${category.post_count || 0})
+            </a>
+            ${category.description ? `<p>${category.description}</p>` : ''}
+          </li>
+        `).join('')}
+      </ul>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; ${new Date().getFullYear()} ${settings.site_title || 'Cloudflare Blog'}</p>
+  </footer>
+</body>
+</html>`;
+}
+
+function renderTagsListPage(data) {
+  const { tags, categories, settings } = data;
+  
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标签 - ${settings.site_title || 'Cloudflare Blog'}</title>
+</head>
+<body>
+  <header>
+    <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
+    <nav>
+      <a href="/">首页</a>
+      <a href="/categories">分类</a>
+      <a href="/tags">标签</a>
+      <a href="/about">关于</a>
+    </nav>
+  </header>
+  
+  <main>
+    <section class="tags">
+      <h2>所有标签</h2>
+      <div class="tag-cloud">
+        ${tags.map(tag => `
+          <a href="/tag/${tag.slug}">${tag.name}</a>
+        `).join('')}
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; ${new Date().getFullYear()} ${settings.site_title || 'Cloudflare Blog'}</p>
+  </footer>
+</body>
+</html>`;
+}
+
+function renderFeedbackPage(data) {
+  const { settings } = data;
+  
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>留言 - ${settings.site_title || 'Cloudflare Blog'}</title>
+</head>
+<body>
+  <header>
+    <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
+    <nav>
+      <a href="/">首页</a>
+      <a href="/about">关于</a>
+    </nav>
+  </header>
+  
+  <main>
+    <section class="feedback">
+      <h2>留言反馈</h2>
+      <p>欢迎留下您的意见和建议！</p>
+      
+      <form id="feedbackForm">
+        <div>
+          <label for="name">姓名</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+          <label for="email">邮箱</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+          <label for="content">内容</label>
+          <textarea id="content" name="content" required></textarea>
+        </div>
+        <button type="submit">提交</button>
+      </form>
+      
+      <div id="feedbackResult" style="display: none;"></div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; ${new Date().getFullYear()} ${settings.site_title || 'Cloudflare Blog'}</p>
+  </footer>
+  
+  <script>
+    document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        content: document.getElementById('content').value
+      };
+      
+      const resultDiv = document.getElementById('feedbackResult');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = '正在提交...';
+      
+      try {
+        const response = await fetch('/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          resultDiv.textContent = result.message;
+          resultDiv.style.color = 'green';
+          document.getElementById('feedbackForm').reset();
+        } else {
+          resultDiv.textContent = result.message || '提交失败';
+          resultDiv.style.color = 'red';
+        }
+      } catch (error) {
+        resultDiv.textContent = '提交失败，请稍后重试';
+        resultDiv.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>`;
+}
+
+function renderLoginPage(data) {
+  const { settings } = data;
+  
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - ${settings.site_title || 'Cloudflare Blog'}</title>
+</head>
+<body>
+  <header>
+    <h1><a href="/">${settings.site_title || 'Cloudflare Blog'}</a></h1>
+  </header>
+  
+  <main>
+    <section class="login">
+      <h2>管理员登录</h2>
+      <form id="loginForm">
+        <div>
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">登录</button>
+      </form>
+      
+      <div id="loginResult" style="display: none;"></div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; ${new Date().getFullYear()} ${settings.site_title || 'Cloudflare Blog'}</p>
+  </footer>
+  
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const password = document.getElementById('password').value;
+      const resultDiv = document.getElementById('loginResult');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = '正在登录...';
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          resultDiv.textContent = '登录成功，正在跳转...';
+          resultDiv.style.color = 'green';
+          localStorage.setItem('token', result.token);
+          setTimeout(() => window.location.href = '/admin', 1000);
+        } else {
+          resultDiv.textContent = result.message || '登录失败';
+          resultDiv.style.color = 'red';
+        }
+      } catch (error) {
+        resultDiv.textContent = '登录失败，请稍后重试';
+        resultDiv.style.color = 'red';
+      }
+    });
+  </script>
 </body>
 </html>`;
 }

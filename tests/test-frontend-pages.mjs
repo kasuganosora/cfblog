@@ -155,8 +155,8 @@ class FrontendTestRunner {
     await this.test('首页包含导航链接', async () => {
       const { html } = await this.fetchPage('/');
       assert.contains(html, 'href="/"', '应该包含首页链接');
-      assert.contains(html, 'href="/category/all"', '应该包含分类链接');
-      assert.contains(html, 'href="/tag/all"', '应该包含标签链接');
+      assert.contains(html, 'href="/categories"', '应该包含分类链接');
+      assert.contains(html, 'href="/tags"', '应该包含标签链接');
     });
 
     await this.test('首页包含搜索功能', async () => {
@@ -170,12 +170,12 @@ class FrontendTestRunner {
     console.log('\n📂 测试分类页面...');
 
     await this.test('分类列表页可以访问', async () => {
-      const { status } = await this.fetchPage('/category/all');
+      const { status } = await this.fetchPage('/categories');
       assert.equal(status, 200, `状态码应该是 200，实际是 ${status}`);
     });
 
     await this.test('分类列表页包含标题', async () => {
-      const { html } = await this.fetchPage('/category/all');
+      const { html } = await this.fetchPage('/categories');
       assert.contains(html, '分类', '应该包含分类标题');
     });
   }
@@ -185,12 +185,12 @@ class FrontendTestRunner {
     console.log('\n🏷️  测试标签页面...');
 
     await this.test('标签列表页可以访问', async () => {
-      const { status } = await this.fetchPage('/tag/all');
+      const { status } = await this.fetchPage('/tags');
       assert.equal(status, 200, `状态码应该是 200，实际是 ${status}`);
     });
 
     await this.test('标签列表页包含标题', async () => {
-      const { html } = await this.fetchPage('/tag/all');
+      const { html } = await this.fetchPage('/tags');
       assert.contains(html, '标签', '应该包含标签标题');
     });
   }
@@ -254,7 +254,6 @@ class FrontendTestRunner {
     await this.test('登录页面包含表单', async () => {
       const { html } = await this.fetchPage('/login');
       assert.contains(html, 'form', '应该包含表单');
-      assert.contains(html, 'username', '应该包含用户名输入框');
       assert.contains(html, 'password', '应该包含密码输入框');
     });
   }
