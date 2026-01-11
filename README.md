@@ -130,13 +130,14 @@ chmod +x start-dev.sh
 
 ## 测试
 
-项目包含完整的测试套件，包括单元测试、集成测试和前端测试。
+项目包含完整的测试套件，包括单元测试、集成测试、前端测试和端到端（E2E）测试。
 
 ### 测试类型
 
 1. **单元测试** - 测试核心工具函数（认证、响应等）
 2. **集成测试** - 测试 API 端点（需要开发服务器运行）
 3. **前端测试** - 测试前台和后台页面（需要开发服务器运行）
+4. **端到端测试** - 在真实浏览器中测试完整用户流程
 
 ### 运行测试
 
@@ -184,6 +185,28 @@ npm run test:admin                 # 后台页面测试
 npm run test:frontend-interactive  # 交互功能测试
 ```
 
+#### 端到端（E2E）测试
+
+```bash
+# 使用交互式脚本运行（推荐）
+powershell -ExecutionPolicy Bypass -File run-e2e-tests.ps1
+
+# 或使用 npm 命令
+npm run test:e2e                  # 运行所有 E2E 测试
+npm run test:e2e:chromium         # 仅 Chromium 测试
+npm run test:e2e:firefox           # 仅 Firefox 测试
+npm run test:e2e:webkit            # 仅 Safari 测试
+npm run test:e2e:debug             # 调试模式
+npm run test:e2e:report            # 查看测试报告
+```
+
+**首次运行需要安装 Playwright 浏览器：**
+
+```bash
+npm install --save-dev @playwright/test
+npx playwright install
+```
+
 ### 测试覆盖
 
 #### 单元测试
@@ -204,15 +227,26 @@ npm run test:frontend-interactive  # 交互功能测试
 - 后台页面测试（仪表盘、文章、分类、标签、评论、留言、附件）
 - 交互功能测试（搜索、评论、留言、表单验证）
 
+#### 端到端测试
+- 访客浏览流程（13 个测试）
+- 管理员管理流程（10 个测试）
+- 交互功能流程（15 个测试）
+- 跨浏览器测试（Chrome、Firefox、Safari）
+- 响应式设计测试（桌面、平板、移动）
+- 性能测试和可访问性测试
+
 ### 测试文档
 
 详细的测试文档请查看：
 - [测试总结](./TEST_SUMMARY.md) - 测试套件概述
 - [测试报告](./TESTING_REPORT.md) - 最新测试运行结果
 - [前端测试总结](./FRONTEND_TEST_SUMMARY.md) - 前端测试创建总结
+- [前端测试结果](./FRONTEND_TEST_RESULTS.md) - 前端测试详细结果
+- [E2E 测试设置](./E2E_SETUP.md) - E2E 测试完整指南
 - [快速测试指南](./QUICK_TEST.md) - 快速开始测试
 - [测试文档](./tests/README.md) - 完整的测试指南
 - [前端测试指南](./tests/FRONTEND_TEST_GUIDE.md) - 前端测试详细指南
+- [E2E 测试文档](./tests/e2e/README.md) - E2E 测试文档
 
 ### 快速测试
 

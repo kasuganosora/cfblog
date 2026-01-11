@@ -26,9 +26,17 @@
     "test:frontend-interactive": "node tests/test-frontend-interactive.mjs",
     "test:interactive:auto": "node tests/test-frontend-interactive-with-server.mjs",
     "test:run-frontend": "powershell -ExecutionPolicy Bypass -File run-frontend-tests.ps1",
-    "test:coverage": "node tests/coverage.js"
+    "test:coverage": "node tests/coverage.js",
+    "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "undici": "^7.18.2",
     "wrangler": "^4.54.0"
   },
