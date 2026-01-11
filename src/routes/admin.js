@@ -15,12 +15,30 @@ export async function handleAdminRoutes(request) {
     }
 
     // 验证用户令牌
+    let token = null;
+    
+    // 尝试从 Authorization 头获取
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+    
+    // 尝试从 cookie 获取
+    if (!token) {
+      const cookieHeader = request.headers.get('Cookie');
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';').map(c => c.trim());
+        const tokenCookie = cookies.find(c => c.startsWith('token='));
+        if (tokenCookie) {
+          token = tokenCookie.substring(6);
+        }
+      }
+    }
+    
+    if (!token) {
       return unauthorizedResponse();
     }
-
-    const token = authHeader.substring(7);
+    
     try {
       const payload = await verifyToken(token, env.JWT_SECRET);
       request.user = payload;

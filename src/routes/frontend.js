@@ -1491,10 +1491,10 @@ function renderLoginPage(data) {
       resultDiv.textContent = '正在登录...';
       
       try {
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch('/api/user/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ username: 'admin', password })
         });
         
         const result = await response.json();

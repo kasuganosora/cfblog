@@ -60,10 +60,11 @@ test.describe('管理员登录流程', () => {
 // 测试文章管理流程
 test.describe('文章管理流程', () => {
   test.beforeEach(async ({ page, context }) => {
-    // 设置认证令牌
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以创建新文章', async ({ page }) => {

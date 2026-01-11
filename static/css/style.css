@@ -478,6 +478,11 @@ main {
     background-color: #2563eb;
 }
 
+.btn:active {
+    transform: scale(0.98);
+    background-color: #1d4ed8;
+}
+
 .btn-secondary {
     background-color: #6b7280;
 }
@@ -672,6 +677,11 @@ main {
 
 .search-button:hover {
     background-color: #2563eb;
+}
+
+.search-button:active {
+    transform: scale(0.98);
+    background-color: #1d4ed8;
 }
 
 /* 留言板页面 */

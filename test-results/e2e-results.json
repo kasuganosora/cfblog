@@ -1,0 +1,2493 @@
+{
+  "config": {
+    "configFile": "d:\\code\\cfblog\\playwright.config.js",
+    "rootDir": "d:/code/cfblog/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 6
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/e2e-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "d:/code/cfblog/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "d:/code/cfblog/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "d:/code/cfblog/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "d:/code/cfblog/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "d:/code/cfblog/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 6,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://localhost:8787",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "admin-flow.spec.js",
+      "file": "admin-flow.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "管理员登录流程",
+          "file": "admin-flow.spec.js",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以成功登录",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3023,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.285Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-fcb23a3c4d29a491b34c",
+              "file": "admin-flow.spec.js",
+              "line": 10,
+              "column": 3
+            },
+            {
+              "title": "错误的密码无法登录",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1692,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.279Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-421c634798ece6d71570",
+              "file": "admin-flow.spec.js",
+              "line": 26,
+              "column": 3
+            },
+            {
+              "title": "空密码无法登录",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1991,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.296Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-22454c309c1972323c02",
+              "file": "admin-flow.spec.js",
+              "line": 46,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "文章管理流程",
+          "file": "admin-flow.spec.js",
+          "line": 61,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以创建新文章",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 7507,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:77:40",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 40,
+                          "line": 77
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 75 |\u001b[39m     \n \u001b[90m 76 |\u001b[39m     \u001b[90m// 检查表单是否显示\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'form'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 78 |\u001b[39m     \n \u001b[90m 79 |\u001b[39m     \u001b[90m// 填写文章标题\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m titleInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"title\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 40,
+                            "line": 77
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n\n  75 |     \n  76 |     // 检查表单是否显示\n> 77 |     await expect(page.locator('form')).toBeVisible();\n     |                                        ^\n  78 |     \n  79 |     // 填写文章标题\n  80 |     const titleInput = page.locator('input[name=\"title\"]');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:77:40"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.321Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以创建新文章-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以创建新文章-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以创建新文章-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 40,
+                        "line": 77
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-8c24384ee2d3ee8553c5",
+              "file": "admin-flow.spec.js",
+              "line": 69,
+              "column": 3
+            },
+            {
+              "title": "管理员可以查看文章列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 7605,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:113:51",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 51,
+                          "line": 113
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 111 |\u001b[39m     \n \u001b[90m 112 |\u001b[39m     \u001b[90m// 要么有文章列表，要么有空消息\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 113 |\u001b[39m     \u001b[36mawait\u001b[39m expect(postsContainer\u001b[33m.\u001b[39mor(emptyMessage))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 114 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 115 |\u001b[39m\n \u001b[90m 116 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 51,
+                            "line": 113
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n\n  111 |     \n  112 |     // 要么有文章列表，要么有空消息\n> 113 |     await expect(postsContainer.or(emptyMessage)).toBeVisible();\n      |                                                   ^\n  114 |   });\n  115 |\n  116 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:113:51"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.295Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以查看文章列表-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以查看文章列表-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-文章管理流程-管理员可以查看文章列表-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 51,
+                        "line": 113
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-0847dbf6289252156be0",
+              "file": "admin-flow.spec.js",
+              "line": 101,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "分类管理流程",
+          "file": "admin-flow.spec.js",
+          "line": 119,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以访问分类管理页面",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 7705,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:133:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 57,
+                          "line": 133
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m     \n \u001b[90m 132 |\u001b[39m     \u001b[90m// 检查分类管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"分类\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m   test(\u001b[32m'管理员可以创建新分类'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 57,
+                            "line": 133
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n\n  131 |     \n  132 |     // 检查分类管理标题\n> 133 |     await expect(page.locator('h1, h2:has-text(\"分类\")')).toBeVisible();\n      |                                                         ^\n  134 |   });\n  135 |\n  136 |   test('管理员可以创建新分类', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:133:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:31.369Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-分类管理流程-管理员可以访问分类管理页面-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-分类管理流程-管理员可以访问分类管理页面-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-分类管理流程-管理员可以访问分类管理页面-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 57,
+                        "line": 133
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-f3a795a307d7deafb11d",
+              "file": "admin-flow.spec.js",
+              "line": 126,
+              "column": 3
+            },
+            {
+              "title": "管理员可以创建新分类",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1263,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:33.705Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-8df9da6ddca77d459971",
+              "file": "admin-flow.spec.js",
+              "line": 136,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "标签管理流程",
+          "file": "admin-flow.spec.js",
+          "line": 163,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以访问标签管理页面",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 6943,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:177:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 57,
+                          "line": 177
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 175 |\u001b[39m     \n \u001b[90m 176 |\u001b[39m     \u001b[90m// 检查标签管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 177 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"标签\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 178 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 179 |\u001b[39m\n \u001b[90m 180 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 57,
+                            "line": 177
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n\n  175 |     \n  176 |     // 检查标签管理标题\n> 177 |     await expect(page.locator('h1, h2:has-text(\"标签\")')).toBeVisible();\n      |                                                         ^\n  178 |   });\n  179 |\n  180 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:177:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:33.891Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-标签管理流程-管理员可以访问标签管理页面-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-标签管理流程-管理员可以访问标签管理页面-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-标签管理流程-管理员可以访问标签管理页面-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 57,
+                        "line": 177
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-73795a6c97037b2e938a",
+              "file": "admin-flow.spec.js",
+              "line": 170,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "仪表盘流程",
+          "file": "admin-flow.spec.js",
+          "line": 183,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以访问仪表盘",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 7141,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:197:74",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 74,
+                          "line": 197
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 195 |\u001b[39m     \n \u001b[90m 196 |\u001b[39m     \u001b[90m// 检查仪表盘标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 197 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 198 |\u001b[39m     \n \u001b[90m 199 |\u001b[39m     \u001b[90m// 检查是否有统计卡片\u001b[39m\n \u001b[90m 200 |\u001b[39m     \u001b[36mconst\u001b[39m statsCards \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.stat, .card, .dashboard-stats'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 74,
+                            "line": 197
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n\n  195 |     \n  196 |     // 检查仪表盘标题\n> 197 |     await expect(page.locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')).toBeVisible();\n      |                                                                          ^\n  198 |     \n  199 |     // 检查是否有统计卡片\n  200 |     const statsCards = page.locator('.stat, .card, .dashboard-stats');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:197:74"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:34.937Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-仪表盘流程-管理员可以访问仪表盘-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-仪表盘流程-管理员可以访问仪表盘-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-仪表盘流程-管理员可以访问仪表盘-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 74,
+                        "line": 197
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-27d8b41525d57c22aec0",
+              "file": "admin-flow.spec.js",
+              "line": 190,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "评论管理流程",
+          "file": "admin-flow.spec.js",
+          "line": 207,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以访问评论管理页面",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7138,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:221:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 57,
+                          "line": 221
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 219 |\u001b[39m     \n \u001b[90m 220 |\u001b[39m     \u001b[90m// 检查评论管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 221 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"评论\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 222 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 223 |\u001b[39m\n \u001b[90m 224 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 57,
+                            "line": 221
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n\n  219 |     \n  220 |     // 检查评论管理标题\n> 221 |     await expect(page.locator('h1, h2:has-text(\"评论\")')).toBeVisible();\n      |                                                         ^\n  222 |   });\n  223 |\n  224 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:221:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:34.996Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-评论管理流程-管理员可以访问评论管理页面-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-评论管理流程-管理员可以访问评论管理页面-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-评论管理流程-管理员可以访问评论管理页面-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 57,
+                        "line": 221
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-e9e6a52553d0968de720",
+              "file": "admin-flow.spec.js",
+              "line": 214,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "反馈管理流程",
+          "file": "admin-flow.spec.js",
+          "line": 227,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以访问反馈管理页面",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 7687,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:241:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                          "column": 57,
+                          "line": 241
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 239 |\u001b[39m     \n \u001b[90m 240 |\u001b[39m     \u001b[90m// 检查反馈管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 241 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"反馈\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 242 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 243 |\u001b[39m\n \u001b[90m 244 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                            "column": 57,
+                            "line": 241
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n\n  239 |     \n  240 |     // 检查反馈管理标题\n> 241 |     await expect(page.locator('h1, h2:has-text(\"反馈\")')).toBeVisible();\n      |                                                         ^\n  242 |   });\n  243 |\n  244 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:241:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:42.035Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-反馈管理流程-管理员可以访问反馈管理页面-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-反馈管理流程-管理员可以访问反馈管理页面-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\admin-flow-反馈管理流程-管理员可以访问反馈管理页面-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
+                        "column": 57,
+                        "line": 241
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-3c22d59c84c7c6debeef",
+              "file": "admin-flow.spec.js",
+              "line": 234,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "注销流程",
+          "file": "admin-flow.spec.js",
+          "line": 247,
+          "column": 6,
+          "specs": [
+            {
+              "title": "管理员可以注销",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1063,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:42.044Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c355cef47d3353d6fd3-0e11f87e094a11fa2803",
+              "file": "admin-flow.spec.js",
+              "line": 254,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "guest-flow.spec.js",
+      "file": "guest-flow.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "访客浏览流程",
+          "file": "guest-flow.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "访客可以浏览首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1120,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:42.294Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-9b6ec3e7c3c02b14e873",
+              "file": "guest-flow.spec.js",
+              "line": 9,
+              "column": 3
+            },
+            {
+              "title": "访客可以浏览分类列表",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1085,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:43.590Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-2852f75c433d1c06dc15",
+              "file": "guest-flow.spec.js",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "访客可以浏览标签列表",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1547,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:44.896Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-b9a3b0232193ac5dddcc",
+              "file": "guest-flow.spec.js",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "访客可以搜索文章",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1692,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:44.984Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-d461580dcaae8b585567",
+              "file": "guest-flow.spec.js",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "访客可以访问关于页面",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1075,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:43.665Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-4dd8407e129ab44bd349",
+              "file": "guest-flow.spec.js",
+              "line": 66,
+              "column": 3
+            },
+            {
+              "title": "访客可以访问联系页面",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1030,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:44.001Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-585a6dda17f13639faaa",
+              "file": "guest-flow.spec.js",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "访客可以访问留言页面",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1110,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:44.785Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-856a98fb5337e6e5af35",
+              "file": "guest-flow.spec.js",
+              "line": 86,
+              "column": 3
+            },
+            {
+              "title": "访客可以访问登录页面",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 966,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:45.060Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-880c1fbc60e20ac09fa7",
+              "file": "guest-flow.spec.js",
+              "line": 101,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "导航流程",
+          "file": "guest-flow.spec.js",
+          "line": 120,
+          "column": 6,
+          "specs": [
+            {
+              "title": "访客可以在不同页面间导航",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1822,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:45.108Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-69da7656b13b219ce9d2",
+              "file": "guest-flow.spec.js",
+              "line": 122,
+              "column": 3
+            },
+            {
+              "title": "访客可以使用导航栏的 logo 返回首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1470,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:45.933Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-03120698edfdf477412c",
+              "file": "guest-flow.spec.js",
+              "line": 139,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "响应式设计",
+          "file": "guest-flow.spec.js",
+          "line": 152,
+          "column": 6,
+          "specs": [
+            {
+              "title": "网站在移动设备上正常显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1122,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:46.052Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-c8d3c4ff1de8107a8027",
+              "file": "guest-flow.spec.js",
+              "line": 154,
+              "column": 3
+            },
+            {
+              "title": "网站在平板设备上正常显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1169,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:46.848Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-f95a2ebc9f6b58eccb7e",
+              "file": "guest-flow.spec.js",
+              "line": 165,
+              "column": 3
+            },
+            {
+              "title": "网站在桌面设备上正常显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1138,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:46.965Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-4b4e13f69c4228377b97",
+              "file": "guest-flow.spec.js",
+              "line": 176,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "页面性能",
+          "file": "guest-flow.spec.js",
+          "line": 190,
+          "column": 6,
+          "specs": [
+            {
+              "title": "首页在合理时间内加载",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1081,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:47.041Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-e00d9c3384c87f39a87b",
+              "file": "guest-flow.spec.js",
+              "line": 192,
+              "column": 3
+            },
+            {
+              "title": "搜索页面在合理时间内加载",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1025,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:47.212Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-ddeb8cb606b419b8e876",
+              "file": "guest-flow.spec.js",
+              "line": 201,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "可访问性",
+          "file": "guest-flow.spec.js",
+          "line": 213,
+          "column": 6,
+          "specs": [
+            {
+              "title": "页面有正确的语义化 HTML 结构",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 1036,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav')\nExpected: visible\nError: strict mode violation: locator('nav') resolved to 2 elements:\n    1) <nav>…</nav> aka getByText('首页 分类 标签 留言 登录')\n    2) <nav class=\"pagination\">…</nav> aka getByRole('navigation').filter({ hasText: '第 1 页，共 0 页' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav')\nExpected: visible\nError: strict mode violation: locator('nav') resolved to 2 elements:\n    1) <nav>…</nav> aka getByText('首页 分类 标签 留言 登录')\n    2) <nav class=\"pagination\">…</nav> aka getByRole('navigation').filter({ hasText: '第 1 页，共 0 页' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js:222:39",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js",
+                          "column": 39,
+                          "line": 222
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 220 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'main'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 221 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'footer'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 222 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'nav'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 223 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 224 |\u001b[39m\n \u001b[90m 225 |\u001b[39m   test(\u001b[32m'表单元素有关联的标签'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js",
+                            "column": 39,
+                            "line": 222
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav')\nExpected: visible\nError: strict mode violation: locator('nav') resolved to 2 elements:\n    1) <nav>…</nav> aka getByText('首页 分类 标签 留言 登录')\n    2) <nav class=\"pagination\">…</nav> aka getByRole('navigation').filter({ hasText: '第 1 页，共 0 页' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav')\u001b[22m\n\n\n  220 |     await expect(page.locator('main')).toBeVisible();\n  221 |     await expect(page.locator('footer')).toBeVisible();\n> 222 |     await expect(page.locator('nav')).toBeVisible();\n      |                                       ^\n  223 |   });\n  224 |\n  225 |   test('表单元素有关联的标签', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js:222:39"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:47.433Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\guest-flow-可访问性-页面有正确的语义化-HTML-结构-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\guest-flow-可访问性-页面有正确的语义化-HTML-结构-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\guest-flow-可访问性-页面有正确的语义化-HTML-结构-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js",
+                        "column": 39,
+                        "line": 222
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-ad67d8606a17f6fecb1f",
+              "file": "guest-flow.spec.js",
+              "line": 215,
+              "column": 3
+            },
+            {
+              "title": "表单元素有关联的标签",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1175,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:48.076Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "62057870aa5a51a9f2c3-e8ed083ff3ef7ffb8a14",
+              "file": "guest-flow.spec.js",
+              "line": 225,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "interaction-flow.spec.js",
+      "file": "interaction-flow.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "搜索功能",
+          "file": "interaction-flow.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "访客可以搜索并查看结果",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 1456,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.search, .posts')\nExpected: visible\nError: strict mode violation: locator('.search, .posts') resolved to 2 elements:\n    1) <section class=\"search\">…</section> aka getByText('搜索结果: Cloudflare 搜索 没有找到相关文章')\n    2) <div class=\"posts\">↵        ↵      </div> aka locator('div')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.search, .posts')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.search, .posts')\nExpected: visible\nError: strict mode violation: locator('.search, .posts') resolved to 2 elements:\n    1) <section class=\"search\">…</section> aka getByText('搜索结果: Cloudflare 搜索 没有找到相关文章')\n    2) <div class=\"posts\">↵        ↵      </div> aka locator('div')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.search, .posts')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:23:51",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                          "column": 51,
+                          "line": 23
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 21 |\u001b[39m     \n \u001b[90m 22 |\u001b[39m     \u001b[90m// 验证页面包含搜索结果部分\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.search, .posts'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 25 |\u001b[39m\n \u001b[90m 26 |\u001b[39m   test(\u001b[32m'搜索功能响应及时'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 51,
+                            "line": 23
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.search, .posts')\nExpected: visible\nError: strict mode violation: locator('.search, .posts') resolved to 2 elements:\n    1) <section class=\"search\">…</section> aka getByText('搜索结果: Cloudflare 搜索 没有找到相关文章')\n    2) <div class=\"posts\">↵        ↵      </div> aka locator('div')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.search, .posts')\u001b[22m\n\n\n  21 |     \n  22 |     // 验证页面包含搜索结果部分\n> 23 |     await expect(page.locator('.search, .posts')).toBeVisible();\n     |                                                   ^\n  24 |   });\n  25 |\n  26 |   test('搜索功能响应及时', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:23:51"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:48.201Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-搜索功能-访客可以搜索并查看结果-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-搜索功能-访客可以搜索并查看结果-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-搜索功能-访客可以搜索并查看结果-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                        "column": 51,
+                        "line": 23
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e394a006e6290d573535-e4d1cc2b417fece9f51e",
+              "file": "interaction-flow.spec.js",
+              "line": 9,
+              "column": 3
+            },
+            {
+              "title": "搜索功能响应及时",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1965,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:48.240Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-21ec37eb76c12342d6e0",
+              "file": "interaction-flow.spec.js",
+              "line": 26,
+              "column": 3
+            },
+            {
+              "title": "空搜索显示提示信息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1464,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:48.350Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-67f2a8028cc5b9bcdf01",
+              "file": "interaction-flow.spec.js",
+              "line": 45,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "留言功能",
+          "file": "interaction-flow.spec.js",
+          "line": 61,
+          "column": 6,
+          "specs": [
+            {
+              "title": "访客可以提交留言",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1885,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:51.481Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-1e14e1e74bedf19014a8",
+              "file": "interaction-flow.spec.js",
+              "line": 63,
+              "column": 3
+            },
+            {
+              "title": "留言表单验证必填字段",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1067,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:49.504Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-a1ec56fdf7150ae1b2ac",
+              "file": "interaction-flow.spec.js",
+              "line": 87,
+              "column": 3
+            },
+            {
+              "title": "邮箱格式验证",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1198,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:49.845Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-fe3b873288d1bcc31e75",
+              "file": "interaction-flow.spec.js",
+              "line": 101,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "登录功能",
+          "file": "interaction-flow.spec.js",
+          "line": 121,
+          "column": 6,
+          "specs": [
+            {
+              "title": "登录表单有正确的输入类型",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 1266,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:52.516Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-3bed50460f90dd829b9b",
+              "file": "interaction-flow.spec.js",
+              "line": 123,
+              "column": 3
+            },
+            {
+              "title": "登录成功后跳转到后台",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2367,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:52.613Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-7f8107fd21d13c470953",
+              "file": "interaction-flow.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "登录失败显示错误消息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1112,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:50.231Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-4d2e08813ca161caa5b4",
+              "file": "interaction-flow.spec.js",
+              "line": 151,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "表单交互",
+          "file": "interaction-flow.spec.js",
+          "line": 175,
+          "column": 6,
+          "specs": [
+            {
+              "title": "联系表单可以正常填写",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6690,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"name\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"name\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"name\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"name\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:181:54",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                          "column": 54,
+                          "line": 181
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 179 |\u001b[39m     \n \u001b[90m 180 |\u001b[39m     \u001b[90m// 检查联系表单字段\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 181 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"name\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 182 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"email\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 183 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"subject\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'textarea[name=\"content\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 54,
+                            "line": 181
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"name\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"name\"]')\u001b[22m\n\n\n  179 |     \n  180 |     // 检查联系表单字段\n> 181 |     await expect(page.locator('input[name=\"name\"]')).toBeVisible();\n      |                                                      ^\n  182 |     await expect(page.locator('input[name=\"email\"]')).toBeVisible();\n  183 |     await expect(page.locator('input[name=\"subject\"]')).toBeVisible();\n  184 |     await expect(page.locator('textarea[name=\"content\"]')).toBeVisible();\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:181:54"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:50.609Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-表单交互-联系表单可以正常填写-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-表单交互-联系表单可以正常填写-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-表单交互-联系表单可以正常填写-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                        "column": 54,
+                        "line": 181
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e394a006e6290d573535-d3aacd8fb73e9a1e1ea3",
+              "file": "interaction-flow.spec.js",
+              "line": 177,
+              "column": 3
+            },
+            {
+              "title": "表单按钮有正确的状态反馈",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1043,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:51.070Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-b86b6cf13d25498aadbe",
+              "file": "interaction-flow.spec.js",
+              "line": 197,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "页面导航交互",
+          "file": "interaction-flow.spec.js",
+          "line": 213,
+          "column": 6,
+          "specs": [
+            {
+              "title": "导航链接可以正确跳转",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1692,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:51.368Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-9e1f11e862d84ade0c94",
+              "file": "interaction-flow.spec.js",
+              "line": 215,
+              "column": 3
+            },
+            {
+              "title": "浏览器前进和后退按钮有效",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 3557,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:52.138Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-6617d1d0996bfb42633a",
+              "file": "interaction-flow.spec.js",
+              "line": 232,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "页面滚动和交互",
+          "file": "interaction-flow.spec.js",
+          "line": 261,
+          "column": 6,
+          "specs": [
+            {
+              "title": "页面可以正常滚动",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 1211,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:279:30",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                          "column": 30,
+                          "line": 279
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 277 |\u001b[39m     \n \u001b[90m 278 |\u001b[39m     \u001b[90m// 验证滚动位置改变\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 279 |\u001b[39m     expect(scrolledPosition)\u001b[33m.\u001b[39mtoBeGreaterThan(initialScroll)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 280 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 281 |\u001b[39m\n \u001b[90m 282 |\u001b[39m   test(\u001b[32m'链接在页面不同位置都可点击'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 30,
+                            "line": 279
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  277 |     \n  278 |     // 验证滚动位置改变\n> 279 |     expect(scrolledPosition).toBeGreaterThan(initialScroll);\n      |                              ^\n  280 |   });\n  281 |\n  282 |   test('链接在页面不同位置都可点击', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:279:30"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:53.079Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-页面滚动和交互-页面可以正常滚动-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-页面滚动和交互-页面可以正常滚动-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-页面滚动和交互-页面可以正常滚动-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                        "column": 30,
+                        "line": 279
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e394a006e6290d573535-d6f368744538237f017e",
+              "file": "interaction-flow.spec.js",
+              "line": 263,
+              "column": 3
+            },
+            {
+              "title": "链接在页面不同位置都可点击",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1419,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:53.756Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-1296512033ee296df62c",
+              "file": "interaction-flow.spec.js",
+              "line": 282,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "键盘交互",
+          "file": "interaction-flow.spec.js",
+          "line": 303,
+          "column": 6,
+          "specs": [
+            {
+              "title": "可以使用 Tab 键导航表单",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 6258,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                          "column": 33,
+                          "line": 313
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 311 |\u001b[39m     \u001b[90m// 验证密码输入框获得焦点\u001b[39m\n \u001b[90m 312 |\u001b[39m     \u001b[36mconst\u001b[39m passwordInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[type=\"password\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 313 |\u001b[39m     \u001b[36mawait\u001b[39m expect(passwordInput)\u001b[33m.\u001b[39mtoBeFocused()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 314 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 315 |\u001b[39m\n \u001b[90m 316 |\u001b[39m   test(\u001b[32m'可以使用 Enter 键提交表单'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 33,
+                            "line": 313
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n\n  311 |     // 验证密码输入框获得焦点\n  312 |     const passwordInput = page.locator('input[type=\"password\"]');\n> 313 |     await expect(passwordInput).toBeFocused();\n      |                                 ^\n  314 |   });\n  315 |\n  316 |   test('可以使用 Enter 键提交表单', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:54.082Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-键盘交互-可以使用-Tab-键导航表单-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-键盘交互-可以使用-Tab-键导航表单-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-键盘交互-可以使用-Tab-键导航表单-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                        "column": 33,
+                        "line": 313
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e394a006e6290d573535-ccc1f37bab60ea45d4ae",
+              "file": "interaction-flow.spec.js",
+              "line": 305,
+              "column": 3
+            },
+            {
+              "title": "可以使用 Enter 键提交表单",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3032,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:56.235Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-733c05bf3062f8b96c50",
+              "file": "interaction-flow.spec.js",
+              "line": 316,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "视觉反馈",
+          "file": "interaction-flow.spec.js",
+          "line": 339,
+          "column": 6,
+          "specs": [
+            {
+              "title": "链接有悬停效果",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 1008,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:55.196Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e394a006e6290d573535-da44de08d89bc9a311e1",
+              "file": "interaction-flow.spec.js",
+              "line": 341,
+              "column": 3
+            },
+            {
+              "title": "按钮有点击反馈",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 1275,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:382:45",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                          "column": 45,
+                          "line": 382
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 380 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 381 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 382 |\u001b[39m     expect(isActiveAfter \u001b[33m||\u001b[39m isActiveBefore)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 383 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 384 |\u001b[39m\n \u001b[90m 385 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 45,
+                            "line": 382
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  380 |     );\n  381 |     \n> 382 |     expect(isActiveAfter || isActiveBefore).toBe(true);\n      |                                             ^\n  383 |   });\n  384 |\n  385 | });\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:382:45"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-11T09:01:55.651Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-视觉反馈-按钮有点击反馈-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-视觉反馈-按钮有点击反馈-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-视觉反馈-按钮有点击反馈-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                        "column": 45,
+                        "line": 382
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e394a006e6290d573535-3e00a9e3f0b70235b79b",
+              "file": "interaction-flow.spec.js",
+              "line": 364,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-01-11T09:01:28.344Z",
+    "duration": 32144.319000000003,
+    "expected": 35,
+    "skipped": 0,
+    "unexpected": 13,
+    "flaky": 0
+  }
+}

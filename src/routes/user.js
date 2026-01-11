@@ -93,10 +93,13 @@ async function handleLogin(request, userModel) {
 
     const token = await generateToken(payload, userModel.env.JWT_SECRET);
 
+    // 设置 cookie
+    const cookieValue = `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+
     return successResponse({
       token,
       user
-    }, '登录成功');
+    }, '登录成功', { 'Set-Cookie': cookieValue });
   } catch (err) {
     console.error('Login error:', err);
     return errorResponse('登录失败: ' + err.message, 500);
