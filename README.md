@@ -315,6 +315,10 @@ npm run deploy
 - JWT 认证系统
 - 多角色支持（管理员、投稿者）
 
+
+# 备注
+首页风格需要参考这个网站的
+https://retrospectdemo.wordpress.com/?demo&iframe=true&theme_preview=true&calypso_token=8e2ac344-583a-4393-97aa-6d84c63f2371
 ## 许可证
 
 MIT

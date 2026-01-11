@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - banner [ref=e2]:
     - heading "Cloudflare Blog" [level=1] [ref=e3]:
       - link "Cloudflare Blog" [ref=e4] [cursor=pointer]:
@@ -18,7 +18,7 @@
       - generic [ref=e12]:
         - generic [ref=e13]:
           - text: 姓名
-          - textbox "姓名" [active] [ref=e14]
+          - textbox "姓名" [ref=e14]
         - generic [ref=e15]:
           - text: 邮箱
           - textbox "邮箱" [ref=e16]

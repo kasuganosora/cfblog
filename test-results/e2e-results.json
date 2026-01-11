@@ -162,12 +162,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3023,
+                      "duration": 3503,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.285Z",
+                      "startTime": "2026-01-11T11:42:16.645Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -196,12 +196,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1692,
+                      "duration": 1794,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.279Z",
+                      "startTime": "2026-01-11T11:42:16.660Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -230,12 +230,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1991,
+                      "duration": 1800,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.296Z",
+                      "startTime": "2026-01-11T11:42:16.645Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -272,31 +272,31 @@
                       "workerIndex": 3,
                       "parallelIndex": 3,
                       "status": "failed",
-                      "duration": 7507,
+                      "duration": 8435,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:77:40",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:78:40",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 40,
-                          "line": 77
+                          "line": 78
                         },
-                        "snippet": "\u001b[0m \u001b[90m 75 |\u001b[39m     \n \u001b[90m 76 |\u001b[39m     \u001b[90m// 检查表单是否显示\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 77 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'form'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 78 |\u001b[39m     \n \u001b[90m 79 |\u001b[39m     \u001b[90m// 填写文章标题\u001b[39m\n \u001b[90m 80 |\u001b[39m     \u001b[36mconst\u001b[39m titleInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"title\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 76 |\u001b[39m     \n \u001b[90m 77 |\u001b[39m     \u001b[90m// 检查表单是否显示\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 78 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'form'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 79 |\u001b[39m     \n \u001b[90m 80 |\u001b[39m     \u001b[90m// 填写文章标题\u001b[39m\n \u001b[90m 81 |\u001b[39m     \u001b[36mconst\u001b[39m titleInput \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"title\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 40,
-                            "line": 77
+                            "line": 78
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n\n  75 |     \n  76 |     // 检查表单是否显示\n> 77 |     await expect(page.locator('form')).toBeVisible();\n     |                                        ^\n  78 |     \n  79 |     // 填写文章标题\n  80 |     const titleInput = page.locator('input[name=\"title\"]');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:77:40"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('form')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form')\u001b[22m\n\n\n  76 |     \n  77 |     // 检查表单是否显示\n> 78 |     await expect(page.locator('form')).toBeVisible();\n     |                                        ^\n  79 |     \n  80 |     // 填写文章标题\n  81 |     const titleInput = page.locator('input[name=\"title\"]');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:78:40"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.321Z",
+                      "startTime": "2026-01-11T11:42:16.632Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -318,7 +318,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 40,
-                        "line": 77
+                        "line": 78
                       }
                     }
                   ],
@@ -327,7 +327,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-8c24384ee2d3ee8553c5",
               "file": "admin-flow.spec.js",
-              "line": 69,
+              "line": 70,
               "column": 3
             },
             {
@@ -346,31 +346,31 @@
                       "workerIndex": 4,
                       "parallelIndex": 4,
                       "status": "failed",
-                      "duration": 7605,
+                      "duration": 9446,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:113:51",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:114:51",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 51,
-                          "line": 113
+                          "line": 114
                         },
-                        "snippet": "\u001b[0m \u001b[90m 111 |\u001b[39m     \n \u001b[90m 112 |\u001b[39m     \u001b[90m// 要么有文章列表，要么有空消息\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 113 |\u001b[39m     \u001b[36mawait\u001b[39m expect(postsContainer\u001b[33m.\u001b[39mor(emptyMessage))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 114 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 115 |\u001b[39m\n \u001b[90m 116 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 112 |\u001b[39m     \n \u001b[90m 113 |\u001b[39m     \u001b[90m// 要么有文章列表，要么有空消息\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 114 |\u001b[39m     \u001b[36mawait\u001b[39m expect(postsContainer\u001b[33m.\u001b[39mor(emptyMessage))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 115 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 116 |\u001b[39m\n \u001b[90m 117 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 51,
-                            "line": 113
+                            "line": 114
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n\n  111 |     \n  112 |     // 要么有文章列表，要么有空消息\n> 113 |     await expect(postsContainer.or(emptyMessage)).toBeVisible();\n      |                                                   ^\n  114 |   });\n  115 |\n  116 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:113:51"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.posts, .post-list, table').or(locator('.empty, .no-posts'))\u001b[22m\n\n\n  112 |     \n  113 |     // 要么有文章列表，要么有空消息\n> 114 |     await expect(postsContainer.or(emptyMessage)).toBeVisible();\n      |                                                   ^\n  115 |   });\n  116 |\n  117 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:114:51"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.295Z",
+                      "startTime": "2026-01-11T11:42:16.671Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -392,7 +392,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 51,
-                        "line": 113
+                        "line": 114
                       }
                     }
                   ],
@@ -401,7 +401,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-0847dbf6289252156be0",
               "file": "admin-flow.spec.js",
-              "line": 101,
+              "line": 102,
               "column": 3
             }
           ]
@@ -409,7 +409,7 @@
         {
           "title": "分类管理流程",
           "file": "admin-flow.spec.js",
-          "line": 119,
+          "line": 120,
           "column": 6,
           "specs": [
             {
@@ -428,31 +428,31 @@
                       "workerIndex": 5,
                       "parallelIndex": 5,
                       "status": "failed",
-                      "duration": 7705,
+                      "duration": 9486,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:133:57",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:136:57",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 57,
-                          "line": 133
+                          "line": 136
                         },
-                        "snippet": "\u001b[0m \u001b[90m 131 |\u001b[39m     \n \u001b[90m 132 |\u001b[39m     \u001b[90m// 检查分类管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 133 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"分类\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 134 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 135 |\u001b[39m\n \u001b[90m 136 |\u001b[39m   test(\u001b[32m'管理员可以创建新分类'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 134 |\u001b[39m     \n \u001b[90m 135 |\u001b[39m     \u001b[90m// 检查分类管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 136 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"分类\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 137 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 138 |\u001b[39m\n \u001b[90m 139 |\u001b[39m   test(\u001b[32m'管理员可以创建新分类'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 57,
-                            "line": 133
+                            "line": 136
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n\n  131 |     \n  132 |     // 检查分类管理标题\n> 133 |     await expect(page.locator('h1, h2:has-text(\"分类\")')).toBeVisible();\n      |                                                         ^\n  134 |   });\n  135 |\n  136 |   test('管理员可以创建新分类', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:133:57"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"分类\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"分类\")')\u001b[22m\n\n\n  134 |     \n  135 |     // 检查分类管理标题\n> 136 |     await expect(page.locator('h1, h2:has-text(\"分类\")')).toBeVisible();\n      |                                                         ^\n  137 |   });\n  138 |\n  139 |   test('管理员可以创建新分类', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:136:57"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:31.369Z",
+                      "startTime": "2026-01-11T11:42:16.641Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -474,7 +474,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 57,
-                        "line": 133
+                        "line": 136
                       }
                     }
                   ],
@@ -483,7 +483,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-f3a795a307d7deafb11d",
               "file": "admin-flow.spec.js",
-              "line": 126,
+              "line": 129,
               "column": 3
             },
             {
@@ -499,15 +499,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1263,
+                      "duration": 2934,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:33.705Z",
+                      "startTime": "2026-01-11T11:42:18.774Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -517,7 +517,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-8df9da6ddca77d459971",
               "file": "admin-flow.spec.js",
-              "line": 136,
+              "line": 139,
               "column": 3
             }
           ]
@@ -525,7 +525,7 @@
         {
           "title": "标签管理流程",
           "file": "admin-flow.spec.js",
-          "line": 163,
+          "line": 166,
           "column": 6,
           "specs": [
             {
@@ -541,34 +541,34 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "failed",
-                      "duration": 6943,
+                      "duration": 8624,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:177:57",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:182:57",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 57,
-                          "line": 177
+                          "line": 182
                         },
-                        "snippet": "\u001b[0m \u001b[90m 175 |\u001b[39m     \n \u001b[90m 176 |\u001b[39m     \u001b[90m// 检查标签管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 177 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"标签\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 178 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 179 |\u001b[39m\n \u001b[90m 180 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 180 |\u001b[39m     \n \u001b[90m 181 |\u001b[39m     \u001b[90m// 检查标签管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"标签\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m\n \u001b[90m 185 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 57,
-                            "line": 177
+                            "line": 182
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n\n  175 |     \n  176 |     // 检查标签管理标题\n> 177 |     await expect(page.locator('h1, h2:has-text(\"标签\")')).toBeVisible();\n      |                                                         ^\n  178 |   });\n  179 |\n  180 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:177:57"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"标签\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"标签\")')\u001b[22m\n\n\n  180 |     \n  181 |     // 检查标签管理标题\n> 182 |     await expect(page.locator('h1, h2:has-text(\"标签\")')).toBeVisible();\n      |                                                         ^\n  183 |   });\n  184 |\n  185 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:182:57"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:33.891Z",
+                      "startTime": "2026-01-11T11:42:18.795Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -590,7 +590,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 57,
-                        "line": 177
+                        "line": 182
                       }
                     }
                   ],
@@ -599,7 +599,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-73795a6c97037b2e938a",
               "file": "admin-flow.spec.js",
-              "line": 170,
+              "line": 175,
               "column": 3
             }
           ]
@@ -607,7 +607,7 @@
         {
           "title": "仪表盘流程",
           "file": "admin-flow.spec.js",
-          "line": 183,
+          "line": 188,
           "column": 6,
           "specs": [
             {
@@ -626,31 +626,31 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 7141,
+                      "duration": 8630,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:197:74",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:204:74",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 74,
-                          "line": 197
+                          "line": 204
                         },
-                        "snippet": "\u001b[0m \u001b[90m 195 |\u001b[39m     \n \u001b[90m 196 |\u001b[39m     \u001b[90m// 检查仪表盘标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 197 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 198 |\u001b[39m     \n \u001b[90m 199 |\u001b[39m     \u001b[90m// 检查是否有统计卡片\u001b[39m\n \u001b[90m 200 |\u001b[39m     \u001b[36mconst\u001b[39m statsCards \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.stat, .card, .dashboard-stats'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 202 |\u001b[39m     \n \u001b[90m 203 |\u001b[39m     \u001b[90m// 检查仪表盘标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 204 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 205 |\u001b[39m     \n \u001b[90m 206 |\u001b[39m     \u001b[90m// 检查是否有统计卡片\u001b[39m\n \u001b[90m 207 |\u001b[39m     \u001b[36mconst\u001b[39m statsCards \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.stat, .card, .dashboard-stats'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 74,
-                            "line": 197
+                            "line": 204
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n\n  195 |     \n  196 |     // 检查仪表盘标题\n> 197 |     await expect(page.locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')).toBeVisible();\n      |                                                                          ^\n  198 |     \n  199 |     // 检查是否有统计卡片\n  200 |     const statsCards = page.locator('.stat, .card, .dashboard-stats');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:197:74"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')\u001b[22m\n\n\n  202 |     \n  203 |     // 检查仪表盘标题\n> 204 |     await expect(page.locator('h1:has-text(\"仪表盘\"), h2:has-text(\"仪表盘\")')).toBeVisible();\n      |                                                                          ^\n  205 |     \n  206 |     // 检查是否有统计卡片\n  207 |     const statsCards = page.locator('.stat, .card, .dashboard-stats');\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:204:74"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:34.937Z",
+                      "startTime": "2026-01-11T11:42:20.386Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -672,7 +672,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 74,
-                        "line": 197
+                        "line": 204
                       }
                     }
                   ],
@@ -681,7 +681,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-27d8b41525d57c22aec0",
               "file": "admin-flow.spec.js",
-              "line": 190,
+              "line": 197,
               "column": 3
             }
           ]
@@ -689,7 +689,7 @@
         {
           "title": "评论管理流程",
           "file": "admin-flow.spec.js",
-          "line": 207,
+          "line": 214,
           "column": 6,
           "specs": [
             {
@@ -705,34 +705,34 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
                       "status": "failed",
-                      "duration": 7138,
+                      "duration": 8389,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:221:57",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:230:57",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 57,
-                          "line": 221
+                          "line": 230
                         },
-                        "snippet": "\u001b[0m \u001b[90m 219 |\u001b[39m     \n \u001b[90m 220 |\u001b[39m     \u001b[90m// 检查评论管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 221 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"评论\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 222 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 223 |\u001b[39m\n \u001b[90m 224 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 228 |\u001b[39m     \n \u001b[90m 229 |\u001b[39m     \u001b[90m// 检查评论管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 230 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"评论\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 231 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 232 |\u001b[39m\n \u001b[90m 233 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 57,
-                            "line": 221
+                            "line": 230
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n\n  219 |     \n  220 |     // 检查评论管理标题\n> 221 |     await expect(page.locator('h1, h2:has-text(\"评论\")')).toBeVisible();\n      |                                                         ^\n  222 |   });\n  223 |\n  224 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:221:57"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"评论\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"评论\")')\u001b[22m\n\n\n  228 |     \n  229 |     // 检查评论管理标题\n> 230 |     await expect(page.locator('h1, h2:has-text(\"评论\")')).toBeVisible();\n      |                                                         ^\n  231 |   });\n  232 |\n  233 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:230:57"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:34.996Z",
+                      "startTime": "2026-01-11T11:42:21.733Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -754,7 +754,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 57,
-                        "line": 221
+                        "line": 230
                       }
                     }
                   ],
@@ -763,7 +763,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-e9e6a52553d0968de720",
               "file": "admin-flow.spec.js",
-              "line": 214,
+              "line": 223,
               "column": 3
             }
           ]
@@ -771,7 +771,7 @@
         {
           "title": "反馈管理流程",
           "file": "admin-flow.spec.js",
-          "line": 227,
+          "line": 236,
           "column": 6,
           "specs": [
             {
@@ -788,33 +788,33 @@
                   "results": [
                     {
                       "workerIndex": 6,
-                      "parallelIndex": 5,
+                      "parallelIndex": 3,
                       "status": "failed",
-                      "duration": 7687,
+                      "duration": 8912,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:241:57",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:252:57",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                           "column": 57,
-                          "line": 241
+                          "line": 252
                         },
-                        "snippet": "\u001b[0m \u001b[90m 239 |\u001b[39m     \n \u001b[90m 240 |\u001b[39m     \u001b[90m// 检查反馈管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 241 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"反馈\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 242 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 243 |\u001b[39m\n \u001b[90m 244 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "snippet": "\u001b[0m \u001b[90m 250 |\u001b[39m     \n \u001b[90m 251 |\u001b[39m     \u001b[90m// 检查反馈管理标题\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 252 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, h2:has-text(\"反馈\")'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 253 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 254 |\u001b[39m\n \u001b[90m 255 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
                       },
                       "errors": [
                         {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                             "column": 57,
-                            "line": 241
+                            "line": 252
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n\n  239 |     \n  240 |     // 检查反馈管理标题\n> 241 |     await expect(page.locator('h1, h2:has-text(\"反馈\")')).toBeVisible();\n      |                                                         ^\n  242 |   });\n  243 |\n  244 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:241:57"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1, h2:has-text(\"反馈\")')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2:has-text(\"反馈\")')\u001b[22m\n\n\n  250 |     \n  251 |     // 检查反馈管理标题\n> 252 |     await expect(page.locator('h1, h2:has-text(\"反馈\")')).toBeVisible();\n      |                                                         ^\n  253 |   });\n  254 |\n  255 | });\n    at d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js:252:57"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:42.035Z",
+                      "startTime": "2026-01-11T11:42:26.923Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -836,7 +836,7 @@
                       "errorLocation": {
                         "file": "d:\\code\\cfblog\\tests\\e2e\\admin-flow.spec.js",
                         "column": 57,
-                        "line": 241
+                        "line": 252
                       }
                     }
                   ],
@@ -845,7 +845,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-3c22d59c84c7c6debeef",
               "file": "admin-flow.spec.js",
-              "line": 234,
+              "line": 245,
               "column": 3
             }
           ]
@@ -853,7 +853,7 @@
         {
           "title": "注销流程",
           "file": "admin-flow.spec.js",
-          "line": 247,
+          "line": 258,
           "column": 6,
           "specs": [
             {
@@ -870,14 +870,14 @@
                   "results": [
                     {
                       "workerIndex": 7,
-                      "parallelIndex": 4,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1063,
+                      "duration": 2838,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:42.044Z",
+                      "startTime": "2026-01-11T11:42:28.100Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -887,7 +887,7 @@
               ],
               "id": "5c355cef47d3353d6fd3-0e11f87e094a11fa2803",
               "file": "admin-flow.spec.js",
-              "line": 254,
+              "line": 267,
               "column": 3
             }
           ]
@@ -921,14 +921,14 @@
                   "results": [
                     {
                       "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1120,
+                      "duration": 1027,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:42.294Z",
+                      "startTime": "2026-01-11T11:42:28.127Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -955,14 +955,14 @@
                   "results": [
                     {
                       "workerIndex": 9,
-                      "parallelIndex": 2,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1085,
+                      "duration": 1059,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:43.590Z",
+                      "startTime": "2026-01-11T11:42:29.181Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -991,12 +991,12 @@
                       "workerIndex": 10,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1547,
+                      "duration": 981,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:44.896Z",
+                      "startTime": "2026-01-11T11:42:31.162Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1022,15 +1022,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 11,
-                      "parallelIndex": 1,
+                      "workerIndex": 8,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1692,
+                      "duration": 1502,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:44.984Z",
+                      "startTime": "2026-01-11T11:42:29.422Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1056,15 +1056,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 4,
+                      "workerIndex": 11,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1075,
+                      "duration": 965,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:43.665Z",
+                      "startTime": "2026-01-11T11:42:32.342Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1090,15 +1090,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1030,
+                      "duration": 895,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:44.001Z",
+                      "startTime": "2026-01-11T11:42:30.524Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1124,15 +1124,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 7,
+                      "workerIndex": 8,
                       "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1110,
+                      "duration": 836,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:44.785Z",
+                      "startTime": "2026-01-11T11:42:30.947Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1158,15 +1158,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 966,
+                      "duration": 791,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:45.060Z",
+                      "startTime": "2026-01-11T11:42:31.156Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1201,14 +1201,14 @@
                   "results": [
                     {
                       "workerIndex": 9,
-                      "parallelIndex": 2,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1822,
+                      "duration": 1704,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:45.108Z",
+                      "startTime": "2026-01-11T11:42:31.456Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1234,15 +1234,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 7,
+                      "workerIndex": 8,
                       "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1470,
+                      "duration": 1314,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:45.933Z",
+                      "startTime": "2026-01-11T11:42:31.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1276,15 +1276,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1122,
+                      "duration": 1206,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:46.052Z",
+                      "startTime": "2026-01-11T11:42:31.991Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1313,12 +1313,12 @@
                       "workerIndex": 10,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1169,
+                      "duration": 991,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:46.848Z",
+                      "startTime": "2026-01-11T11:42:32.355Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1344,15 +1344,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 9,
-                      "parallelIndex": 2,
+                      "workerIndex": 8,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1138,
+                      "duration": 1004,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:46.965Z",
+                      "startTime": "2026-01-11T11:42:33.151Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1386,15 +1386,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 11,
+                      "workerIndex": 9,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1081,
+                      "duration": 862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:47.041Z",
+                      "startTime": "2026-01-11T11:42:33.190Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1420,15 +1420,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1025,
+                      "duration": 923,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:47.212Z",
+                      "startTime": "2026-01-11T11:42:33.222Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1462,10 +1462,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 4,
+                      "workerIndex": 10,
+                      "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1036,
+                      "duration": 930,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav')\nExpected: visible\nError: strict mode violation: locator('nav') resolved to 2 elements:\n    1) <nav>…</nav> aka getByText('首页 分类 标签 留言 登录')\n    2) <nav class=\"pagination\">…</nav> aka getByRole('navigation').filter({ hasText: '第 1 页，共 0 页' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav')\u001b[22m\n",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav')\nExpected: visible\nError: strict mode violation: locator('nav') resolved to 2 elements:\n    1) <nav>…</nav> aka getByText('首页 分类 标签 留言 登录')\n    2) <nav class=\"pagination\">…</nav> aka getByRole('navigation').filter({ hasText: '第 1 页，共 0 页' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\guest-flow.spec.js:222:39",
@@ -1489,7 +1489,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:47.433Z",
+                      "startTime": "2026-01-11T11:42:33.385Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1536,15 +1536,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
+                      "workerIndex": 11,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1175,
+                      "duration": 867,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:48.076Z",
+                      "startTime": "2026-01-11T11:42:33.576Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1588,9 +1588,9 @@
                   "results": [
                     {
                       "workerIndex": 9,
-                      "parallelIndex": 2,
+                      "parallelIndex": 1,
                       "status": "failed",
-                      "duration": 1456,
+                      "duration": 1311,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.search, .posts')\nExpected: visible\nError: strict mode violation: locator('.search, .posts') resolved to 2 elements:\n    1) <section class=\"search\">…</section> aka getByText('搜索结果: Cloudflare 搜索 没有找到相关文章')\n    2) <div class=\"posts\">↵        ↵      </div> aka locator('div')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.search, .posts')\u001b[22m\n",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.search, .posts')\nExpected: visible\nError: strict mode violation: locator('.search, .posts') resolved to 2 elements:\n    1) <section class=\"search\">…</section> aka getByText('搜索结果: Cloudflare 搜索 没有找到相关文章')\n    2) <div class=\"posts\">↵        ↵      </div> aka locator('div')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.search, .posts')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:23:51",
@@ -1614,7 +1614,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:48.201Z",
+                      "startTime": "2026-01-11T11:42:34.111Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1661,15 +1661,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 11,
-                      "parallelIndex": 1,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1965,
+                      "duration": 1759,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:48.240Z",
+                      "startTime": "2026-01-11T11:42:34.204Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1696,14 +1696,14 @@
                   "results": [
                     {
                       "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1464,
+                      "duration": 1297,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:48.350Z",
+                      "startTime": "2026-01-11T11:42:34.219Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1738,14 +1738,14 @@
                   "results": [
                     {
                       "workerIndex": 12,
-                      "parallelIndex": 4,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1885,
+                      "duration": 1333,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:51.481Z",
+                      "startTime": "2026-01-11T11:42:36.882Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,15 +1771,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
+                      "workerIndex": 11,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 1067,
+                      "duration": 1057,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:49.504Z",
+                      "startTime": "2026-01-11T11:42:34.486Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1806,14 +1806,14 @@
                   "results": [
                     {
                       "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1198,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:49.845Z",
+                      "startTime": "2026-01-11T11:42:35.539Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1848,14 +1848,14 @@
                   "results": [
                     {
                       "workerIndex": 13,
-                      "parallelIndex": 2,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1266,
+                      "duration": 1053,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:52.516Z",
+                      "startTime": "2026-01-11T11:42:37.805Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1881,15 +1881,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 14,
-                      "parallelIndex": 5,
+                      "workerIndex": 11,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 2367,
+                      "duration": 2305,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:52.613Z",
+                      "startTime": "2026-01-11T11:42:35.566Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1915,15 +1915,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 11,
-                      "parallelIndex": 1,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1112,
+                      "duration": 1051,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:50.231Z",
+                      "startTime": "2026-01-11T11:42:35.990Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1957,10 +1957,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 0,
+                      "workerIndex": 14,
+                      "parallelIndex": 3,
                       "status": "failed",
-                      "duration": 6690,
+                      "duration": 6255,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"name\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"name\"]')\u001b[22m\n",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"name\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"name\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:181:54",
@@ -1984,7 +1984,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:50.609Z",
+                      "startTime": "2026-01-11T11:42:38.536Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2032,14 +2032,14 @@
                   "results": [
                     {
                       "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 1043,
+                      "duration": 885,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:51.070Z",
+                      "startTime": "2026-01-11T11:42:36.585Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2073,15 +2073,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 11,
-                      "parallelIndex": 1,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "passed",
-                      "duration": 1692,
+                      "duration": 1520,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:51.368Z",
+                      "startTime": "2026-01-11T11:42:37.063Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2108,14 +2108,14 @@
                   "results": [
                     {
                       "workerIndex": 8,
-                      "parallelIndex": 3,
+                      "parallelIndex": 4,
                       "status": "passed",
-                      "duration": 3557,
+                      "duration": 3342,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:52.138Z",
+                      "startTime": "2026-01-11T11:42:37.497Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2150,9 +2150,9 @@
                   "results": [
                     {
                       "workerIndex": 11,
-                      "parallelIndex": 1,
+                      "parallelIndex": 2,
                       "status": "failed",
-                      "duration": 1211,
+                      "duration": 1060,
                       "error": {
                         "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
                         "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:279:30",
@@ -2176,7 +2176,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:53.079Z",
+                      "startTime": "2026-01-11T11:42:37.898Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2224,14 +2224,14 @@
                   "results": [
                     {
                       "workerIndex": 12,
-                      "parallelIndex": 4,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1419,
+                      "duration": 1379,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:53.756Z",
+                      "startTime": "2026-01-11T11:42:38.455Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2265,13 +2265,13 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 13,
-                      "parallelIndex": 2,
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
                       "status": "failed",
-                      "duration": 6258,
+                      "duration": 6162,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33",
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    8 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    8 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33",
                         "location": {
                           "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
                           "column": 33,
@@ -2286,13 +2286,13 @@
                             "column": 33,
                             "line": 313
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n\n  311 |     // 验证密码输入框获得焦点\n  312 |     const passwordInput = page.locator('input[type=\"password\"]');\n> 313 |     await expect(passwordInput).toBeFocused();\n      |                                 ^\n  314 |   });\n  315 |\n  316 |   test('可以使用 Enter 键提交表单', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33"
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('input[type=\"password\"]')\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[type=\"password\"]')\u001b[22m\n\u001b[2m    8 × locator resolved to <input required=\"\" id=\"password\" type=\"password\" name=\"password\"/>\u001b[22m\n\u001b[2m      - unexpected value \"inactive\"\u001b[22m\n\n\n  311 |     // 验证密码输入框获得焦点\n  312 |     const passwordInput = page.locator('input[type=\"password\"]');\n> 313 |     await expect(passwordInput).toBeFocused();\n      |                                 ^\n  314 |   });\n  315 |\n  316 |   test('可以使用 Enter 键提交表单', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:313:33"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:54.082Z",
+                      "startTime": "2026-01-11T11:42:38.607Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2328,7 +2328,7 @@
             },
             {
               "title": "可以使用 Enter 键提交表单",
-              "ok": true,
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -2340,19 +2340,41 @@
                   "results": [
                     {
                       "workerIndex": 15,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 3032,
-                      "errors": [],
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 43499,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
+                            "column": 16,
+                            "line": 317
+                          },
+                          "message": "TimeoutError: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8787/login\", waiting until \"load\"\u001b[22m\n\n\n  315 |\n  316 |   test('可以使用 Enter 键提交表单', async ({ page }) => {\n> 317 |     await page.goto(`${BASE_URL}/login`);\n      |                ^\n  318 |     \n  319 |     // 填写密码\n  320 |     await page.fill('input[type=\"password\"]', 'admin123');\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:317:16"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:56.235Z",
+                      "startTime": "2026-01-11T11:42:40.532Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-键盘交互-可以使用-Enter-键提交表单-chromium\\video.webm"
+                        }
+                      ]
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
               "id": "e394a006e6290d573535-733c05bf3062f8b96c50",
@@ -2381,15 +2403,15 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 12,
-                      "parallelIndex": 4,
+                      "workerIndex": 13,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 1008,
+                      "duration": 1019,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:55.196Z",
+                      "startTime": "2026-01-11T11:42:39.102Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2415,41 +2437,33 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 14,
-                      "parallelIndex": 5,
-                      "status": "failed",
-                      "duration": 1275,
+                      "workerIndex": 12,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 37155,
                       "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:382:45",
-                        "location": {
-                          "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
-                          "column": 45,
-                          "line": 382
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 380 |\u001b[39m     )\u001b[33m;\u001b[39m\n \u001b[90m 381 |\u001b[39m     \n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 382 |\u001b[39m     expect(isActiveAfter \u001b[33m||\u001b[39m isActiveBefore)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 383 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 384 |\u001b[39m\n \u001b[90m 385 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
                       },
                       "errors": [
                         {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
                           "location": {
                             "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
-                            "column": 45,
-                            "line": 382
+                            "column": 16,
+                            "line": 365
                           },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  380 |     );\n  381 |     \n> 382 |     expect(isActiveAfter || isActiveBefore).toBe(true);\n      |                                             ^\n  383 |   });\n  384 |\n  385 | });\n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:382:45"
+                          "message": "TimeoutError: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8787/feedback\", waiting until \"load\"\u001b[22m\n\n\n  363 |\n  364 |   test('按钮有点击反馈', async ({ page }) => {\n> 365 |     await page.goto(`${BASE_URL}/feedback`);\n      |                ^\n  366 |     \n  367 |     const submitButton = page.locator('button[type=\"submit\"]');\n  368 |     \n    at d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js:365:16"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-11T09:01:55.651Z",
+                      "startTime": "2026-01-11T11:42:39.853Z",
                       "annotations": [],
                       "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "d:\\code\\cfblog\\test-results\\interaction-flow-视觉反馈-按钮有点击反馈-chromium\\test-failed-1.png"
-                        },
                         {
                           "name": "video",
                           "contentType": "video/webm",
@@ -2460,12 +2474,7 @@
                           "contentType": "text/markdown",
                           "path": "d:\\code\\cfblog\\test-results\\interaction-flow-视觉反馈-按钮有点击反馈-chromium\\error-context.md"
                         }
-                      ],
-                      "errorLocation": {
-                        "file": "d:\\code\\cfblog\\tests\\e2e\\interaction-flow.spec.js",
-                        "column": 45,
-                        "line": 382
-                      }
+                      ]
                     }
                   ],
                   "status": "unexpected"
@@ -2483,11 +2492,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-01-11T09:01:28.344Z",
-    "duration": 32144.319000000003,
-    "expected": 35,
+    "startTime": "2026-01-11T11:42:14.239Z",
+    "duration": 70046.488,
+    "expected": 34,
     "skipped": 0,
-    "unexpected": 13,
+    "unexpected": 14,
     "flaky": 0
   }
 }

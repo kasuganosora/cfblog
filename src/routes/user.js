@@ -93,8 +93,9 @@ async function handleLogin(request, userModel) {
 
     const token = await generateToken(payload, userModel.env.JWT_SECRET);
 
-    // 设置 cookie
-    const cookieValue = `token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+    // 设置 cookie (开发环境不设置 Secure)
+    const isProduction = userModel.env.ENVIRONMENT === 'production';
+    const cookieValue = `token=${token}; HttpOnly; ${isProduction ? 'Secure;' : ''}SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
 
     return successResponse({
       token,

@@ -1,5 +1,5 @@
 // 标准化 API 响应格式
-export function successResponse(data = null, message = '操作成功') {
+export function successResponse(data = null, message = '操作成功', extraHeaders = {}) {
   return new Response(JSON.stringify({
     success: true,
     message,
@@ -8,6 +8,7 @@ export function successResponse(data = null, message = '操作成功') {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
+      ...extraHeaders
     }
   });
 }

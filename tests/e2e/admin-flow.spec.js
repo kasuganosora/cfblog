@@ -118,10 +118,12 @@ test.describe('文章管理流程', () => {
 
 // 测试分类管理流程
 test.describe('分类管理流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以访问分类管理页面', async ({ page }) => {
@@ -162,10 +164,12 @@ test.describe('分类管理流程', () => {
 
 // 测试标签管理流程
 test.describe('标签管理流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以访问标签管理页面', async ({ page }) => {
@@ -182,10 +186,12 @@ test.describe('标签管理流程', () => {
 
 // 测试仪表盘流程
 test.describe('仪表盘流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以访问仪表盘', async ({ page }) => {
@@ -206,10 +212,12 @@ test.describe('仪表盘流程', () => {
 
 // 测试评论管理流程
 test.describe('评论管理流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以访问评论管理页面', async ({ page }) => {
@@ -226,10 +234,12 @@ test.describe('评论管理流程', () => {
 
 // 测试反馈管理流程
 test.describe('反馈管理流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以访问反馈管理页面', async ({ page }) => {
@@ -246,10 +256,12 @@ test.describe('反馈管理流程', () => {
 
 // 测试注销流程
 test.describe('注销流程', () => {
-  test.beforeEach(async ({ page, context }) => {
-    await context.addInitScript(() => {
-      localStorage.setItem('token', 'mock-token-for-testing');
-    });
+  test.beforeEach(async ({ page }) => {
+    // 先登录获取真实token
+    await page.goto(`${BASE_URL}/login`);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
   });
 
   test('管理员可以注销', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response.js';
 import { verifyToken } from '../utils/auth.js';
+import { executeOne, executeQuery } from '../utils/db.js';
 
 // 处理管理后台路由
 export async function handleAdminRoutes(request) {
@@ -14,40 +15,50 @@ export async function handleAdminRoutes(request) {
       return await handleLogin(request, env);
     }
 
-    // 验证用户令牌
-    let token = null;
-    
-    // 尝试从 Authorization 头获取
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
-    
-    // 尝试从 cookie 获取
-    if (!token) {
-      const cookieHeader = request.headers.get('Cookie');
-      if (cookieHeader) {
-        const cookies = cookieHeader.split(';').map(c => c.trim());
-        const tokenCookie = cookies.find(c => c.startsWith('token='));
-        if (tokenCookie) {
-          token = tokenCookie.substring(6);
+    const method = request.method;
+    const acceptHeader = request.headers.get('Accept') || '';
+
+    // 对于页面请求（GET 且 Accept 包含 text/html），不需要服务端认证
+    // 页面会在前端 JavaScript 中检查 localStorage 的 token
+    const isPageRequest = method === 'GET' && acceptHeader.includes('text/html');
+
+    // API 调用需要认证
+    if (!isPageRequest) {
+      // 验证用户令牌
+      let token = null;
+
+      // 尝试从 Authorization 头获取
+      const authHeader = request.headers.get('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+
+      // 尝试从 cookie 获取
+      if (!token) {
+        const cookieHeader = request.headers.get('Cookie');
+        if (cookieHeader) {
+          const cookies = cookieHeader.split(';').map(c => c.trim());
+          const tokenCookie = cookies.find(c => c.startsWith('token='));
+          if (tokenCookie) {
+            token = tokenCookie.substring(6);
+          }
         }
+      }
+
+      if (!token) {
+        return unauthorizedResponse();
+      }
+
+      try {
+        const payload = await verifyToken(token, env.JWT_SECRET);
+        request.user = payload;
+      } catch (error) {
+        return unauthorizedResponse();
       }
     }
     
-    if (!token) {
-      return unauthorizedResponse();
-    }
-    
-    try {
-      const payload = await verifyToken(token, env.JWT_SECRET);
-      request.user = payload;
-    } catch (error) {
-      return unauthorizedResponse();
-    }
-    
     // 管理后台首页
-    if (path === '/admin' || path === '/admin/') {
+    if (path === '/admin' || path === '/admin/' || path === '/admin/dashboard') {
       return await handleDashboard(request, env);
     }
     
@@ -153,13 +164,15 @@ async function handleDashboard(request, env) {
   try {
     // 获取统计数据
     const stats = await getDashboardStats(env);
-    
+
+    console.log('Dashboard stats:', stats);
+
     // 渲染页面
     const html = renderDashboardPage({
       user: request.user,
-      stats
+      stats: stats || {}
     });
-    
+
     return new Response(html, {
       headers: {
         'Content-Type': 'text/html',
@@ -167,7 +180,16 @@ async function handleDashboard(request, env) {
     });
   } catch (err) {
     console.error('Dashboard error:', err);
-    return errorResponse('获取仪表板数据失败', 500);
+    // 对于页面请求，返回一个简化页面而不是 JSON 错误
+    const html = renderDashboardPage({
+      user: request.user,
+      stats: { posts: { total: 0, published: 0, draft: 0, today: 0 } }
+    });
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html',
+      }
+    });
   }
 }
 
@@ -594,63 +616,89 @@ async function handleSettingsManagement(request, env) {
 // 获取仪表板统计数据
 async function getDashboardStats(env) {
   try {
-    const stats = {};
-    
+    const stats = {
+      posts: { total: 0, published: 0, draft: 0, today: 0 },
+      comments: { total: 0, approved: 0, pending: 0, today: 0 },
+      users: { total: 0, admin: 0, today: 0 },
+      feedback: { total: 0, unread: 0, today: 0 },
+      recentPosts: [],
+      recentComments: []
+    };
+
     // 文章统计
-    const postsQuery = `SELECT 
+    const postsQuery = `SELECT
       COUNT(*) as total,
       COUNT(CASE WHEN status = 1 THEN 1 END) as published,
       COUNT(CASE WHEN status = 0 THEN 1 END) as draft,
-      COUNT(CASE WHERE DATE(created_at) = DATE('now') THEN 1 END) as today
+      COUNT(CASE WHEN DATE(created_at) = DATE('now') THEN 1 END) as today
     FROM posts`;
-    const postsResult = await env.DB.prepare(postsQuery).first();
-    stats.posts = postsResult;
-    
+    const postsResult = await executeOne(env, postsQuery);
+    if (postsResult.success && postsResult.result) {
+      stats.posts = postsResult.result;
+    }
+
     // 评论统计
-    const commentsQuery = `SELECT 
+    const commentsQuery = `SELECT
       COUNT(*) as total,
       COUNT(CASE WHEN status = 1 THEN 1 END) as approved,
       COUNT(CASE WHEN status = 0 THEN 1 END) as pending,
-      COUNT(CASE WHERE DATE(created_at) = DATE('now') THEN 1 END) as today
+      COUNT(CASE WHEN DATE(created_at) = DATE('now') THEN 1 END) as today
     FROM comments`;
-    const commentsResult = await env.DB.prepare(commentsQuery).first();
-    stats.comments = commentsResult;
-    
+    const commentsResult = await executeOne(env, commentsQuery);
+    if (commentsResult.success && commentsResult.result) {
+      stats.comments = commentsResult.result;
+    }
+
     // 用户统计
-    const usersQuery = `SELECT 
+    const usersQuery = `SELECT
       COUNT(*) as total,
       COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin,
-      COUNT(CASE WHERE DATE(created_at) = DATE('now') THEN 1 END) as today
+      COUNT(CASE WHEN DATE(created_at) = DATE('now') THEN 1 END) as today
     FROM users`;
-    const usersResult = await env.DB.prepare(usersQuery).first();
-    stats.users = usersResult;
-    
+    const usersResult = await executeOne(env, usersQuery);
+    if (usersResult.success && usersResult.result) {
+      stats.users = usersResult.result;
+    }
+
     // 反馈统计
-    const feedbackQuery = `SELECT 
+    const feedbackQuery = `SELECT
       COUNT(*) as total,
       COUNT(CASE WHEN status = 0 THEN 1 END) as unread,
-      COUNT(CASE WHERE DATE(created_at) = DATE('now') THEN 1 END) as today
+      COUNT(CASE WHEN DATE(created_at) = DATE('now') THEN 1 END) as today
     FROM feedback`;
-    const feedbackResult = await env.DB.prepare(feedbackQuery).first();
-    stats.feedback = feedbackResult;
-    
+    const feedbackResult = await executeOne(env, feedbackQuery);
+    if (feedbackResult.success && feedbackResult.result) {
+      stats.feedback = feedbackResult.result;
+    }
+
     // 最近文章
     const recentPostsQuery = `SELECT id, title, slug, created_at FROM posts ORDER BY created_at DESC LIMIT 5`;
-    const recentPostsResult = await env.DB.prepare(recentPostsQuery).all();
-    stats.recentPosts = recentPostsResult.results || [];
-    
+    const recentPostsResult = await executeQuery(env, recentPostsQuery);
+    if (recentPostsResult.success) {
+      stats.recentPosts = recentPostsResult.results || [];
+    }
+
     // 最近评论
-    const recentCommentsQuery = `SELECT c.id, c.content, c.created_at, p.title, p.slug 
-      FROM comments c 
-      JOIN posts p ON c.post_id = p.id 
+    const recentCommentsQuery = `SELECT c.id, c.content, c.created_at, p.title, p.slug
+      FROM comments c
+      JOIN posts p ON c.post_id = p.id
       ORDER BY c.created_at DESC LIMIT 5`;
-    const recentCommentsResult = await env.DB.prepare(recentCommentsQuery).all();
-    stats.recentComments = recentCommentsResult.results || [];
-    
+    const recentCommentsResult = await executeQuery(env, recentCommentsQuery);
+    if (recentCommentsResult.success) {
+      stats.recentComments = recentCommentsResult.results || [];
+    }
+
     return stats;
   } catch (error) {
     console.error('Get dashboard stats error:', error);
-    return {};
+    return {
+      posts: { total: 0, published: 0, draft: 0, today: 0 },
+      comments: { total: 0, approved: 0, pending: 0, today: 0 },
+      users: { total: 0, admin: 0, today: 0 },
+      feedback: { total: 0, unread: 0, today: 0 },
+      recentPosts: [],
+      recentComments: []
+    };
   }
 }
 
