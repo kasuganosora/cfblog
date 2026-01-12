@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response.js';
 import { Feedback } from '../models/Feedback.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理反馈路由
 export async function handleFeedbackRoutes(request) {
@@ -97,9 +98,11 @@ async function handleSubmitFeedback(request, feedbackModel) {
 
 // 获取反馈列表
 async function handleGetFeedbackList(request, feedbackModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, feedbackModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const url = new URL(request.url);

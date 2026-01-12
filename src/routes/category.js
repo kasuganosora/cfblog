@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response.js';
 import { Category } from '../models/Category.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理分类路由
 export async function handleCategoryRoutes(request) {
@@ -152,9 +153,11 @@ async function handleGetCategory(request, categoryIdOrSlug, categoryModel) {
 
 // 创建分类
 async function handleCreateCategory(request, categoryModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, categoryModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const categoryData = await request.json();
@@ -178,9 +181,11 @@ async function handleCreateCategory(request, categoryModel) {
 
 // 更新分类
 async function handleUpdateCategory(request, categoryId, categoryModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, categoryModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const categoryData = await request.json();
@@ -205,9 +210,11 @@ async function handleUpdateCategory(request, categoryId, categoryModel) {
 
 // 删除分类
 async function handleDeleteCategory(request, categoryId, categoryModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, categoryModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     // 检查分类下是否有文章

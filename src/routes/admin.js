@@ -133,7 +133,7 @@ async function handleLogin(request, env) {
   }
   
   // 处理登录请求
-  if (method === 'POST' && path === '/admin/login/api') {
+  if (method === 'POST' && url.pathname === '/admin/login/api') {
     try {
       const { username, password } = await request.json();
       
@@ -440,9 +440,7 @@ async function handleTagsManagement(request, env) {
       });
       
       const tagsData = await tagsResponse.json();
-      
-      // 渲染页面
-      const tagsData = await tagsResponse.json();
+
 
       // 提取实际数据
       const tags = tagsData.success && tagsData.data ? tagsData.data.data || [] : [];

@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response.js';
 import { Tag } from '../models/Tag.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理标签路由
 export async function handleTagRoutes(request) {
@@ -99,9 +100,11 @@ async function handleGetPopularTags(request, tagModel) {
 
 // 批量获取或创建标签
 async function handleBatchGetOrCreateTags(request, tagModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, tagModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const { names } = await request.json();
@@ -166,9 +169,11 @@ async function handleGetTag(request, tagIdOrSlug, tagModel) {
 
 // 创建标签
 async function handleCreateTag(request, tagModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, tagModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const tagData = await request.json();
@@ -192,9 +197,11 @@ async function handleCreateTag(request, tagModel) {
 
 // 更新标签
 async function handleUpdateTag(request, tagId, tagModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, tagModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const tagData = await request.json();
@@ -219,9 +226,11 @@ async function handleUpdateTag(request, tagId, tagModel) {
 
 // 删除标签
 async function handleDeleteTag(request, tagId, tagModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, tagModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     // 检查标签下是否有文章

@@ -2,6 +2,7 @@ import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse 
 import { Post } from '../models/Post.js';
 import { Category } from '../models/Category.js';
 import { Tag } from '../models/Tag.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理文章路由
 export async function handlePostRoutes(request) {
@@ -127,9 +128,11 @@ async function handleGetPost(request, postIdOrSlug, postModel) {
 
 // 创建文章
 async function handleCreatePost(request, postModel, categoryModel, tagModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, postModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const postData = await request.json();
@@ -184,9 +187,11 @@ async function handleCreatePost(request, postModel, categoryModel, tagModel) {
 
 // 更新文章
 async function handleUpdatePost(request, postId, postModel, categoryModel, tagModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, postModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const postData = await request.json();
@@ -235,9 +240,11 @@ async function handleUpdatePost(request, postId, postModel, categoryModel, tagMo
 
 // 删除文章
 async function handleDeletePost(request, postId, postModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, postModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     // 获取原始文章信息
@@ -294,9 +301,11 @@ async function handleSearchPosts(request, postModel) {
 
 // 设置文章分类
 async function handleSetPostCategories(request, postId, postModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, postModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const { categoryIds } = await request.json();
@@ -331,9 +340,11 @@ async function handleSetPostCategories(request, postId, postModel) {
 
 // 设置文章标签
 async function handleSetPostTags(request, postId, postModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, postModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const { tagIds } = await request.json();

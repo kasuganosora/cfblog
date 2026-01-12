@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response.js';
 import { Attachment } from '../models/Attachment.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理上传路由
 export async function handleUploadRoutes(request) {
@@ -59,9 +60,11 @@ export async function handleUploadRoutes(request) {
 
 // 上传文件
 async function handleUploadFile(request, attachmentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const formData = await request.formData();
@@ -107,9 +110,11 @@ async function handleUploadFile(request, attachmentModel) {
 
 // 获取附件列表
 async function handleGetAttachments(request, attachmentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const url = new URL(request.url);
@@ -137,9 +142,11 @@ async function handleGetAttachments(request, attachmentModel) {
 
 // 获取附件详情
 async function handleGetAttachment(request, attachmentId, attachmentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const result = await attachmentModel.getAttachmentById(attachmentId);
@@ -164,9 +171,11 @@ async function handleGetAttachment(request, attachmentId, attachmentModel) {
 
 // 更新附件信息
 async function handleUpdateAttachment(request, attachmentId, attachmentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     const { description, postId } = await request.json();
@@ -203,9 +212,11 @@ async function handleUpdateAttachment(request, attachmentId, attachmentModel) {
 
 // 删除附件
 async function handleDeleteAttachment(request, attachmentId, attachmentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     // 获取附件信息
@@ -272,9 +283,11 @@ async function handleDownloadAttachment(request, attachmentId, attachmentModel) 
 
 // 获取附件统计
 async function handleGetAttachmentStats(request, attachmentModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, attachmentModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const result = await attachmentModel.getAttachmentStats();

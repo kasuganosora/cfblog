@@ -11,10 +11,28 @@ export const authMiddleware = async (request, env, ctx, next) => {
     return await next();
   }
   
-  // 获取 Authorization 头
-  const authHeader = request.headers.get('Authorization');
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // 获取令牌（优先从Cookie，其次从Authorization头）
+  let token = null;
+
+  // 尝试从 Cookie 获取
+  const cookieHeader = request.headers.get('Cookie');
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').map(c => c.trim());
+    const tokenCookie = cookies.find(c => c.startsWith('token='));
+    if (tokenCookie) {
+      token = tokenCookie.substring(6); // 去掉 "token=" 前缀
+    }
+  }
+
+  // 如果Cookie中没有，尝试从 Authorization 头获取
+  if (!token) {
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // 去掉 "Bearer " 前缀
+    }
+  }
+
+  if (!token) {
     return new Response(JSON.stringify({
       success: false,
       message: '未提供认证令牌'
@@ -25,8 +43,6 @@ export const authMiddleware = async (request, env, ctx, next) => {
       }
     });
   }
-  
-  const token = authHeader.substring(7); // 去掉 "Bearer " 前缀
   
   try {
     // 验证令牌

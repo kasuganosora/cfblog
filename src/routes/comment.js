@@ -1,5 +1,6 @@
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse } from '../utils/response.js';
 import { Comment } from '../models/Comment.js';
+import { authenticateRequest } from '../utils/auth-helper.js';
 
 // 处理评论路由
 export async function handleCommentRoutes(request) {
@@ -119,8 +120,13 @@ async function handleGetComment(request, commentId, commentModel) {
 // 创建评论
 async function handleCreateComment(request, commentModel) {
   try {
+    const user = await authenticateRequest(request, commentModel.env);
+    if (user) {
+      request.user = user;
+    }
+
     const commentData = await request.json();
-    
+
     // 如果用户已登录，使用用户信息
     if (request.user) {
       commentData.userId = request.user.id;
@@ -145,9 +151,11 @@ async function handleCreateComment(request, commentModel) {
 
 // 更新评论
 async function handleUpdateComment(request, commentId, commentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, commentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     // 获取原始评论信息
@@ -186,9 +194,11 @@ async function handleUpdateComment(request, commentId, commentModel) {
 
 // 删除评论
 async function handleDeleteComment(request, commentId, commentModel) {
-  if (!request.user) {
+  const user = await authenticateRequest(request, commentModel.env);
+  if (!user) {
     return unauthorizedResponse();
   }
+  request.user = user;
   
   try {
     // 获取原始评论信息
@@ -220,9 +230,11 @@ async function handleDeleteComment(request, commentId, commentModel) {
 
 // 批准评论
 async function handleApproveComment(request, commentId, commentModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, commentModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const result = await commentModel.approveComment(commentId);
@@ -240,9 +252,11 @@ async function handleApproveComment(request, commentId, commentModel) {
 
 // 拒绝评论
 async function handleRejectComment(request, commentId, commentModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, commentModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const result = await commentModel.rejectComment(commentId);
@@ -282,9 +296,11 @@ async function handleGetCommentReplies(request, commentId, commentModel) {
 
 // 获取评论统计
 async function handleGetCommentStats(request, commentModel) {
-  if (!request.user || request.user.role !== 'admin') {
+  const user = await authenticateRequest(request, commentModel.env);
+  if (!user || user.role !== 'admin') {
     return unauthorizedResponse('需要管理员权限');
   }
+  request.user = user;
   
   try {
     const result = await commentModel.getCommentStats();

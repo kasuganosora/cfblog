@@ -1,5 +1,0 @@
-# Page snapshot
-
-```yaml
-- generic [ref=e2]: "{\"success\":false,\"message\":\"获取文章列表失败\",\"data\":null}"
-```
