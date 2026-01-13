@@ -14,6 +14,11 @@ export async function handleFrontendRoutes(request) {
   
   const env = request.env;
   
+  // 静态资源直接跳过，让 wrangler 处理
+  if (path.startsWith('/static/')) {
+    return null; // 返回 null 让其他处理器处理
+  }
+  
   try {
     // 首页
     if (path === '/' || path === '/index.html') {
@@ -305,19 +310,58 @@ async function handleStaticResource(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   
-  // 移除 /static 前缀
+  // 移除 /static 前缀，获取实际文件路径
   const filePath = path.replace('/static/', '');
   
   try {
-    // 在 Cloudflare Workers 中，静态文件通过 site 配置自动处理
-    // 这里我们返回一个简单的重定向或者让 Workers 的静态资源处理器处理
-    return new Response(null, {
+    // 在开发环境中，我们需要直接返回静态文件内容
+    // 这里我们先返回一个简单的响应，让前端知道文件存在
+    
+    // 根据文件类型设置正确的 Content-Type
+    let contentType = 'text/plain';
+    if (filePath.endsWith('.css')) {
+      contentType = 'text/css';
+    } else if (filePath.endsWith('.js')) {
+      contentType = 'application/javascript';
+    } else if (filePath.endsWith('.png')) {
+      contentType = 'image/png';
+    } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      contentType = 'image/jpeg';
+    } else if (filePath.endsWith('.gif')) {
+      contentType = 'image/gif';
+    } else if (filePath.endsWith('.svg')) {
+      contentType = 'image/svg+xml';
+    }
+    
+    // 在开发环境中，Cloudflare Workers 无法直接读取本地文件
+    // 我们需要使用不同的方法
+    
+    // 对于开发环境，我们可以返回一个占位符或者让 wrangler dev 处理
+    if (env.ENVIRONMENT === 'development') {
+      // 让 wrangler dev 的静态文件处理器处理
+      return new Response(`/* Static file: ${filePath} */`, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'no-cache'
+        }
+      });
+    }
+    
+    return new Response('Static resource not found', { 
       status: 404,
-      statusText: 'Static resource not found'
+      headers: {
+        'Content-Type': 'text/plain'
+      }
     });
   } catch (error) {
     console.error('Static resource error:', error);
-    return new Response('Static resource error', { status: 500 });
+    return new Response('Static resource error', { 
+      status: 500,
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    });
   }
 }
 

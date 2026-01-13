@@ -1,4 +1,5 @@
 // 简单的模板渲染工具
+import { inlineCSS, inlineJS } from './inline-css.js';
 
 /**
  * 简单的 Handlebars 风格模板渲染器
@@ -85,12 +86,12 @@ function getTemplateContent(templateName) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{blogTitle}} - {{pageTitle}}</title>
     <meta name="description" content="{{metaDescription}}">
-    <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>${inlineCSS}</style>
 </head>
 <body>
     <div class="site-container">
@@ -157,7 +158,7 @@ function getTemplateContent(templateName) {
         </button>
     </div>
 
-    <script src="/static/js/main.js"></script>
+    <script>${inlineJS}</script>
 </body>
 </html>`,
 
