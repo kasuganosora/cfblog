@@ -1,4 +1,5 @@
 import { Router } from 'itty-router';
+// 强制刷新缓存 - 2024-01-13
 import { addCorsHeaders, handleOptionsRequest } from './middleware/cors.js';
 import { handleUserRoutes } from './routes/user.js';
 import { handlePostRoutes } from './routes/post.js';

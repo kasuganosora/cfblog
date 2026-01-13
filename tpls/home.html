@@ -71,9 +71,28 @@
     {{^hasPosts}}
     <div class="no-posts-message">
         <div class="no-posts-content">
-            <i class="fas fa-pen-nib"></i>
+            <div class="no-posts-illustration">
+                <div class="illustration-circle">
+                    <i class="fas fa-feather-alt"></i>
+                </div>
+                <div class="illustration-dots">
+                    <span class="dot dot-1"></span>
+                    <span class="dot dot-2"></span>
+                    <span class="dot dot-3"></span>
+                </div>
+            </div>
             <h3>还没有发布任何文章</h3>
-            <p>这里将展示最新的文章内容，敬请期待。</p>
+            <p>这里将展示最新的文章内容，分享生活中的美好瞬间。</p>
+            <div class="no-posts-actions">
+                <a href="/admin" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    创建第一篇文章
+                </a>
+                <a href="/about" class="btn-secondary">
+                    <i class="fas fa-info-circle"></i>
+                    了解更多
+                </a>
+            </div>
         </div>
     </div>
     {{/hasPosts}}
