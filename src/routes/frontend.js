@@ -302,8 +302,23 @@ async function handleSubmitFeedback(request, env) {
 }
 
 async function handleStaticResource(request, env) {
-  // TODO: 实现静态资源处理
-  return new Response('Not Found', { status: 404 });
+  const url = new URL(request.url);
+  const path = url.pathname;
+  
+  // 移除 /static 前缀
+  const filePath = path.replace('/static/', '');
+  
+  try {
+    // 在 Cloudflare Workers 中，静态文件通过 site 配置自动处理
+    // 这里我们返回一个简单的重定向或者让 Workers 的静态资源处理器处理
+    return new Response(null, {
+      status: 404,
+      statusText: 'Static resource not found'
+    });
+  } catch (error) {
+    console.error('Static resource error:', error);
+    return new Response('Static resource error', { status: 500 });
+  }
 }
 
 async function handleCategoriesList(request, env) {

@@ -37,6 +37,9 @@ router.all('/api/upload/*', handleUploadRoutes);
 // 管理后台路由（认证逻辑在 handleAdminRoutes 内部处理）
 router.all('/admin/*', handleAdminRoutes);
 
+// 静态资源路由 - 让 Cloudflare Workers 的静态资源处理器处理
+router.get('/static/*', () => null);
+
 // 前台展示路由
 router.get('/*', handleFrontendRoutes);
 
