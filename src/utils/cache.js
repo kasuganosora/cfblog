@@ -1,7 +1,7 @@
 // 从 KV 获取缓存
 export async function getCache(env, key) {
   try {
-    const value = await env.CACHE.get(key);
+    const value = await env.BLOG.get(key);
     
     if (value === null) {
       return {
@@ -49,7 +49,7 @@ export async function setCache(env, key, value, expirationTtl = null) {
       options.expirationTtl = expirationTtl;
     }
     
-    await env.CACHE.put(key, stringValue, options);
+    await env.BLOG.put(key, stringValue, options);
     
     return {
       success: true,
@@ -67,7 +67,7 @@ export async function setCache(env, key, value, expirationTtl = null) {
 // 删除 KV 缓存
 export async function deleteCache(env, key) {
   try {
-    await env.CACHE.delete(key);
+    await env.BLOG.delete(key);
     
     return {
       success: true,
@@ -85,7 +85,7 @@ export async function deleteCache(env, key) {
 // 批量获取缓存
 export async function getMultipleCache(env, keys) {
   try {
-    const results = await env.CACHE.get(keys);
+    const results = await env.BLOG.get(keys);
     
     const processedResults = {};
     
