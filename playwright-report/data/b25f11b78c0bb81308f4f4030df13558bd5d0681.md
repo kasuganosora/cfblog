@@ -1,5 +1,0 @@
-# Page snapshot
-
-```yaml
-- generic [ref=e2]: "{\"success\":false,\"message\":\"服务器内部错误\",\"data\":null}"
-```

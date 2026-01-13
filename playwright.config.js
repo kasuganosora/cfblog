@@ -66,7 +66,7 @@ export default defineConfig({
 
   // 运行测试前启动开发服务器
   webServer: {
-    command: 'npm run dev',
+    command: './start-dev-server.sh',
     url: 'http://localhost:8787',
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // 2 分钟
