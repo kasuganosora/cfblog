@@ -1,15 +1,36 @@
-// 前台交互逻辑
+// Retrospect Theme - 前台交互逻辑
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 搜索表单切换
-    const searchToggle = document.querySelector('.search-toggle');
-    const searchForm = document.getElementById('search-form');
+    // 移动端菜单切换
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
     
-    if (searchToggle && searchForm) {
-        searchToggle.addEventListener('click', function() {
-            searchForm.style.display = searchForm.style.display === 'block' ? 'none' : 'block';
-            if (searchForm.style.display === 'block') {
-                searchForm.querySelector('input').focus();
+    if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            
+            // 更新按钮图标
+            const icon = this.querySelector('i');
+            if (sidebar.classList.contains('active')) {
+                icon.className = 'fas fa-times';
+            } else {
+                icon.className = 'fas fa-bars';
+            }
+        });
+        
+        // 点击主内容区域时关闭菜单
+        document.querySelector('.main-content').addEventListener('click', function() {
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                mobileMenuToggle.querySelector('i').className = 'fas fa-bars';
+            }
+        });
+        
+        // ESC 键关闭菜单
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                mobileMenuToggle.querySelector('i').className = 'fas fa-bars';
             }
         });
     }
@@ -18,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const replyBtns = document.querySelectorAll('.reply-btn');
     const parentIdInput = document.getElementById('parent-id');
     const cancelReplyBtn = document.getElementById('cancel-reply');
-    const commentForm = document.querySelector('.comment-form-element');
+    const commentForm = document.querySelector('.comment-form');
     const submitCommentBtn = document.getElementById('submit-comment');
     
     replyBtns.forEach(btn => {
@@ -31,17 +52,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (submitCommentBtn) {
-                submitCommentBtn.textContent = `回复 #${commentId.substring(0, 8)}`;
+                const icon = submitCommentBtn.querySelector('i');
+                submitCommentBtn.innerHTML = `${icon ? icon.outerHTML : '<i class="fas fa-reply"></i>'} 回复 #${commentId.substring(0, 8)}`;
             }
             
             if (cancelReplyBtn) {
-                cancelReplyBtn.style.display = 'inline-block';
+                cancelReplyBtn.style.display = 'inline-flex';
             }
             
             // 滚动到评论表单
             if (commentForm) {
                 commentForm.scrollIntoView({ behavior: 'smooth' });
-                commentForm.querySelector('textarea').focus();
+                const textarea = commentForm.querySelector('textarea');
+                if (textarea) {
+                    textarea.focus();
+                }
             }
         });
     });
@@ -53,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (submitCommentBtn) {
-                submitCommentBtn.textContent = '发表评论';
+                submitCommentBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发表评论';
             }
             
             cancelReplyBtn.style.display = 'none';
@@ -67,11 +92,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+            const originalHTML = submitBtn.innerHTML;
             
             // 禁用提交按钮并显示加载状态
             submitBtn.disabled = true;
-            submitBtn.textContent = '提交中...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
             
             // 发送评论
             fetch('/api/comment', {
@@ -91,14 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showMessage(data.message || '评论发表失败，请稍后再试', 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    submitBtn.innerHTML = originalHTML;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showMessage('发生错误，请稍后再试', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.innerHTML = originalHTML;
             });
         });
     }
@@ -111,11 +136,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+            const originalHTML = submitBtn.innerHTML;
             
             // 禁用提交按钮并显示加载状态
             submitBtn.disabled = true;
-            submitBtn.textContent = '提交中...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
             
             // 发送留言
             fetch('/api/feedback', {
@@ -138,14 +163,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showMessage(data.message || '留言发表失败，请稍后再试', 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    submitBtn.innerHTML = originalHTML;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showMessage('发生错误，请稍后再试', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.innerHTML = originalHTML;
             });
         });
     }
@@ -158,11 +183,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
+            const originalHTML = submitBtn.innerHTML;
             
             // 禁用提交按钮并显示加载状态
             submitBtn.disabled = true;
-            submitBtn.textContent = '登录中...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
             
             // 发送登录请求
             fetch('/api/user/login', {
@@ -182,17 +207,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showMessage(data.message || '登录失败，请检查用户名和密码', 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    submitBtn.innerHTML = originalHTML;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showMessage('发生错误，请稍后再试', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.innerHTML = originalHTML;
             });
         });
     }
+    
+    // 图片懒加载
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
 });
 
 // 显示消息提示
@@ -207,7 +263,8 @@ function showMessage(message, type = 'info') {
             top: 20px;
             right: 20px;
             z-index: 1000;
-            max-width: 300px;
+            max-width: 320px;
+            pointer-events: none;
         `;
         document.body.appendChild(messageContainer);
     }
@@ -215,18 +272,31 @@ function showMessage(message, type = 'info') {
     // 创建消息元素
     const messageEl = document.createElement('div');
     messageEl.className = `message message-${type}`;
+    
+    const bgColor = type === 'success' ? '#d1fae5' : type === 'error' ? '#fee2e2' : '#dbeafe';
+    const textColor = type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#1e40af';
+    const borderColor = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
+    
     messageEl.style.cssText = `
-        background-color: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fee2e2' : '#dbeafe'};
-        color: ${type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#1e40af'};
-        padding: 12px 16px;
-        border-radius: 4px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background-color: ${bgColor};
+        color: ${textColor};
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-left: 4px solid ${borderColor};
         opacity: 0;
-        transform: translateY(-10px);
-        transition: opacity 0.3s, transform 0.3s;
+        transform: translateX(100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: auto;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
     `;
-    messageEl.textContent = message;
+    
+    // 添加图标
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    messageEl.innerHTML = `<i class="fas ${icon}" style="margin-right: 8px;"></i>${message}`;
     
     // 添加到容器
     messageContainer.appendChild(messageEl);
@@ -234,13 +304,13 @@ function showMessage(message, type = 'info') {
     // 显示动画
     setTimeout(() => {
         messageEl.style.opacity = '1';
-        messageEl.style.transform = 'translateY(0)';
+        messageEl.style.transform = 'translateX(0)';
     }, 10);
     
-    // 3秒后自动消失
+    // 4秒后自动消失
     setTimeout(() => {
         messageEl.style.opacity = '0';
-        messageEl.style.transform = 'translateY(-10px)';
+        messageEl.style.transform = 'translateX(100%)';
         
         // 移除元素
         setTimeout(() => {
@@ -248,5 +318,16 @@ function showMessage(message, type = 'info') {
                 messageEl.parentNode.removeChild(messageEl);
             }
         }, 300);
-    }, 3000);
+    }, 4000);
+    
+    // 点击消息可手动关闭
+    messageEl.addEventListener('click', function() {
+        this.style.opacity = '0';
+        this.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (this.parentNode) {
+                this.parentNode.removeChild(this);
+            }
+        }, 300);
+    });
 }

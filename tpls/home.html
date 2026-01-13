@@ -1,56 +1,80 @@
 {{> base}}
 
-<div class="post-list">
+<div class="posts-container">
     {{#hasPosts}}
         {{#posts}}
-        <article class="post-card">
-            <header class="post-header">
-                <h2 class="post-title">
-                    <a href="/post/{{slug}}">{{title}}</a>
-                </h2>
-                <div class="post-meta">
-                    <time datetime="{{createdAt}}">{{formattedDate}}</time>
-                    {{#category}}
-                    <span class="post-category">
-                        <a href="/category/{{slug}}">{{name}}</a>
-                    </span>
-                    {{/category}}
-                    <span class="post-comments-count">
-                        <a href="/post/{{slug}}#comments">{{commentsCount}} 条评论</a>
-                    </span>
+        <article class="post-preview">
+            {{#featuredImage}}
+            <div class="post-featured-image">
+                <a href="/post/{{slug}}">
+                    <img src="{{featuredImage}}" alt="{{title}}" loading="lazy">
+                </a>
+            </div>
+            {{/featuredImage}}
+            
+            <div class="post-preview-content">
+                <header class="post-preview-header">
+                    <h2 class="post-preview-title">
+                        <a href="/post/{{slug}}">{{title}}</a>
+                    </h2>
+                    <div class="post-preview-meta">
+                        <time datetime="{{createdAt}}">{{formattedDate}}</time>
+                        {{#category}}
+                        <span class="post-category-link">
+                            <a href="/category/{{slug}}">{{name}}</a>
+                        </span>
+                        {{/category}}
+                    </div>
+                </header>
+                
+                <div class="post-preview-excerpt">
+                    <p>{{excerpt}}</p>
                 </div>
-            </header>
-            <div class="post-excerpt">
-                <p>{{excerpt}}</p>
-            </div>
-            {{#tags}}
-            <div class="post-tags">
-                {{#.}}
-                <a href="/tag/{{slug}}" class="tag">#{{name}}</a>
-                {{/.}}
-            </div>
-            {{/tags}}
-            <div class="post-actions">
-                <a href="/post/{{slug}}" class="read-more">继续阅读</a>
+                
+                {{#tags}}
+                <div class="post-preview-tags">
+                    {{#.}}
+                    <a href="/tag/{{slug}}" class="tag-link">#{{name}}</a>
+                    {{/.}}
+                </div>
+                {{/tags}}
+                
+                <div class="post-preview-footer">
+                    <a href="/post/{{slug}}" class="read-more-link">继续阅读</a>
+                    <span class="comments-count">{{commentsCount}} 条评论</span>
+                </div>
             </div>
         </article>
         {{/posts}}
         
-        <div class="pagination">
-            {{#hasPrevPage}}
-            <a href="?page={{prevPage}}" class="prev-page">上一页</a>
-            {{/hasPrevPage}}
-            
-            <span class="page-info">第 {{currentPage}} 页，共 {{totalPages}} 页</span>
-            
-            {{#hasNextPage}}
-            <a href="?page={{nextPage}}" class="next-page">下一页</a>
-            {{/hasNextPage}}
+        {{#hasMorePosts}}
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                {{#hasPrevPage}}
+                <a href="?page={{prevPage}}" class="pagination-link pagination-prev">
+                    <i class="fas fa-chevron-left"></i> 上一页
+                </a>
+                {{/hasPrevPage}}
+                
+                <span class="pagination-info">第 {{currentPage}} 页，共 {{totalPages}} 页</span>
+                
+                {{#hasNextPage}}
+                <a href="?page={{nextPage}}" class="pagination-link pagination-next">
+                    下一页 <i class="fas fa-chevron-right"></i>
+                </a>
+                {{/hasNextPage}}
+            </div>
         </div>
+        {{/hasMorePosts}}
     {{/hasPosts}}
+    
     {{^hasPosts}}
-        <div class="no-posts">
-            <p>还没有发布任何文章。</p>
+    <div class="no-posts-message">
+        <div class="no-posts-content">
+            <i class="fas fa-pen-nib"></i>
+            <h3>还没有发布任何文章</h3>
+            <p>这里将展示最新的文章内容，敬请期待。</p>
         </div>
+    </div>
     {{/hasPosts}}
 </div>
