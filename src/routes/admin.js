@@ -20,7 +20,9 @@ export async function handleAdminRoutes(request) {
 
     // 对于页面请求（GET 且 Accept 包含 text/html），不强制要求认证
     // 页面会在前端 JavaScript 中检查 localStorage 的 token
-    const isPageRequest = method === 'GET' && acceptHeader.includes('text/html');
+    // 对于 /admin 路径的 GET 请求，即使没有 Accept 头也当作页面请求
+    const isAdminPage = path === '/admin' || path === '/admin/' || path === '/admin/dashboard';
+    const isPageRequest = method === 'GET' && (isAdminPage || acceptHeader.includes('text/html'));
 
     // 尝试获取并验证用户令牌
     let token = null;
@@ -141,21 +143,42 @@ async function handleLogin(request, env) {
         return errorResponse('用户名和密码不能为空', 400);
       }
       
-      // 调用登录API
-      const response = await fetch(`${url.origin}/api/user/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password })
-      });
+      // 直接导入 User 模型处理登录
+      const { User } = await import('../models/User.js');
+      const { generateToken } = await import('../utils/auth.js');
+      const userModel = new User(env);
       
-      const result = await response.json();
+      const result = await userModel.validatePassword(username, password);
       
-      return new Response(JSON.stringify(result), {
-        status: response.status,
-        headers: {
-          'Content-Type': 'application/json',
+      if (!result.success) {
+        return errorResponse(result.message, 401);
+      }
+      
+      const user = result.user;
+      
+      // 生成 JWT 令牌
+      const payload = {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // 7天有效期
+      };
+      
+      const token = await generateToken(payload, env.JWT_SECRET);
+      
+      return successResponse({
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          display_name: user.display_name,
+          role: user.role,
+          avatar: user.avatar,
+          bio: user.bio,
+          status: user.status,
+          created_at: user.created_at,
+          updated_at: user.updated_at
         }
       });
     } catch (err) {
@@ -1114,7 +1137,7 @@ function renderDashboardPage(data) {
       <div class="header">
         <h1>仪表板</h1>
         <div>
-          <span>欢迎, ${user.display_name || user.username}</span>
+          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
           <button class="logout" onclick="logout()">退出</button>
         </div>
       </div>
@@ -1336,15 +1359,15 @@ function renderPostsPage(data) {
         </tr>
       </thead>
       <tbody>
-        ${posts.map(post => `
+        ${(posts || []).map(post => `
           <tr>
             <td>${post.id}</td>
             <td><a href="/post/${post.slug}" target="_blank">${post.title}</a></td>
-            <td>${post.author_name}</td>
-            <td>${post.categories.map(cat => cat.name).join(', ')}</td>
+            <td>${post.author_name || '未知'}</td>
+            <td>${(post.categories || []).map(cat => cat.name).join(', ') || '-'}</td>
             <td class="${post.status === 1 ? 'status-published' : 'status-draft'}">${post.status === 1 ? '已发布' : '草稿'}</td>
-            <td>${post.view_count}</td>
-            <td>${new Date(post.created_at).toLocaleDateString()}</td>
+            <td>${post.view_count || 0}</td>
+            <td>${post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}</td>
             <td>
               <div class="action-buttons">
                 <a href="/admin/posts/edit/${post.id}" class="btn btn-primary">编辑</a>
