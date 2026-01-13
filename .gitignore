@@ -27,3 +27,7 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# E2E Test Results
+playwright-report/
+test-results/
