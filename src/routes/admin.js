@@ -1246,16 +1246,53 @@ function renderPostsPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 文章管理</title>
   <style>
-    /* 简化样式，实际项目中应该更完善 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+    }
+    .content-wrapper {
       max-width: 1200px;
-      margin: 0 auto;
       background-color: #fff;
       padding: 20px;
       border-radius: 5px;
@@ -1328,14 +1365,58 @@ function renderPostsPage(data) {
       display: flex;
       gap: 8px;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>文章管理</h1>
-      <a href="/admin/posts/edit/new" class="btn btn-primary">新建文章</a>
-    </div>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts" class="active">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h1>文章管理</h1>
+        <div>
+          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
+        <div class="header">
+          <h2>文章列表</h2>
+          <a href="/admin/posts/edit/new" class="btn btn-primary">新建文章</a>
+        </div>
     
     <div class="filters">
       <select id="statusFilter" onchange="filterByStatus()">
@@ -1386,9 +1467,24 @@ function renderPostsPage(data) {
       ${pagination.page < pagination.totalPages ? `<a href="?page=${pagination.page + 1}${currentStatus ? `&status=${currentStatus}` : ''}">下一页</a>` : ''}
     </div>
     ` : ''}
+      </div>
+    </main>
   </div>
   
   <script>
+    function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
+    }
+    
+    // 在每个请求中添加认证头
     function filterByStatus() {
       const status = document.getElementById('statusFilter').value;
       let url = '/admin/posts';
@@ -1419,6 +1515,11 @@ function renderPostsPage(data) {
           alert('删除失败，请稍后重试');
         });
       }
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
     }
   </script>
 </body>
@@ -1480,6 +1581,56 @@ function renderPostEditPage(data) {
     .checkbox-group input {
       margin-right: 5px;
     }
+    .upload-section {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 2px dashed #ddd;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .upload-section.dragover {
+      border-color: #007cba;
+      background-color: #f0f7ff;
+    }
+    .upload-section input[type="file"] {
+      display: none;
+    }
+    .upload-button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #007cba;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .upload-button:hover {
+      background-color: #005a87;
+    }
+    .uploaded-files {
+      margin-top: 15px;
+      text-align: left;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    .file-item a {
+      flex: 1;
+      color: #007cba;
+      text-decoration: none;
+      margin-right: 10px;
+    }
+    .file-item .remove-file {
+      color: #d32f2f;
+      cursor: pointer;
+      text-decoration: none;
+    }
     .form-actions {
       display: flex;
       gap: 10px;
@@ -1528,6 +1679,16 @@ function renderPostEditPage(data) {
       </div>
       
       <div class="form-group">
+        <label>附件上传</label>
+        <div class="upload-section" id="uploadSection">
+          <p>拖拽文件到这里或点击按钮选择文件</p>
+          <button type="button" class="upload-button" onclick="document.getElementById('fileInput').click()">选择文件</button>
+          <input type="file" id="fileInput" multiple>
+          <div class="uploaded-files" id="uploadedFiles"></div>
+        </div>
+      </div>
+      
+      <div class="form-group">
         <label for="categoryId">分类</label>
         <select id="categoryId" name="categoryId">
           <option value="">请选择分类</option>
@@ -1572,6 +1733,28 @@ function renderPostEditPage(data) {
   </div>
   
   <script>
+    // 新建文章还是编辑文章的标记
+    const isNew = ${isNew ? 'true' : 'false'};
+    
+    // 获取认证 token
+    const authToken = localStorage.getItem('auth_token');
+    
+    // 在每个请求中添加认证头
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      const [url, options = {}] = args;
+      
+      if (!options.headers) {
+        options.headers = {};
+      }
+      
+      if (!options.headers.Authorization && authToken) {
+        options.headers.Authorization = 'Bearer ' + authToken;
+      }
+      
+      return originalFetch.apply(this, args);
+    };
+    
     // 标签管理
     const tags = ${post && post.tags ? JSON.stringify(post.tags) : '[]'};
     const tagsContainer = document.getElementById('tagsContainer');
@@ -1653,6 +1836,77 @@ function renderPostEditPage(data) {
         alert('${isNew ? '创建失败，请稍后重试' : '更新失败，请稍后重试'}');
       });
     });
+    
+    // 文件上传功能
+    const uploadSection = document.getElementById('uploadSection');
+    const fileInput = document.getElementById('fileInput');
+    const uploadedFiles = document.getElementById('uploadedFiles');
+    const uploadedFileList = [];
+    
+    uploadSection.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.classList.add('dragover');
+    });
+    
+    uploadSection.addEventListener('dragleave', function() {
+      this.classList.remove('dragover');
+    });
+    
+    uploadSection.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      handleFiles(files);
+    });
+    
+    fileInput.addEventListener('change', function() {
+      handleFiles(this.files);
+    });
+    
+    function handleFiles(files) {
+      if (files.length === 0) return;
+      
+      for (let i = 0; i < files.length; i++) {
+        uploadFile(files[i]);
+      }
+    }
+    
+    function uploadFile(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          uploadedFileList.push(data.data);
+          renderUploadedFiles();
+        } else {
+          alert(data.message || '上传失败');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('上传失败，请稍后重试');
+      });
+    }
+    
+    function renderUploadedFiles() {
+      uploadedFiles.innerHTML = uploadedFileList.map((file, index) => 
+        '<div class="file-item">' +
+          '<a href="' + file.url + '" target="_blank">' + file.original_name + '</a>' +
+          '<a href="javascript:void(0)" class="remove-file" onclick="removeFile(' + index + ')">删除</a>' +
+        '</div>'
+      ).join('');
+    }
+    
+    function removeFile(index) {
+      uploadedFileList.splice(index, 1);
+      renderUploadedFiles();
+    }
   </script>
 </body>
 </html>`;
@@ -1669,16 +1923,53 @@ function renderCategoriesPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 分类管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+    }
+    .content-wrapper {
       max-width: 1000px;
-      margin: 0 auto;
       background-color: #fff;
       padding: 20px;
       border-radius: 5px;
@@ -1718,14 +2009,58 @@ function renderCategoriesPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>分类管理</h1>
-      <button class="btn btn-primary">新建分类</button>
-    </div>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories" class="active">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h1>分类管理</h1>
+        <div>
+          <span>欢迎, ${data.user ? (data.user.display_name || data.user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
+        <div class="header">
+          <h2>分类列表</h2>
+          <button class="btn btn-primary" onclick="openAddModal()">新建分类</button>
+        </div>
     
     <table>
       <thead>
@@ -1754,7 +2089,81 @@ function renderCategoriesPage(data) {
         `).join('') || '<tr><td colspan="6">暂无分类</td></tr>'}
       </tbody>
     </table>
+      </div>
+    </main>
   </div>
+  
+  <!-- 新增分类弹窗 -->
+  <div id="addModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="position:relative; width:400px; margin:100px auto; background:#fff; padding:20px; border-radius:5px;">
+      <h3>新增分类</h3>
+      <div class="form-group">
+        <label>分类名称</label>
+        <input type="text" id="newCategoryName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+      </div>
+      <div class="form-group">
+        <label>URL别名</label>
+        <input type="text" id="newCategorySlug" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="addCategory()">确定</button>
+        <button class="btn btn-secondary" onclick="closeAddModal()" style="background:#6c757d; color:#fff; margin-left:10px;">取消</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    
+    function openAddModal() {
+      document.getElementById('addModal').style.display = 'block';
+    }
+    
+    function closeAddModal() {
+      document.getElementById('addModal').style.display = 'none';
+    }
+    
+    function addCategory() {
+      const name = document.getElementById('newCategoryName').value;
+      const slug = document.getElementById('newCategorySlug').value || name;
+      
+      if (!name) {
+        alert('请输入分类名称');
+        return;
+      }
+      
+      fetch('/api/category/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, slug })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('分类创建成功');
+          window.location.reload();
+        } else {
+          alert(data.message || '创建失败');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('创建失败，请稍后重试');
+      });
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
+    }
+  </script>
 </body>
 </html>`;
 }
@@ -1768,16 +2177,53 @@ function renderTagsPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 标签管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+    }
+    .content-wrapper {
       max-width: 1000px;
-      margin: 0 auto;
       background-color: #fff;
       padding: 20px;
       border-radius: 5px;
@@ -1817,14 +2263,58 @@ function renderTagsPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>标签管理</h1>
-      <button class="btn btn-primary">新建标签</button>
-    </div>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags" class="active">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h1>标签管理</h1>
+        <div>
+          <span>欢迎, ${data.user ? (data.user.display_name || data.user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
+        <div class="header">
+          <h2>标签列表</h2>
+          <button class="btn btn-primary" onclick="openAddModal()">新建标签</button>
+        </div>
     
     <table>
       <thead>
@@ -1853,7 +2343,81 @@ function renderTagsPage(data) {
         `).join('') || '<tr><td colspan="6">暂无标签</td></tr>'}
       </tbody>
     </table>
+      </div>
+    </main>
   </div>
+  
+  <!-- 新增标签弹窗 -->
+  <div id="addModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="position:relative; width:400px; margin:100px auto; background:#fff; padding:20px; border-radius:5px;">
+      <h3>新增标签</h3>
+      <div class="form-group">
+        <label>标签名称</label>
+        <input type="text" id="newTagName" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+      </div>
+      <div class="form-group">
+        <label>URL别名</label>
+        <input type="text" id="newTagSlug" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="addTag()">确定</button>
+        <button class="btn btn-secondary" onclick="closeAddModal()" style="background:#6c757d; color:#fff; margin-left:10px;">取消</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    
+    function openAddModal() {
+      document.getElementById('addModal').style.display = 'block';
+    }
+    
+    function closeAddModal() {
+      document.getElementById('addModal').style.display = 'none';
+    }
+    
+    function addTag() {
+      const name = document.getElementById('newTagName').value;
+      const slug = document.getElementById('newTagSlug').value || name;
+      
+      if (!name) {
+        alert('请输入标签名称');
+        return;
+      }
+      
+      fetch('/api/tag/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, slug })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('标签创建成功');
+          window.location.reload();
+        } else {
+          alert(data.message || '创建失败');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('创建失败，请稍后重试');
+      });
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
+    }
+  </script>
 </body>
 </html>`;
 }
@@ -2056,6 +2620,11 @@ function renderCommentsPage(data) {
         });
       }
     }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
+    }
   </script>
 </body>
 </html>`;
@@ -2070,16 +2639,53 @@ function renderUsersPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 用户管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+    }
+    .content-wrapper {
       max-width: 1000px;
-      margin: 0 auto;
       background-color: #fff;
       padding: 20px;
       border-radius: 5px;
@@ -2139,14 +2745,90 @@ function renderUsersPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
+    .modal {
+      display:none;
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.5);
+      z-index:1000;
+    }
+    .modal-content {
+      position:relative;
+      width:400px;
+      margin:100px auto;
+      background:#fff;
+      padding:20px;
+      border-radius:5px;
+    }
+    .form-group {
+      margin-bottom:15px;
+    }
+    .form-group label {
+      display:block;
+      margin-bottom:5px;
+    }
+    .form-group input, .form-group select {
+      width:100%;
+      padding:8px;
+      border:1px solid #ddd;
+      border-radius:4px;
+      box-sizing:border-box;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>用户管理</h1>
-      <button class="btn btn-primary">新建用户</button>
-    </div>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users" class="active">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h1>用户管理</h1>
+        <div>
+          <span>欢迎, ${data.user ? (data.user.display_name || data.user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
+        <div class="header">
+          <h2>用户列表</h2>
+          <button class="btn btn-primary" onclick="openAddModal()">新建用户</button>
+        </div>
     
     <div class="filters">
       <select id="roleFilter" onchange="filterUsers()">
@@ -2196,9 +2878,93 @@ function renderUsersPage(data) {
         `).join('') || '<tr><td colspan="8">暂无用户</td></tr>'}
       </tbody>
     </table>
+      </div>
+    </main>
+  </div>
+  
+  <!-- 新增用户弹窗 -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <h3>新增用户</h3>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="newUsername">
+      </div>
+      <div class="form-group">
+        <label>显示名</label>
+        <input type="text" id="newDisplayName">
+      </div>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="newEmail">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="newPassword">
+      </div>
+      <div class="form-group">
+        <label>角色</label>
+        <select id="newRole">
+          <option value="contributor">投稿者</option>
+          <option value="admin">管理员</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="addUser()">确定</button>
+        <button class="btn btn-secondary" onclick="closeAddModal()" style="background:#6c757d; color:#fff; margin-left:10px;">取消</button>
+      </div>
+    </div>
   </div>
   
   <script>
+    function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    
+    function openAddModal() {
+      document.getElementById('addModal').style.display = 'block';
+    }
+    
+    function closeAddModal() {
+      document.getElementById('addModal').style.display = 'none';
+    }
+    
+    function addUser() {
+      const username = document.getElementById('newUsername').value;
+      const displayName = document.getElementById('newDisplayName').value;
+      const email = document.getElementById('newEmail').value;
+      const password = document.getElementById('newPassword').value;
+      const role = document.getElementById('newRole').value;
+      
+      if (!username || !email || !password) {
+        alert('请填写所有必填字段');
+        return;
+      }
+      
+      fetch('/api/user/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, display_name: displayName, email, password, role })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('用户创建成功');
+          window.location.reload();
+        } else {
+          alert(data.message || '创建失败');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('创建失败，请稍后重试');
+      });
+    }
     function filterUsers() {
       const role = document.getElementById('roleFilter').value;
       const status = document.getElementById('statusFilter').value;
@@ -2235,6 +3001,11 @@ function renderUsersPage(data) {
           alert('删除失败，请稍后重试');
         });
       }
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
     }
   </script>
 </body>
@@ -2443,6 +3214,11 @@ function renderFeedbackPage(data) {
           alert('删除失败，请稍后重试');
         });
       }
+    }
+    
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
     }
   </script>
 </body>
