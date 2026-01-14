@@ -72,13 +72,24 @@ export async function handlePostRoutes(request) {
 async function handleGetPosts(request, postModel) {
   try {
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page')) || 1;
-    const limit = parseInt(url.searchParams.get('limit')) || 10;
-    const status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : 1; // 默认只获取已发布的文章
+    
+    // 验证和转换参数
+    let page = parseInt(url.searchParams.get('page'));
+    let limit = parseInt(url.searchParams.get('limit'));
+    let status = url.searchParams.get('status') ? parseInt(url.searchParams.get('status')) : 1; // 默认只获取已发布的文章
     const featured = url.searchParams.get('featured') ? parseInt(url.searchParams.get('featured')) : undefined;
     const authorId = url.searchParams.get('authorId') ? parseInt(url.searchParams.get('authorId')) : undefined;
     const categoryId = url.searchParams.get('categoryId') ? parseInt(url.searchParams.get('categoryId')) : undefined;
     const tagId = url.searchParams.get('tagId') ? parseInt(url.searchParams.get('tagId')) : undefined;
+    
+    // 参数验证
+    if (isNaN(page) || page < 1) {
+      return errorResponse('页码参数无效', 400);
+    }
+    
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return errorResponse('每页数量参数无效，必须在1-100之间', 400);
+    }
     
     const options = { page, limit, status, featured, authorId, categoryId, tagId };
     

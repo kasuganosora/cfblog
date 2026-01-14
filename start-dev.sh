@@ -1,70 +1,49 @@
 #!/bin/bash
 
-# Cloudflare Blog 开发环境启动脚本
+# Cloudflare Blog Dev Environment Startup Script
+# Interactive foreground startup, background version recommended
 
-echo "=== Cloudflare Blog 开发环境启动 ==="
+echo "=== Cloudflare Blog Dev Environment Startup ==="
+echo "Linux/macOS Version - Interactive Foreground Startup"
 echo
 
-# 检查 wrangler 是否已安装
-if ! command -v wrangler &> /dev/null; then
-    echo "❌ Wrangler 未安装，请先安装："
-    echo "npm install -g wrangler"
+echo "Recommended to use background startup scripts, which can:"
+echo "  1. Run server in background"
+echo "  2. View real-time logs"
+echo "  3. Easily stop and restart"
+echo
+echo "Available scripts:"
+echo "  ./start-dev-background.sh - Background startup (recommended)"
+echo "  ./stop-dev.sh             - Stop server"
+echo "  ./restart-dev.sh          - Restart server"
+echo
+read -p "Continue with interactive foreground startup? (y/n): " -n 1 -r
+echo
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo
+    echo "Please use: ./start-dev-background.sh"
+    sleep 3
+    exit 0
+fi
+
+echo
+echo "Starting interactive development server..."
+echo "Press Ctrl+C to stop server"
+echo
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "[ERROR] Node.js is not installed, please install Node.js first"
     exit 1
 fi
 
-# 检查是否已登录 Cloudflare
-if ! wrangler whoami &> /dev/null; then
-    echo "❌ 未登录 Cloudflare，请先登录："
-    echo "wrangler login"
+# Run cross-platform startup script
+node start-dev.js
+
+# If script execution fails, show error message
+if [ $? -ne 0 ]; then
+    echo
+    echo "[ERROR] Startup failed, please check above error messages"
     exit 1
 fi
-
-echo "✅ 环境检查通过"
-echo
-
-# 检查 D1 数据库是否已创建
-if [ -z "$(wrangler d1 list | grep cfblog-database)" ]; then
-    echo "🔧 创建 D1 数据库..."
-    wrangler d1 create cfblog-database
-    
-    echo "⚠️  请将返回的 database_id 更新到 wrangler.toml 文件中"
-    echo "然后再次运行此脚本"
-    exit 1
-else
-    echo "✅ D1 数据库已存在"
-fi
-
-# 检查 R2 存储桶是否已创建
-if [ -z "$(wrangler r2 bucket list | grep cfblog-storage)" ]; then
-    echo "🔧 创建 R2 存储桶..."
-    wrangler r2 bucket create cfblog-storage
-    echo "✅ R2 存储桶已创建"
-else
-    echo "✅ R2 存储桶已存在"
-fi
-
-# 检查 KV 命名空间是否已创建
-if ! grep -q 'id = "[^"]*"' wrangler.toml; then
-    echo "🔧 创建 KV 命名空间..."
-    wrangler kv:namespace create "CACHE"
-    echo "⚠️  请将返回的 id 更新到 wrangler.toml 文件中"
-    echo "然后再次运行此脚本"
-    exit 1
-else
-    echo "✅ KV 命名空间已存在"
-fi
-
-# 应用数据库迁移
-echo "🔧 应用数据库迁移..."
-wrangler d1 migrations apply cfblog-database --local
-echo "✅ 数据库迁移完成"
-
-echo
-echo "🚀 启动开发服务器..."
-echo "博客前台: http://localhost:8787"
-echo "管理后台: http://localhost:8787/admin"
-echo
-echo "按 Ctrl+C 停止服务器"
-echo
-
-npm run dev

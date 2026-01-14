@@ -143,7 +143,7 @@ npx wrangler d1 migrations apply blog --local --persist-to=.wrangler/state
 - ✅ 系统设置（部分）
 
 ### 已覆盖的 API 端点
-- ✅ POST /admin/login/api
+- ✅ POST /api/user/login (统一登录接口)
 - ✅ GET /api/post/list
 - ✅ GET /api/category/list
 - ✅ GET /api/tag/list

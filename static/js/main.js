@@ -1,5 +1,114 @@
 // Retrospect Theme - 前台交互逻辑
 
+// 生成随机盐值
+function generateSalt(length = 16) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// SHA256哈希函数
+async function sha256(message) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+// 检查session是否过期
+function checkSessionExpiration() {
+    const sessionID = localStorage.getItem('sessionID');
+    const expiration = localStorage.getItem('sessionExpiration');
+    
+    if (!sessionID || !expiration) {
+        return false;
+    }
+    
+    const now = Date.now();
+    const expirationTime = parseInt(expiration, 10);
+    
+    if (now > expirationTime) {
+        // 清除过期的session
+        localStorage.removeItem('sessionID');
+        localStorage.removeItem('sessionExpiration');
+        return false;
+    }
+    
+    return true;
+}
+
+// 获取sessionID（优先从localStorage获取）
+function getSessionID() {
+    return localStorage.getItem('sessionID');
+}
+
+// 设置fetch拦截器，自动添加Authorization头并处理session过期
+(function() {
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        const [url, options = {}] = args;
+        
+        // 检查session是否有效
+        if (!checkSessionExpiration()) {
+            // session已过期，清除并跳转到登录页
+            if (url && typeof url === 'string' && url.includes('/api/')) {
+                localStorage.removeItem('sessionID');
+                localStorage.removeItem('sessionExpiration');
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
+                }
+                return Promise.reject(new Error('Session expired'));
+            }
+        }
+        
+        // 获取sessionID
+        const sessionID = getSessionID();
+        
+        if (sessionID && url && typeof url === 'string' && url.includes('/api/')) {
+            // 确保headers对象存在
+            if (!options.headers) {
+                options.headers = {};
+            }
+            
+            // 如果还没有Authorization header，则添加
+            if (!options.headers.Authorization && !options.headers.authorization) {
+                options.headers.Authorization = 'Bearer ' + sessionID;
+            }
+        }
+        
+        // 调用原始fetch并处理响应
+        return originalFetch.apply(this, [url, options]).then(response => {
+            // 检查是否是401错误
+            if (response.status === 401) {
+                return response.clone().json().then(data => {
+                    // 检查是否是session过期错误
+                    if (data.error === 'Session Expired') {
+                        // 清除localStorage中的sessionID
+                        localStorage.removeItem('sessionID');
+                        localStorage.removeItem('sessionExpiration');
+                        
+                        // 自动跳转至登录页面
+                        if (!window.location.pathname.includes('/login')) {
+                            window.location.href = '/login';
+                        }
+                    }
+                    // 返回原始响应
+                    return response;
+                }).catch(() => {
+                    // 如果无法解析JSON，返回原始响应
+                    return response;
+                });
+            }
+            return response;
+        });
+    };
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
     // 移动端菜单切换
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
@@ -175,32 +284,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 处理登录表单提交
-    const loginForm = document.querySelector('.login-form-element');
+    // 处理登录表单提交（如果表单没有内联脚本处理）
+    const loginForm = document.querySelector('.login-form-element:not(#loginForm)');
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
+            const username = this.querySelector('input[name="username"]').value;
+            const password = this.querySelector('input[name="password"]').value;
+            
+            if (!username || !password) {
+                showMessage('用户名和密码不能为空', 'error');
+                return;
+            }
+            
+            // 生成盐值和时间戳
+            const salt = generateSalt();
+            const timestamp = Date.now().toString();
+            
+            // 第一步加密：用户名+密码+盐值+时间戳
+            const firstHash = await sha256(username + password + salt + timestamp);
+            
+            // 第二步加密：拼接盐值和时间戳后再次加密
+            const finalHash = await sha256(firstHash + salt + timestamp);
+            
+            // 提交表单数据
+            const formData = new FormData();
+            formData.append('encryptedData', finalHash);
+            formData.append('timestamp', timestamp);
+            formData.append('salt', salt);
+            formData.append('username', username);
+            
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalHTML = submitBtn.innerHTML;
             
-            // 禁用提交按钮并显示加载状态
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
             
-            // 发送登录请求
-            fetch('/api/user/login', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+                const response = await fetch('/api/user/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
                 if (data.success) {
-                    // 显示成功消息
+                    // 存储sessionID到localStorage
+                    if (data.sessionID) {
+                        localStorage.setItem('sessionID', data.sessionID);
+                        // 设置过期时间（7天）
+                        const expirationTime = Date.now() + 7 * 24 * 60 * 60 * 1000;
+                        localStorage.setItem('sessionExpiration', expirationTime.toString());
+                    }
+                    
                     showMessage('登录成功！', 'success');
                     
-                    // 重定向到管理后台或首页
                     setTimeout(() => {
                         window.location.href = data.redirect || '/admin';
                     }, 1000);
@@ -209,13 +348,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalHTML;
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
                 showMessage('发生错误，请稍后再试', 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalHTML;
-            });
+            }
         });
     }
     

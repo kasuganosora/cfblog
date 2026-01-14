@@ -1,6 +1,9 @@
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response.js';
 import { verifyToken } from '../utils/auth.js';
 import { executeOne, executeQuery } from '../utils/db.js';
+import { User } from '../models/User.js';
+
+
 
 // 处理管理后台路由
 export async function handleAdminRoutes(request) {
@@ -11,7 +14,7 @@ export async function handleAdminRoutes(request) {
 
   try {
     // 登录页面和API不需要验证
-    if (path === '/admin/login' || path === '/admin/login/api') {
+    if (path === '/admin/login') {
       return await handleLogin(request, env);
     }
 
@@ -24,34 +27,68 @@ export async function handleAdminRoutes(request) {
     const isAdminPage = path === '/admin' || path === '/admin/' || path === '/admin/dashboard';
     const isPageRequest = method === 'GET' && (isAdminPage || acceptHeader.includes('text/html'));
 
-    // 尝试获取并验证用户令牌
+    // 尝试获取并验证用户凭证（支持sessionID和JWT token）
+    let sessionID = null;
     let token = null;
 
-    // 尝试从 Authorization 头获取
+    // 尝试从 Authorization 头获取（优先）
     const authHeader = request.headers.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
+      const authValue = authHeader.substring(7);
+      // 尝试判断是sessionID还是JWT token
+      // sessionID通常是随机字符串，JWT token有特定的格式（包含点号）
+      if (authValue.includes('.')) {
+        token = authValue; // JWT token
+      } else {
+        sessionID = authValue; // sessionID
+      }
     }
 
     // 尝试从 cookie 获取
-    if (!token) {
+    if (!sessionID && !token) {
       const cookieHeader = request.headers.get('Cookie');
       if (cookieHeader) {
         const cookies = cookieHeader.split(';').map(c => c.trim());
-        const tokenCookie = cookies.find(c => c.startsWith('token='));
-        if (tokenCookie) {
-          token = tokenCookie.substring(6);
+        // 尝试获取sessionID cookie
+        const sessionCookie = cookies.find(c => c.startsWith('sessionID='));
+        if (sessionCookie) {
+          sessionID = sessionCookie.substring(10);
+        } else {
+          // 尝试获取旧的token cookie
+          const tokenCookie = cookies.find(c => c.startsWith('token='));
+          if (tokenCookie) {
+            token = tokenCookie.substring(6);
+          }
         }
       }
     }
 
     // API 调用必须认证
-    if (!isPageRequest && !token) {
+    if (!isPageRequest && !sessionID && !token) {
       return unauthorizedResponse();
     }
 
-    // 如果有 token，尝试验证
-    if (token) {
+    // 验证凭证
+    if (sessionID) {
+      // 使用sessionID验证
+      const sessionResult = await validateSessionID(sessionID, env);
+      
+      if (!sessionResult.success) {
+        // 检查是否是session过期
+        if (sessionResult.message === 'Session已过期') {
+          return errorResponse({ error: 'Session Expired' }, 401);
+        }
+        // 对于 API 调用，认证失败则拒绝
+        if (!isPageRequest) {
+          return unauthorizedResponse(sessionResult.message);
+        }
+        // 对于页面请求，认证失败不影响页面渲染
+        request.user = null;
+      } else {
+        request.user = sessionResult.user;
+      }
+    } else if (token) {
+      // 使用JWT token验证（向后兼容）
       try {
         const payload = await verifyToken(token, env.JWT_SECRET);
         request.user = payload;
@@ -132,59 +169,6 @@ async function handleLogin(request, env) {
         'Content-Type': 'text/html',
       }
     });
-  }
-  
-  // 处理登录请求
-  if (method === 'POST' && url.pathname === '/admin/login/api') {
-    try {
-      const { username, password } = await request.json();
-      
-      if (!username || !password) {
-        return errorResponse('用户名和密码不能为空', 400);
-      }
-      
-      // 直接导入 User 模型处理登录
-      const { User } = await import('../models/User.js');
-      const { generateToken } = await import('../utils/auth.js');
-      const userModel = new User(env);
-      
-      const result = await userModel.validatePassword(username, password);
-      
-      if (!result.success) {
-        return errorResponse(result.message, 401);
-      }
-      
-      const user = result.user;
-      
-      // 生成 JWT 令牌
-      const payload = {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60 // 7天有效期
-      };
-      
-      const token = await generateToken(payload, env.JWT_SECRET);
-      
-      return successResponse({
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          display_name: user.display_name,
-          role: user.role,
-          avatar: user.avatar,
-          bio: user.bio,
-          status: user.status,
-          created_at: user.created_at,
-          updated_at: user.updated_at
-        }
-      });
-    } catch (err) {
-      console.error('Admin login error:', err);
-      return errorResponse('登录失败', 500);
-    }
   }
   
   return errorResponse('无效的请求', 400);
@@ -719,26 +703,17 @@ async function handleSettingsManagement(request, env) {
     }
 
     try {
-      // 获取设置
-      const settingsResponse = await fetch(`${url.origin}/api/settings/list`, {
-        headers: {
-          'Cookie': cookieHeader || '',
-        }
-      });
-      
-      let settingsData = {};
-      if (settingsResponse.ok) {
-        const jsonData = await settingsResponse.json();
-        // 提取实际数据
-        settingsData = jsonData.data || [];
-      }
+      // 从数据库获取设置
+      const settingsQuery = `SELECT * FROM settings ORDER BY id`;
+      const settingsResult = await executeQuery(env, settingsQuery);
+      const settingsData = settingsResult.success && settingsResult.results ? settingsResult.results : [];
 
       // 渲染页面
       const html = renderSettingsPage({
         user: request.user,
         settings: settingsData
       });
-      
+
       return new Response(html, {
         headers: {
           'Content-Type': 'text/html',
@@ -749,7 +724,66 @@ async function handleSettingsManagement(request, env) {
       return errorResponse('获取设置失败', 500);
     }
   }
-  
+
+  // API: 保存设置
+  if (path === '/api/settings' && method === 'POST') {
+    // 只有管理员可以保存设置
+    if (request.user && request.user.role !== 'admin') {
+      return errorResponse('权限不足', 403);
+    }
+
+    try {
+      const { settings } = await request.json();
+
+      if (!settings || !Array.isArray(settings)) {
+        return errorResponse('设置数据格式错误', 400);
+      }
+
+      // 保存每个设置项
+      for (const setting of settings) {
+        const { key, value } = setting;
+
+        if (!key) continue;
+
+        // 检查设置是否已存在
+        const checkQuery = `SELECT id FROM settings WHERE key = ?`;
+        const checkResult = await executeOne(env, checkQuery, [key]);
+
+        if (checkResult.success && checkResult.result) {
+          // 更新现有设置
+          const updateQuery = `UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?`;
+          await executeOne(env, updateQuery, [value, key]);
+        } else {
+          // 插入新设置
+          const insertQuery = `INSERT INTO settings (key, value, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))`;
+          await executeOne(env, insertQuery, [key, value]);
+        }
+      }
+
+      return successResponse(null, '设置保存成功');
+    } catch (err) {
+      console.error('Save settings error:', err);
+      return errorResponse('保存设置失败: ' + err.message, 500);
+    }
+  }
+
+  // API: 获取设置列表
+  if (path === '/api/settings' && method === 'GET') {
+    try {
+      const settingsQuery = `SELECT * FROM settings ORDER BY id`;
+      const settingsResult = await executeQuery(env, settingsQuery);
+      const settingsData = settingsResult.success && settingsResult.results ? settingsResult.results : [];
+
+      return successResponse({
+        data: settingsData,
+        pagination: null
+      }, '获取设置成功');
+    } catch (err) {
+      console.error('Get settings error:', err);
+      return errorResponse('获取设置失败', 500);
+    }
+  }
+
   return errorResponse('未找到对应的后台页面', 404);
 }
 
@@ -928,6 +962,26 @@ function renderLoginPage() {
   </div>
   
   <script>
+    // 辅助函数：生成随机盐值
+    function generateSalt(length = 16) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // 辅助函数：SHA256哈希
+    async function sha256(message) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -935,13 +989,34 @@ function renderLoginPage() {
       const password = document.getElementById('password').value;
       const messageDiv = document.getElementById('message');
       
+      if (!username || !password) {
+        messageDiv.textContent = '用户名和密码不能为空';
+        messageDiv.className = 'message error';
+        messageDiv.style.display = 'block';
+        return;
+      }
+      
       try {
-        const response = await fetch('/admin/login/api', {
+        // 生成盐值和时间戳
+        const salt = generateSalt();
+        const timestamp = Date.now().toString();
+        
+        // 第一步加密：用户名+密码+盐值+时间戳
+        const firstHash = await sha256(username + password + salt + timestamp);
+        
+        // 第二步加密：拼接盐值和时间戳后再次加密
+        const encryptedData = await sha256(firstHash + salt + timestamp);
+        
+        // 创建FormData格式的数据
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('encryptedData', encryptedData);
+        formData.append('timestamp', timestamp);
+        formData.append('salt', salt);
+        
+        const response = await fetch('/api/user/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password })
+          body: formData
         });
         
         const result = await response.json();
@@ -951,8 +1026,13 @@ function renderLoginPage() {
           messageDiv.className = 'message success';
           messageDiv.style.display = 'block';
           
-          // 保存令牌
-          localStorage.setItem('auth_token', result.data.token);
+          // 保存sessionID到localStorage
+          if (result.data.sessionID) {
+            localStorage.setItem('sessionID', result.data.sessionID);
+            // 设置过期时间（7天）
+            const expirationTime = Date.now() + 7 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('sessionExpiration', expirationTime.toString());
+          }
           
           // 跳转到管理后台首页
           setTimeout(() => {
@@ -1137,7 +1217,7 @@ function renderDashboardPage(data) {
       <div class="header">
         <h1>仪表板</h1>
         <div>
-          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <span id="user-welcome-text">加载中...</span>
           <button class="logout" onclick="logout()">退出</button>
         </div>
       </div>
@@ -1209,25 +1289,68 @@ function renderDashboardPage(data) {
   </div>
   
   <script>
+    // 检查登录状态并更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      // 如果有token,获取当前用户信息
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            // 更新页面上的用户信息显示
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            // token无效,清除并跳转登录
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        // 没有token,重定向到登录页
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
     function logout() {
       if (confirm('确定要退出登录吗？')) {
         localStorage.removeItem('auth_token');
         window.location.href = '/admin/login';
       }
     }
-    
+
     // 在每个请求中添加认证头
     const originalFetch = window.fetch;
     window.fetch = function(...args) {
-      if (args[1]) {
-        args[1].headers = args[1].headers || {};
-        args[1].headers.Authorization = 'Bearer ' + localStorage.getItem('auth_token');
-      } else {
-        args[1] = {
-          headers: {
-            Authorization: 'Bearer ' + localStorage.getItem('auth_token')
-          }
-        };
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        if (args[1]) {
+          args[1].headers = args[1].headers || {};
+          args[1].headers.Authorization = 'Bearer ' + authToken;
+        } else {
+          args[1] = {
+            headers: {
+              Authorization: 'Bearer ' + authToken
+            }
+          };
+        }
       }
       return originalFetch.apply(this, args);
     };
@@ -1407,7 +1530,7 @@ function renderPostsPage(data) {
       <div class="header">
         <h1>文章管理</h1>
         <div>
-          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <span id="user-welcome-text">加载中...</span>
           <button class="logout" onclick="logout()">退出</button>
         </div>
       </div>
@@ -1472,13 +1595,52 @@ function renderPostsPage(data) {
   </div>
   
   <script>
+    // 检查登录状态并更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      // 如果有token,获取当前用户信息
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            // 更新页面上的用户信息显示
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            // token无效,清除并跳转登录
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        // 没有token,重定向到登录页
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
     function logout() {
       if (confirm('确定要退出登录吗？')) {
         localStorage.removeItem('auth_token');
         window.location.href = '/admin/login';
       }
     }
-    
+
     // 检查登录状态
     if (!localStorage.getItem('auth_token')) {
       window.location.href = '/admin/login';
@@ -2051,7 +2213,7 @@ function renderCategoriesPage(data) {
       <div class="header">
         <h1>分类管理</h1>
         <div>
-          <span>欢迎, ${data.user ? (data.user.display_name || data.user.username) : '访客'}</span>
+          <span id="user-welcome-text">加载中...</span>
           <button class="logout" onclick="logout()">退出</button>
         </div>
       </div>
@@ -2113,17 +2275,52 @@ function renderCategoriesPage(data) {
   </div>
   
   <script>
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
     function logout() {
       if (confirm('确定要退出登录吗？')) {
         localStorage.removeItem('auth_token');
         window.location.href = '/admin/login';
       }
     }
-    
+
     function openAddModal() {
       document.getElementById('addModal').style.display = 'block';
     }
-    
+
     function closeAddModal() {
       document.getElementById('addModal').style.display = 'none';
     }
@@ -2305,7 +2502,7 @@ function renderTagsPage(data) {
       <div class="header">
         <h1>标签管理</h1>
         <div>
-          <span>欢迎, ${data.user ? (data.user.display_name || data.user.username) : '访客'}</span>
+          <span id="user-welcome-text">加载中...</span>
           <button class="logout" onclick="logout()">退出</button>
         </div>
       </div>
@@ -2367,17 +2564,52 @@ function renderTagsPage(data) {
   </div>
   
   <script>
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
     function logout() {
       if (confirm('确定要退出登录吗？')) {
         localStorage.removeItem('auth_token');
         window.location.href = '/admin/login';
       }
     }
-    
+
     function openAddModal() {
       document.getElementById('addModal').style.display = 'block';
     }
-    
+
     function closeAddModal() {
       document.getElementById('addModal').style.display = 'none';
     }
@@ -2424,6 +2656,8 @@ function renderTagsPage(data) {
 
 function renderCommentsPage(data) {
   // 评论管理页面实现
+  const { user, comments, pagination, currentStatus } = data;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -2431,26 +2665,67 @@ function renderCommentsPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 评论管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background-color: #fff;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+      flex-shrink: 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
       padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background-color: #fff;
+      padding: 10px 20px;
       margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .content-wrapper {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .filters {
       margin-bottom: 20px;
@@ -2497,69 +2772,105 @@ function renderCommentsPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>评论管理</h1>
-    </div>
-    
-    <div class="filters">
-      <select id="statusFilter" onchange="filterByStatus()">
-        <option value="">所有状态</option>
-        <option value="0" ${data.currentStatus === 0 ? 'selected' : ''}>待审核</option>
-        <option value="1" ${data.currentStatus === 1 ? 'selected' : ''}>已批准</option>
-        <option value="2" ${data.currentStatus === 2 ? 'selected' : ''}>已拒绝</option>
-      </select>
-    </div>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>作者</th>
-          <th>内容</th>
-          <th>文章</th>
-          <th>状态</th>
-          <th>创建时间</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.comments.map(comment => `
-          <tr>
-            <td>${comment.id}</td>
-            <td>${comment.author_display_name}</td>
-            <td>${comment.content.substring(0, 50)}...</td>
-            <td><a href="/post/${comment.post_slug}" target="_blank">${comment.post_title || '未知'}</a></td>
-            <td class="status-${comment.status === 0 ? 'pending' : comment.status === 1 ? 'approved' : 'rejected'}">${
-              comment.status === 0 ? '待审核' : comment.status === 1 ? '已批准' : '已拒绝'
-            }</td>
-            <td>${new Date(comment.created_at).toLocaleDateString()}</td>
-            <td>
-              ${comment.status === 0 ? `<button class="btn btn-success" onclick="approveComment(${comment.id})">批准</button>` : ''}
-              ${comment.status === 0 ? `<button class="btn btn-danger" onclick="rejectComment(${comment.id})">拒绝</button>` : ''}
-              <button class="btn btn-danger" onclick="deleteComment(${comment.id})">删除</button>
-            </td>
-          </tr>
-        `).join('') || '<tr><td colspan="7">暂无评论</td></tr>'}
-      </tbody>
-    </table>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments" class="active">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>评论管理</h1>
+        <div>
+          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="filters">
+          <select id="statusFilter" onchange="filterByStatus()">
+            <option value="">所有状态</option>
+            <option value="0" ${currentStatus === 0 ? 'selected' : ''}>待审核</option>
+            <option value="1" ${currentStatus === 1 ? 'selected' : ''}>已批准</option>
+            <option value="2" ${currentStatus === 2 ? 'selected' : ''}>已拒绝</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>作者</th>
+              <th>内容</th>
+              <th>文章</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comments.map(comment => `
+              <tr>
+                <td>${comment.id}</td>
+                <td>${comment.author_display_name || comment.author_username}</td>
+                <td>${comment.content.substring(0, 50)}...</td>
+                <td><a href="/post/${comment.post_slug}" target="_blank">${comment.post_title || '未知'}</a></td>
+                <td class="status-${comment.status === 0 ? 'pending' : comment.status === 1 ? 'approved' : 'rejected'}">${
+                  comment.status === 0 ? '待审核' : comment.status === 1 ? '已批准' : '已拒绝'
+                }</td>
+                <td>${new Date(comment.created_at).toLocaleDateString()}</td>
+                <td>
+                  ${comment.status === 0 ? `<button class="btn btn-success" onclick="approveComment(${comment.id})">批准</button>` : ''}
+                  ${comment.status === 0 ? `<button class="btn btn-danger" onclick="rejectComment(${comment.id})">拒绝</button>` : ''}
+                  <button class="btn btn-danger" onclick="deleteComment(${comment.id})">删除</button>
+                </td>
+              </tr>
+            `).join('') || '<tr><td colspan="7">暂无评论</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </main>
   </div>
-  
+
   <script>
     function filterByStatus() {
       const status = document.getElementById('statusFilter').value;
       let url = '/admin/comments';
-      
+
       if (status) {
         url += '?status=' + status;
       }
-      
+
       window.location.href = url;
     }
-    
+
     function approveComment(id) {
       fetch('/api/comment/' + id + '/approve', {
         method: 'PUT'
@@ -2578,7 +2889,7 @@ function renderCommentsPage(data) {
         alert('操作失败，请稍后重试');
       });
     }
-    
+
     function rejectComment(id) {
       if (confirm('确定要拒绝这条评论吗？')) {
         fetch('/api/comment/' + id + '/reject', {
@@ -2599,7 +2910,7 @@ function renderCommentsPage(data) {
         });
       }
     }
-    
+
     function deleteComment(id) {
       if (confirm('确定要删除这条评论吗？')) {
         fetch('/api/comment/' + id + '/delete', {
@@ -2620,11 +2931,46 @@ function renderCommentsPage(data) {
         });
       }
     }
-    
-    // 检查登录状态
-    if (!localStorage.getItem('auth_token')) {
+
+    function logout() {
+      localStorage.removeItem('auth_token');
       window.location.href = '/admin/login';
     }
+
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
   </script>
 </body>
 </html>`;
@@ -2917,17 +3263,52 @@ function renderUsersPage(data) {
   </div>
   
   <script>
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
     function logout() {
       if (confirm('确定要退出登录吗？')) {
         localStorage.removeItem('auth_token');
         window.location.href = '/admin/login';
       }
     }
-    
+
     function openAddModal() {
       document.getElementById('addModal').style.display = 'block';
     }
-    
+
     function closeAddModal() {
       document.getElementById('addModal').style.display = 'none';
     }
@@ -3014,6 +3395,8 @@ function renderUsersPage(data) {
 
 function renderFeedbackPage(data) {
   // 反馈管理页面实现
+  const { user, feedback, pagination, currentStatus } = data;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -3021,26 +3404,67 @@ function renderFeedbackPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 反馈管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background-color: #fff;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+      flex-shrink: 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
       padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background-color: #fff;
+      padding: 10px 20px;
       margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .content-wrapper {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .filters {
       margin-bottom: 20px;
@@ -3092,71 +3516,107 @@ function renderFeedbackPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>反馈管理</h1>
-    </div>
-    
-    <div class="filters">
-      <select id="statusFilter" onchange="filterFeedbacks()">
-        <option value="">所有状态</option>
-        <option value="0" ${data.currentStatus === 0 ? 'selected' : ''}>未读</option>
-        <option value="1" ${data.currentStatus === 1 ? 'selected' : ''}>已读</option>
-        <option value="2" ${data.currentStatus === 2 ? 'selected' : ''}>已回复</option>
-      </select>
-    </div>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>姓名</th>
-          <th>邮箱</th>
-          <th>主题</th>
-          <th>状态</th>
-          <th>创建时间</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.feedback.map(item => `
-          <tr>
-            <td>${item.id}</td>
-            <td>${item.name}</td>
-            <td>${item.email}</td>
-            <td>${item.subject}</td>
-            <td class="status-${
-              item.status === 0 ? 'unread' : item.status === 1 ? 'read' : 'replied'
-            }">${
-              item.status === 0 ? '未读' : item.status === 1 ? '已读' : '已回复'
-            }</td>
-            <td>${new Date(item.created_at).toLocaleDateString()}</td>
-            <td>
-              ${item.status === 0 ? `<button class="btn btn-success" onclick="markAsRead(${item.id})">标记已读</button>` : ''}
-              ${item.status === 1 ? `<button class="btn btn-primary" onclick="markAsReplied(${item.id})">标记已回复</button>` : ''}
-              <button class="btn btn-danger" onclick="deleteFeedback(${item.id})">删除</button>
-            </td>
-          </tr>
-        `).join('') || '<tr><td colspan="7">暂无反馈</td></tr>'}
-      </tbody>
-    </table>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback" class="active">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>反馈管理</h1>
+        <div>
+          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="filters">
+          <select id="statusFilter" onchange="filterFeedbacks()">
+            <option value="">所有状态</option>
+            <option value="0" ${currentStatus === 0 ? 'selected' : ''}>未读</option>
+            <option value="1" ${currentStatus === 1 ? 'selected' : ''}>已读</option>
+            <option value="2" ${currentStatus === 2 ? 'selected' : ''}>已回复</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>姓名</th>
+              <th>邮箱</th>
+              <th>主题</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${feedback.map(item => `
+              <tr>
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.email}</td>
+                <td>${item.subject}</td>
+                <td class="status-${
+                  item.status === 0 ? 'unread' : item.status === 1 ? 'read' : 'replied'
+                }">${
+                  item.status === 0 ? '未读' : item.status === 1 ? '已读' : '已回复'
+                }</td>
+                <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                <td>
+                  ${item.status === 0 ? `<button class="btn btn-success" onclick="markAsRead(${item.id})">标记已读</button>` : ''}
+                  ${item.status === 1 ? `<button class="btn btn-primary" onclick="markAsReplied(${item.id})">标记已回复</button>` : ''}
+                  <button class="btn btn-danger" onclick="deleteFeedback(${item.id})">删除</button>
+                </td>
+              </tr>
+            `).join('') || '<tr><td colspan="7">暂无反馈</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </main>
   </div>
-  
+
   <script>
     function filterFeedbacks() {
       const status = document.getElementById('statusFilter').value;
       let url = '/admin/feedback';
-      
+
       if (status) {
         url += '?status=' + status;
       }
-      
+
       window.location.href = url;
     }
-    
+
     function markAsRead(id) {
       fetch('/api/feedback/' + id + '/read', {
         method: 'PUT'
@@ -3175,7 +3635,7 @@ function renderFeedbackPage(data) {
         alert('操作失败，请稍后重试');
       });
     }
-    
+
     function markAsReplied(id) {
       fetch('/api/feedback/' + id + '/reply', {
         method: 'PUT'
@@ -3194,7 +3654,7 @@ function renderFeedbackPage(data) {
         alert('操作失败，请稍后重试');
       });
     }
-    
+
     function deleteFeedback(id) {
       if (confirm('确定要删除这条反馈吗？')) {
         fetch('/api/feedback/' + id + '/delete', {
@@ -3215,11 +3675,46 @@ function renderFeedbackPage(data) {
         });
       }
     }
-    
-    // 检查登录状态
-    if (!localStorage.getItem('auth_token')) {
+
+    function logout() {
+      localStorage.removeItem('auth_token');
       window.location.href = '/admin/login';
     }
+
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
   </script>
 </body>
 </html>`;
@@ -3227,6 +3722,8 @@ function renderFeedbackPage(data) {
 
 function renderAttachmentsPage(data) {
   // 附件管理页面实现
+  const { user, attachments } = data;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -3234,26 +3731,67 @@ function renderAttachmentsPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 附件管理</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      background-color: #fff;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+      flex-shrink: 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
       padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background-color: #fff;
+      padding: 10px 20px;
       margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .content-wrapper {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .upload-area {
       border: 2px dashed #ddd;
@@ -3261,6 +3799,7 @@ function renderAttachmentsPage(data) {
       text-align: center;
       margin-bottom: 20px;
       border-radius: 5px;
+      cursor: pointer;
     }
     .upload-area.dragover {
       border-color: #007cba;
@@ -3282,6 +3821,7 @@ function renderAttachmentsPage(data) {
       width: 20px;
       height: 20px;
       margin-right: 5px;
+      font-size: 20px;
     }
     .file-size {
       color: #666;
@@ -3302,84 +3842,119 @@ function renderAttachmentsPage(data) {
       background-color: #d32f2f;
       color: #fff;
     }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>附件管理</h1>
-      <button class="btn btn-primary">上传文件</button>
-    </div>
-    
-    <div class="upload-area" id="uploadArea">
-      <p>拖拽文件到这里或点击上传按钮选择文件</p>
-      <input type="file" id="fileInput" multiple style="display: none;">
-    </div>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>文件名</th>
-          <th>类型</th>
-          <th>大小</th>
-          <th>下载次数</th>
-          <th>上传时间</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.attachments.map(att => `
-          <tr>
-            <td>
-              ${getFileIcon(att.mime_type)}
-              <a href="/api/upload/${att.id}/download" target="_blank">${att.original_name}</a>
-            </td>
-            <td>${att.mime_type}</td>
-            <td class="file-size">${formatFileSize(att.file_size)}</td>
-            <td>${att.download_count}</td>
-            <td>${new Date(att.created_at).toLocaleDateString()}</td>
-            <td>
-              <button class="btn btn-primary">编辑</button>
-              <button class="btn btn-danger" onclick="deleteAttachment(${att.id})">删除</button>
-            </td>
-          </tr>
-        `).join('') || '<tr><td colspan="6">暂无附件</td></tr>'}
-      </tbody>
-    </table>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments" class="active">附件管理</a></li>
+          <li><a href="/admin/settings">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>附件管理</h1>
+        <div>
+          <span>欢迎, ${user ? (user.display_name || user.username) : '访客'}</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="upload-area" id="uploadArea">
+          <p>拖拽文件到这里或点击上传按钮选择文件</p>
+          <input type="file" id="fileInput" multiple style="display: none;">
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>文件名</th>
+              <th>类型</th>
+              <th>大小</th>
+              <th>下载次数</th>
+              <th>上传时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${attachments && attachments.length > 0 ? attachments.map(att => `
+              <tr>
+                <td>
+                  ${getFileIcon(att.mime_type)}
+                  <a href="/api/upload/${att.id}/download" target="_blank">${att.original_name}</a>
+                </td>
+                <td>${att.mime_type}</td>
+                <td class="file-size">${formatFileSize(att.file_size)}</td>
+                <td>${att.download_count}</td>
+                <td>${new Date(att.created_at).toLocaleDateString()}</td>
+                <td>
+                  <button class="btn btn-primary">编辑</button>
+                  <button class="btn btn-danger" onclick="deleteAttachment(${att.id})">删除</button>
+                </td>
+              </tr>
+            `).join('') : '<tr><td colspan="6">暂无附件</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </main>
   </div>
-  
+
   <script>
     function getFileIcon(mimeType) {
       // 根据MIME类型返回对应的图标
-      if (mimeType.startsWith('image/')) {
+      if (mimeType && mimeType.startsWith('image/')) {
         return '<span class="file-icon">🖼️</span>';
-      } else if (mimeType.startsWith('video/')) {
+      } else if (mimeType && mimeType.startsWith('video/')) {
         return '<span class="file-icon">🎥</span>';
-      } else if (mimeType.startsWith('audio/')) {
+      } else if (mimeType && mimeType.startsWith('audio/')) {
         return '<span class="file-icon">🎵</span>';
-      } else if (mimeType.includes('pdf')) {
+      } else if (mimeType && mimeType.includes('pdf')) {
         return '<span class="file-icon">📄</span>';
-      } else if (mimeType.includes('word') || mimeType.includes('document')) {
+      } else if (mimeType && (mimeType.includes('word') || mimeType.includes('document'))) {
         return '<span class="file-icon">📝</span>';
-      } else if (mimeType.includes('excel') || mimeType.includes('sheet')) {
+      } else if (mimeType && (mimeType.includes('excel') || mimeType.includes('sheet'))) {
         return '<span class="file-icon">📊</span>';
-      } else if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar')) {
+      } else if (mimeType && (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar'))) {
         return '<span class="file-icon">📦</span>';
       } else {
         return '<span class="file-icon">📎</span>';
       }
     }
-    
+
     function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      
+      if (!bytes || bytes === 0) return '0 Bytes';
+
       const k = 1024;
       const sizes = ['Bytes', 'KB', 'MB', 'GB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
+
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
+
     function deleteAttachment(id) {
       if (confirm('确定要删除这个附件吗？')) {
         fetch('/api/upload/' + id, {
@@ -3400,62 +3975,109 @@ function renderAttachmentsPage(data) {
         });
       }
     }
-    
-    // 文件上传功能（简化版）
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/admin/login';
+    }
+
+    // 在页面加载时更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    });
+
+    // 文件上传功能
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
-    
-    uploadArea.addEventListener('click', function() {
-      fileInput.click();
-    });
-    
-    uploadArea.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      this.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', function() {
-      this.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-      e.preventDefault();
-      this.classList.remove('dragover');
-      
-      const files = e.dataTransfer.files;
-      handleFiles(files);
-    });
-    
-    fileInput.addEventListener('change', function() {
-      const files = this.files;
-      handleFiles(files);
-    });
-    
-    function handleFiles(files) {
-      if (files.length === 0) return;
-      
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        formData.append('file', files[i]);
-      }
-      
-      fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('文件上传成功');
-          window.location.reload();
-        } else {
-          alert(data.message || '上传失败');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('上传失败，请稍后重试');
+
+    if (uploadArea && fileInput) {
+      uploadArea.addEventListener('click', function() {
+        fileInput.click();
       });
+
+      uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', function() {
+        this.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+      });
+
+      fileInput.addEventListener('change', function() {
+        const files = this.files;
+        handleFiles(files);
+      });
+
+      function handleFiles(files) {
+        if (!files || files.length === 0) return;
+
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+          formData.append('file', files[i]);
+        }
+
+        fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('文件上传成功');
+            window.location.reload();
+          } else {
+            alert(data.message || '上传失败');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('上传失败，请稍后重试');
+        });
+      }
+    }
+
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
     }
   </script>
 </body>
@@ -3471,22 +4093,62 @@ function renderSettingsPage(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 系统设置</title>
   <style>
-    /* 简化样式 */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       background-color: #f5f5f5;
     }
     .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      padding: 20px 0;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar nav li {
+      margin-bottom: 5px;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 10px 20px;
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a:hover {
+      background-color: #444;
+    }
+    .sidebar nav a.active {
+      background-color: #007cba;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+    }
+    .content-wrapper {
       max-width: 800px;
-      margin: 0 auto;
       background-color: #fff;
       padding: 20px;
       border-radius: 5px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
     }
     .form-group {
@@ -3522,6 +4184,17 @@ function renderSettingsPage(data) {
       background-color: #007cba;
       color: #fff;
     }
+    .logout {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
     .setting-section {
       margin-bottom: 30px;
     }
@@ -3534,9 +4207,33 @@ function renderSettingsPage(data) {
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>系统设置</h1>
-    </div>
+    <aside class="sidebar">
+      <h2>管理后台</h2>
+      <nav>
+        <ul>
+          <li><a href="/admin">仪表板</a></li>
+          <li><a href="/admin/posts">文章管理</a></li>
+          <li><a href="/admin/categories">分类管理</a></li>
+          <li><a href="/admin/tags">标签管理</a></li>
+          <li><a href="/admin/comments">评论管理</a></li>
+          <li><a href="/admin/users">用户管理</a></li>
+          <li><a href="/admin/feedback">反馈管理</a></li>
+          <li><a href="/admin/attachments">附件管理</a></li>
+          <li><a href="/admin/settings" class="active">系统设置</a></li>
+        </ul>
+      </nav>
+    </aside>
+    
+    <main class="main-content">
+      <div class="header">
+        <h1>系统设置</h1>
+        <div>
+          <span id="user-welcome-text">加载中...</span>
+          <button class="logout" onclick="logout()">退出</button>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
     
     <form id="settingsForm">
       <div class="setting-section">
@@ -3619,28 +4316,173 @@ function renderSettingsPage(data) {
         <button type="submit" class="btn btn-primary">保存设置</button>
       </div>
     </form>
+      </div>
+    </main>
   </div>
   
   <script>
-    document.getElementById('settingsForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const formData = new FormData(e.target);
-      const settings = {};
-      
-      for (const [key, value] of formData.entries()) {
-        if (key.endsWith('_moderation') || key.endsWith('_comments') || key.endsWith('_registration')) {
-          settings[key] = value;
-        } else {
-          settings[key] = value;
+    // 检查登录状态并更新用户信息
+    document.addEventListener('DOMContentLoaded', function() {
+      const authToken = localStorage.getItem('auth_token');
+
+      // 如果有token,获取当前用户信息
+      if (authToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': 'Bearer ' + authToken
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data) {
+            // 更新页面上的用户信息显示
+            const userDisplayEl = document.getElementById('user-welcome-text');
+            if (userDisplayEl) {
+              const displayName = data.data.display_name || data.data.username;
+              userDisplayEl.textContent = '欢迎, ' + displayName;
+            }
+          } else {
+            // token无效,清除并跳转登录
+            localStorage.removeItem('auth_token');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+        });
+      } else {
+        // 没有token,重定向到登录页
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
         }
       }
-      
-      // 这里应该调用更新设置的API
-      // 由于我们没有实现这个API，这里只是一个示例
-      alert('设置保存功能未实现');
+    });
+
+    function logout() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/admin/login';
+      }
+    }
+
+    // 检查登录状态
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/admin/login';
+    }
+    
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const settings = [];
+
+      for (const [key, value] of formData.entries()) {
+        settings.push({
+          key: key,
+          value: value
+        });
+      }
+
+      // 调用更新设置的API
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ settings })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('设置保存成功');
+        } else {
+          alert(data.message || '设置保存失败');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('设置保存失败，请稍后重试');
+      });
     });
   </script>
 </body>
 </html>`;
+
+}
+
+
+
+// 验证HMAC-SHA1生成的sessionID
+async function validateSessionID(sessionID, env) {
+  try {
+    // sessionID格式：userId:timestamp:randomHex:signature
+    const parts = sessionID.split(':');
+    if (parts.length !== 4) {
+      return { success: false, message: '无效的sessionID格式' };
+    }
+    
+    const [userId, timestamp, randomHex, signature] = parts;
+    
+    // 验证时间戳（session过期时间）
+    const sessionTime = parseInt(timestamp, 10);
+    const currentTime = Date.now();
+    
+    // session有效期为7天
+    if (currentTime - sessionTime > 7 * 24 * 60 * 60 * 1000) {
+      return { success: false, message: 'Session已过期' };
+    }
+    
+    // 重新计算签名进行验证
+    const serverKey = env.SESSION_SECRET || 'default-session-secret-key-change-in-production';
+    const data = `${userId}:${timestamp}:${randomHex}`;
+    
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(serverKey);
+    const messageData = encoder.encode(data);
+    
+    // 导入密钥
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['verify']
+    );
+    
+    // 将十六进制签名转换为ArrayBuffer
+    const signatureBytes = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    
+    // 验证签名
+    const isValid = await crypto.subtle.verify(
+      'HMAC',
+      key,
+      signatureBytes,
+      messageData
+    );
+    
+    if (!isValid) {
+      return { success: false, message: '无效的session签名' };
+    }
+    
+    // 获取用户信息
+    const userModel = new User(env);
+    const userResult = await userModel.getById('users', parseInt(userId, 10), 'id, username, email, display_name, avatar, role, bio, status, created_at, updated_at');
+    
+    if (!userResult.success || !userResult.result) {
+      return { success: false, message: '用户不存在' };
+    }
+    
+    const user = userResult.result;
+    
+    return {
+      success: true,
+      message: 'Session验证成功',
+      user
+    };
+  } catch (err) {
+    console.error('Session验证错误:', err);
+    return { success: false, message: 'Session验证失败: ' + err.message };
+  }
 }

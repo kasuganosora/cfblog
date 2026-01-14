@@ -34,6 +34,7 @@ router.all('/api/search/*', handleSearchRoutes);
 router.all('/api/feedback/*', handleFeedbackRoutes);
 router.get('/sitemap.xml', handleSitemapRoute);
 router.all('/api/upload/*', handleUploadRoutes);
+router.all('/api/settings*', handleAdminRoutes);
 
 // 管理后台路由（认证逻辑在 handleAdminRoutes 内部处理）
 router.all('/admin/*', handleAdminRoutes);

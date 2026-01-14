@@ -69,18 +69,45 @@ cfblog/
 3. 复制环境变量文件: `cp dev.vars.example dev.vars`
 4. 修改 `dev.vars` 中的变量值
 
-#### 快速启动 (推荐)
+#### 快速启动
 
-Windows 用户:
+##### Windows 用户 (推荐使用后台启动)
 ```bash
+# 后台启动 (推荐) - 服务器在后台运行，方便管理
+start-dev-background.bat
+
+# 停止后台服务器
+stop-dev.bat
+
+# 重启服务器
+restart-dev.bat
+
+# 交互式前台启动 (按 Ctrl+C 停止)
 start-dev.bat
 ```
 
-Mac/Linux 用户:
+##### Mac/Linux 用户
 ```bash
-chmod +x start-dev.sh
+# 给脚本添加执行权限
+chmod +x start-dev.sh start-dev-background.sh stop-dev.sh restart-dev.sh
+
+# 后台启动 (推荐)
+./start-dev-background.sh
+
+# 停止后台服务器
+./stop-dev.sh
+
+# 重启服务器
+./restart-dev.sh
+
+# 交互式前台启动 (按 Ctrl+C 停止)
 ./start-dev.sh
 ```
+
+##### 服务器管理
+- **查看日志**: 后台启动时，日志保存在 `logs/` 目录下
+- **检查状态**: 访问 http://localhost:8787 查看服务器是否运行
+- **终止进程**: 使用 `stop-dev` 脚本或查找占用端口 8787 的进程
 
 #### 手动启动
 
@@ -294,6 +321,7 @@ wrangler kv:namespace create "CACHE"
 # 4. 设置环境变量
 wrangler secret put JWT_SECRET
 wrangler secret put ADMIN_PASSWORD
+wrangler secret put SESSION_SECRET
 
 # 5. 运行数据库迁移
 wrangler d1 migrations apply cfblog-database
@@ -301,6 +329,50 @@ wrangler d1 migrations apply cfblog-database
 # 6. 部署
 npm run deploy
 ```
+
+### SessionID 安全配置
+
+项目使用 sessionID 机制进行用户认证，需要配置以下环境变量：
+
+#### 1. SESSION_SECRET (必需)
+- **作用**: 用于生成和验证 sessionID 的 HMAC 签名密钥
+- **要求**: 至少 32 个字符的随机字符串
+- **生成方法**:
+  ```bash
+  # 使用 openssl 生成
+  openssl rand -base64 32
+  
+  # 或使用 Node.js
+  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+  ```
+- **设置方法**:
+  ```bash
+  wrangler secret put SESSION_SECRET
+  ```
+
+#### 2. 本地开发配置
+在 `dev.vars` 文件中添加：
+```bash
+SESSION_SECRET="your-session-secret-key-here-change-in-production"
+```
+
+#### 3. SessionID 格式
+生成的 sessionID 格式为：`用户ID:时间戳:随机数:HMAC签名`
+- **用户ID**: 数据库中的用户 ID
+- **时间戳**: 生成 sessionID 的时间戳（毫秒）
+- **随机数**: 8 字节随机十六进制字符串
+- **HMAC签名**: 使用 SESSION_SECRET 对前三个部分进行 HMAC-SHA1 签名
+
+#### 4. 安全注意事项
+1. **生产环境必须设置强密码**: 不要使用默认值
+2. **定期轮换密钥**: 建议每 3-6 个月更换一次 SESSION_SECRET
+3. **密钥长度**: 至少 32 字节（256 位）
+4. **密钥存储**: 使用 Cloudflare Secrets 安全存储，不要硬编码在代码中
+
+#### 5. Session 过期时间
+- 默认: 7 天
+- 可通过修改代码中的 `7 * 24 * 60 * 60 * 1000` 调整
+- 过期后需要重新登录
 
 ## 项目特点
 
@@ -312,8 +384,9 @@ npm run deploy
 - 响应式前台界面
 - 功能完整的后台管理
 - RESTful API 设计
-- JWT 认证系统
+- **SessionID 认证系统**（基于 HMAC 签名的安全 session 机制）
 - 多角色支持（管理员、投稿者）
+- 前端加密登录（防止密码明文传输）
 
 
 # 备注

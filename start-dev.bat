@@ -1,39 +1,51 @@
 @echo off
-REM Cloudflare Blog 开发环境启动脚本 (Windows)
+chcp 65001 >nul
+REM Cloudflare Blog Dev Environment Startup Script (Windows)
+REM Interactive foreground startup, background version recommended
 
-echo === Cloudflare Blog 开发环境启动 ===
+echo === Cloudflare Blog Dev Environment Startup ===
+echo Windows Version - Interactive Foreground Startup
 echo.
 
-REM 检查 wrangler 是否已安装
-where wrangler >nul 2>nul
+echo Recommended to use background startup scripts, which can:
+echo   1. Run server in background
+echo   2. View real-time logs
+echo   3. Easily stop and restart
+echo.
+echo Available scripts:
+echo   start-dev-background.bat - Background startup (recommended)
+echo   stop-dev.bat             - Stop server
+echo   restart-dev.bat          - Restart server
+echo.
+choice /C YN /M "Continue with interactive foreground startup? (Y/N)"
+
+if errorlevel 2 (
+    echo.
+    echo Please use: start-dev-background.bat
+    timeout /t 3 /nobreak >nul
+    exit /b 0
+)
+
+echo.
+echo Starting interactive development server...
+echo Press Ctrl+C to stop server
+echo.
+
+REM Check if Node.js is installed
+where node >nul 2>nul
 if %errorlevel% neq 0 (
-    echo ❌ Wrangler 未安装，请先安装：
-    echo npm install -g wrangler
+    echo [ERROR] Node.js is not installed, please install Node.js first
+    pause
     exit /b 1
 )
 
-REM 检查是否已登录 Cloudflare
-wrangler whoami >nul 2>nul
+REM Run cross-platform startup script
+node start-dev.js
+
+REM If script execution fails, show error message
 if %errorlevel% neq 0 (
-    echo ❌ 未登录 Cloudflare，请先登录：
-    echo wrangler login
-    exit /b 1
+    echo.
+    echo [ERROR] Startup failed, please check above error messages
+    pause
+    exit /b %errorlevel%
 )
-
-echo ✅ 环境检查通过
-echo.
-
-REM 应用数据库迁移
-echo 🔧 应用数据库迁移...
-wrangler d1 migrations apply cfblog-database --local
-echo ✅ 数据库迁移完成
-
-echo.
-echo 🚀 启动开发服务器...
-echo 博客前台: http://localhost:8787
-echo 管理后台: http://localhost:8787/admin
-echo.
-echo 按 Ctrl+C 停止服务器
-echo.
-
-npm run dev

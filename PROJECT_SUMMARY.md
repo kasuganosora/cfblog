@@ -39,7 +39,7 @@
 ### 其他功能
 - Sitemap 生成
 - SEO 优化
-- JWT 认证
+- SessionID 认证（基于 HMAC 签名）
 - 多角色支持（管理员、投稿者）
 
 ## 项目结构
@@ -209,7 +209,7 @@ chmod +x start-dev.sh
 - 响应式前台界面
 - 功能完整的后台管理
 - RESTful API 设计
-- JWT 认证系统
+- SessionID 认证（基于 HMAC 签名）系统
 - 多角色支持（管理员、投稿者）
 - SEO 优化
 - 完整的测试套件

@@ -1,6 +1,152 @@
 // 后台管理界面交互逻辑
 
+// 添加fetch拦截器,自动包含Authorization header并处理session过期
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    const [url, options = {}] = args;
+
+    // 检查session是否过期
+    const sessionID = localStorage.getItem('sessionID');
+    const expiration = localStorage.getItem('sessionExpiration');
+    
+    if (sessionID && expiration) {
+      const now = Date.now();
+      const expirationTime = parseInt(expiration, 10);
+      
+      if (now > expirationTime) {
+        // session已过期，清除并跳转到登录页
+        localStorage.removeItem('sessionID');
+        localStorage.removeItem('sessionExpiration');
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/admin/login';
+        }
+        return Promise.reject(new Error('Session expired'));
+      }
+    }
+
+    // 获取sessionID
+    const currentSessionID = localStorage.getItem('sessionID');
+
+    if (currentSessionID && url && typeof url === 'string' && url.startsWith('/api/')) {
+      // 确保headers对象存在
+      if (!options.headers) {
+        options.headers = {};
+      }
+
+      // 如果还没有Authorization header,则添加
+      if (!options.headers.Authorization && !options.headers.authorization) {
+        options.headers.Authorization = 'Bearer ' + currentSessionID;
+      }
+    }
+
+    // 调用原始fetch并处理响应
+    return originalFetch.apply(this, [url, options]).then(response => {
+      // 检查是否是401错误
+      if (response.status === 401) {
+        return response.clone().json().then(data => {
+          // 检查是否是session过期错误
+          if (data.error === 'Session Expired') {
+            // 清除localStorage中的sessionID
+            localStorage.removeItem('sessionID');
+            localStorage.removeItem('sessionExpiration');
+            
+            // 自动跳转至登录页面
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+          // 返回原始响应
+          return response;
+        }).catch(() => {
+          // 如果无法解析JSON，返回原始响应
+          return response;
+        });
+      }
+      return response;
+    });
+  };
+})();
+
+// 初始化时检查登录状态
 document.addEventListener('DOMContentLoaded', function() {
+  // 检查session是否过期
+  const sessionID = localStorage.getItem('sessionID');
+  const expiration = localStorage.getItem('sessionExpiration');
+  
+  if (sessionID && expiration) {
+    const now = Date.now();
+    const expirationTime = parseInt(expiration, 10);
+    
+    if (now > expirationTime) {
+      // session已过期，清除并跳转到登录页
+      localStorage.removeItem('sessionID');
+      localStorage.removeItem('sessionExpiration');
+      if (!window.location.pathname.startsWith('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+      return;
+    }
+  }
+
+  // 如果没有sessionID,重定向到登录页
+  if (!sessionID && !window.location.pathname.startsWith('/admin/login')) {
+    window.location.href = '/admin/login';
+    return;
+  }
+
+  // 如果有sessionID,获取当前用户信息
+  if (sessionID) {
+    fetch('/api/user/info', {
+      headers: {
+        'Authorization': 'Bearer ' + sessionID
+      }
+    })
+    .then(response => {
+      if (response.status === 401) {
+        // 检查是否是session过期
+        return response.json().then(data => {
+          if (data.error === 'Session Expired') {
+            // session过期，清除并跳转登录
+            localStorage.removeItem('sessionID');
+            localStorage.removeItem('sessionExpiration');
+            if (!window.location.pathname.startsWith('/admin/login')) {
+              window.location.href = '/admin/login';
+            }
+          }
+          throw new Error('Unauthorized');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success && data.data) {
+        // 更新页面上的用户信息
+        const usernameEl = document.querySelector('.admin-username');
+        const roleEl = document.querySelector('.admin-role');
+
+        if (usernameEl) {
+          const displayName = data.data.display_name || data.data.username;
+          usernameEl.textContent = displayName || '未知用户';
+        }
+
+        if (roleEl) {
+          const roleText = data.data.role === 'admin' ? '管理员' : '投稿者';
+          roleEl.textContent = roleText;
+        }
+      } else {
+        // session无效,清除并跳转登录
+        localStorage.removeItem('sessionID');
+        localStorage.removeItem('sessionExpiration');
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    })
+    .catch(error => {
+      console.error('获取用户信息失败:', error);
+    });
+  }
     // 标签页切换
     const tabItems = document.querySelectorAll('.tab-item');
     const tabContents = document.querySelectorAll('.tab-content');

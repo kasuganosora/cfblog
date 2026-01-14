@@ -6,6 +6,8 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "wrangler dev",
+    "start": "node start-dev.js",
+    "start:dev": "node start-dev.js",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
     "db:migrate": "wrangler d1 migrations apply cfblog-database",
