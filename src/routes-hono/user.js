@@ -21,7 +21,18 @@ userRoutes.post('/login', async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const { username, password } = await c.req.json();
+    let username, password;
+
+    // Try JSON first, then fall back to form data
+    try {
+      const body = await c.req.json();
+      username = body.username;
+      password = body.password;
+    } catch {
+      const body = await c.req.parseBody();
+      username = body.username;
+      password = body.password;
+    }
 
     if (!username || !password) {
       return c.json(errorResponse('Username and password are required').json(), 400);
