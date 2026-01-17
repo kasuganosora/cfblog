@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from '../pages/home-page';
+import HomePage from '../pages/home-page';
 import testData from '../../fixtures/test-data';
 
 test.describe('响应式设计测试', () => {

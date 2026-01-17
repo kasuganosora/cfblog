@@ -40,6 +40,33 @@ postRoutes.get('/list', async (c) => {
   }
 });
 
+// GET /search - 搜索文章 (必须在 /:id 之前，否则会被/:id路由捕获)
+postRoutes.get('/search', async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const url = new URL(c.req.url);
+    const keyword = url.searchParams.get('keyword');
+
+    if (!keyword) {
+      return c.json(errorResponse('Keyword is required').json(), 400);
+    }
+
+    const { page, limit } = parsePagination(c);
+    const postModel = new Post(db);
+
+    const result = await postModel.searchPosts(keyword, { page, limit });
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Search posts error:', error);
+    return c.json(serverErrorResponse(error.message).json(), 500);
+  }
+});
+
 // GET /:id - 根据ID获取文章
 postRoutes.get('/:id', async (c) => {
   try {
@@ -186,33 +213,6 @@ postRoutes.delete('/:id/delete', async (c) => {
   } catch (error) {
     console.error('Delete post error:', error);
     return c.json(errorResponse(error.message).json(), 500);
-  }
-});
-
-// GET /search - 搜索文章
-postRoutes.get('/search', async (c) => {
-  try {
-    const db = c.env?.DB;
-    if (!db) {
-      return c.json(serverErrorResponse('Database not available').json(), 500);
-    }
-
-    const url = new URL(c.req.url);
-    const keyword = url.searchParams.get('keyword');
-
-    if (!keyword) {
-      return c.json(errorResponse('Keyword is required').json(), 400);
-    }
-
-    const { page, limit } = parsePagination(c);
-    const postModel = new Post(db);
-
-    const result = await postModel.searchPosts(keyword, { page, limit });
-
-    return c.json(result);
-  } catch (error) {
-    console.error('Search posts error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
   }
 });
 

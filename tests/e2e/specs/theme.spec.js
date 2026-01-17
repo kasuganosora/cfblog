@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from '../pages/home-page';
+import HomePage from '../pages/home-page';
 
 test.describe('主题切换测试', () => {
   let homePage;

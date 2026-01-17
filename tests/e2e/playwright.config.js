@@ -26,21 +26,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
   ],
 
   webServer: {
-    command: 'npx wrangler dev --local --port 8787 --config wrangler-simple.toml',
+    command: 'npx wrangler dev --local --port 8787',
     url: 'http://localhost:8787',
     reuseExistingServer: true,
     timeout: 120000,

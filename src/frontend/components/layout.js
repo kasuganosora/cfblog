@@ -90,9 +90,6 @@ export class Layout {
           <li class="nav-item">
             <a href="/tags" class="nav-link">标签</a>
           </li>
-          <li class="nav-item">
-            <a href="/search" class="nav-link">搜索</a>
-          </li>
         </ul>
       </div>
       
@@ -103,7 +100,6 @@ export class Layout {
         <button id="lang-toggle" class="nav-button nav-icon-button" aria-label="Toggle language" title="切换语言">
           <span class="icon">🌐</span>
         </button>
-        <a href="/login" class="nav-link nav-link-button">登录</a>
       </div>
     `;
   }
@@ -115,7 +111,7 @@ export class Layout {
     return `
       <div class="footer-section">
         <p class="footer-copyright">
-          &copy; ${new Date().getFullYear()} CFBlog. 版权所有
+          &copy; ${new Date().getFullYear()} CFBlog. 版权所有 | <a href="/login">登录</a>
         </p>
       </div>
       

@@ -9,8 +9,8 @@ class LoginPage {
   }
 
   async goto() {
-    await this.page.goto(this.url);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto('http://localhost:8787/login');
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   // 登录

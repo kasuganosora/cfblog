@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('调试测试', () => {
 
   test('检查页面结构', async ({ page }) => {
-    const response = await page.goto('/');
+    const response = await page.goto('http://localhost:8787/');
     console.log('Response status:', response.status());
     console.log('Response url:', response.url());
 
@@ -12,7 +12,7 @@ test.describe('调试测试', () => {
     console.log('Page title:', title);
 
     // 检查页面内容
-    const bodyText = await page.body();
+    const bodyText = await page.content();
     console.log('Body length:', bodyText.length);
     console.log('Has header:', bodyText.includes('<header>'));
     console.log('Has nav:', bodyText.includes('<nav>'));
@@ -27,17 +27,17 @@ test.describe('调试测试', () => {
   });
 
   test('检查登录页结构', async ({ page }) => {
-    const response = await page.goto('/login');
+    const response = await page.goto('http://localhost:8787/login');
     console.log('Response status:', response.status());
 
-    const bodyText = await page.body();
+    const bodyText = await page.content();
     console.log('Has form:', bodyText.includes('<form'));
     console.log('Has input:', bodyText.includes('<input'));
     console.log('Has button:', bodyText.includes('<button'));
   });
 
   test('检查选择器', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('http://localhost:8787/');
 
     // 尝试查找元素
     console.log('Looking for h1...');

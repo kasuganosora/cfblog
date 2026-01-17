@@ -59,6 +59,29 @@ categoryRoutes.get('/tree', async (c) => {
   }
 });
 
+// GET /api/category/slug/:slug - 根据slug获取分类 (必须在/:id之前)
+categoryRoutes.get('/slug/:slug', async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const slug = c.req.param('slug');
+    const categoryModel = new Category(db);
+    const category = await categoryModel.findBySlug(slug);
+
+    if (!category) {
+      return c.json(notFoundResponse('Category not found').json(), 404);
+    }
+
+    return c.json(category);
+  } catch (error) {
+    console.error('Get category by slug error:', error);
+    return c.json(serverErrorResponse(error.message).json(), 500);
+  }
+});
+
 // GET /api/category/:id - 根据ID获取分类
 categoryRoutes.get('/:id', async (c) => {
   try {

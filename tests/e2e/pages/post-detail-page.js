@@ -8,7 +8,7 @@ class PostDetailPage {
   }
 
   async goto(slug) {
-    await this.page.goto(`/post/${slug}`);
+    await this.page.goto(`http://localhost:8787/post/${slug}`);
     await this.page.waitForLoadState('networkidle');
   }
 

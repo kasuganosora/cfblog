@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from '../pages/home-page';
+import HomePage from '../pages/home-page';
 
 test.describe('国际化(i18n)测试', () => {
   let homePage;
@@ -50,7 +50,7 @@ test.describe('国际化(i18n)测试', () => {
   });
 
   test('日期格式应该根据语言变化', async ({ page }) => {
-    await page.goto('/post/getting-started-workers');
+    await page.goto('http://localhost:8787/post/getting-started-workers');
     
     const dateZh = await page.textContent('[data-testid="post-date"]');
     
@@ -80,7 +80,7 @@ test.describe('国际化(i18n)测试', () => {
   });
 
   test('表单验证消息应该支持多语言', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('http://localhost:8787/login');
     
     // 不填写任何内容直接提交
     await page.click('button[type="submit"]');
@@ -112,7 +112,7 @@ test.describe('国际化(i18n)测试', () => {
   });
 
   test('404页面应该支持多语言', async ({ page }) => {
-    await page.goto('/nonexistent-page');
+    await page.goto('http://localhost:8787/nonexistent-page');
     
     await expect(page.locator('[data-testid="404-message"]')).toBeVisible();
     

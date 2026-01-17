@@ -62,6 +62,29 @@ tagRoutes.get('/popular', async (c) => {
   }
 });
 
+// GET /api/tag/slug/:slug - 根据slug获取标签 (必须在/:id之前)
+tagRoutes.get('/slug/:slug', async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const slug = c.req.param('slug');
+    const tagModel = new Tag(db);
+    const tag = await tagModel.findBySlug(slug);
+
+    if (!tag) {
+      return c.json(notFoundResponse('Tag not found').json(), 404);
+    }
+
+    return c.json(tag);
+  } catch (error) {
+    console.error('Get tag by slug error:', error);
+    return c.json(serverErrorResponse(error.message).json(), 500);
+  }
+});
+
 // GET /api/tag/:id - 根据ID获取标签
 tagRoutes.get('/:id', async (c) => {
   try {

@@ -1,0 +1,1889 @@
+{
+  "config": {
+    "configFile": "d:\\code\\cfblog\\tests\\e2e\\playwright.config.js",
+    "rootDir": "d:/code/cfblog/tests/e2e/specs",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "test-results/playwright-report"
+        }
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "d:/code/cfblog/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "d:/code/cfblog/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "d:/code/cfblog/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 2,
+    "webServer": {
+      "command": "npx wrangler dev --local --port 8787",
+      "url": "http://localhost:8787",
+      "reuseExistingServer": true,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "basic-functionality.spec.js",
+      "file": "basic-functionality.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "基础功能测试",
+          "file": "basic-functionality.spec.js",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "应该成功加载首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1919,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:30.774Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-1a989d5f0514d95345ba",
+              "file": "basic-functionality.spec.js",
+              "line": 10,
+              "column": 7
+            },
+            {
+              "title": "应该显示导航菜单",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7154,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:24:23",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 23,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 22 |\u001b[39m   test(\u001b[32m'应该显示导航菜单'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 23 |\u001b[39m     \u001b[36mconst\u001b[39m nav \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'nav[role=\"navigation\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m expect(nav)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \n \u001b[90m 26 |\u001b[39m     \u001b[90m// 检查导航链接\u001b[39m\n \u001b[90m 27 |\u001b[39m     \u001b[36mconst\u001b[39m links \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m nav\u001b[33m.\u001b[39mlocator(\u001b[32m'a'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 23,
+                            "line": 24
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n\n\n  22 |   test('应该显示导航菜单', async ({ page }) => {\n  23 |     const nav = page.locator('nav[role=\"navigation\"]');\n> 24 |     await expect(nav).toBeVisible();\n     |                       ^\n  25 |     \n  26 |     // 检查导航链接\n  27 |     const links = await nav.locator('a').count();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:24:23"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:30.804Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 23,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-b651fcac9a1a95d86102",
+              "file": "basic-functionality.spec.js",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "应该显示文章列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6779,
+                      "error": {
+                        "message": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n",
+                        "stack": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:33:16",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 16,
+                          "line": 33
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 31 |\u001b[39m   test(\u001b[32m'应该显示文章列表'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 32 |\u001b[39m     \u001b[90m// 等待文章加载\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'.posts-section'\u001b[39m\u001b[33m,\u001b[39m { state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 34 |\u001b[39m     \n \u001b[90m 35 |\u001b[39m     \u001b[90m// 检查文章卡片\u001b[39m\n \u001b[90m 36 |\u001b[39m     \u001b[36mconst\u001b[39m postCards \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.post-card'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 33
+                          },
+                          "message": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n\n\n  31 |   test('应该显示文章列表', async ({ page }) => {\n  32 |     // 等待文章加载\n> 33 |     await page.waitForSelector('.posts-section', { state: 'visible', timeout: 5000 });\n     |                ^\n  34 |     \n  35 |     // 检查文章卡片\n  36 |     const postCards = await page.locator('.post-card').count();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:33:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:32.835Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 16,
+                        "line": 33
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-3637d6b03247e87095cd",
+              "file": "basic-functionality.spec.js",
+              "line": 31,
+              "column": 7
+            },
+            {
+              "title": "应该能点击文章进入详情页",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7782,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:58:55",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 55,
+                          "line": 58
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 56 |\u001b[39m     \n \u001b[90m 57 |\u001b[39m     \u001b[90m// 检查文章详情页元素\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 58 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'article.post-detail'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.post-title'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 60 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 61 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 55,
+                            "line": 58
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n\n\n  56 |     \n  57 |     // 检查文章详情页元素\n> 58 |     await expect(page.locator('article.post-detail')).toBeVisible();\n     |                                                       ^\n  59 |     await expect(page.locator('.post-title')).toBeVisible();\n  60 |   });\n  61 |\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:58:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:39.345Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 55,
+                        "line": 58
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-1d9f131c95ad59e8db64",
+              "file": "basic-functionality.spec.js",
+              "line": 45,
+              "column": 7
+            },
+            {
+              "title": "应该显示侧边栏",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31810,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 63
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.sidebar') to be visible\u001b[22m\n\n\n  61 |\n  62 |   test('应该显示侧边栏', async ({ page }) => {\n> 63 |     await page.waitForSelector('.sidebar', { state: 'visible' });\n     |                ^\n  64 |     \n  65 |     await expect(page.locator('.sidebar')).toBeVisible();\n  66 |     \n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:63:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:40.874Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-916170728954474894e3",
+              "file": "basic-functionality.spec.js",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "应该有正确的语义化HTML结构",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 6827,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:73:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 57,
+                          "line": 73
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 71 |\u001b[39m\n \u001b[90m 72 |\u001b[39m   test(\u001b[32m'应该有正确的语义化HTML结构'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 73 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'header[role=\"banner\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 74 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'main, .content-primary'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 75 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'nav[role=\"navigation\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 76 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'footer[role=\"contentinfo\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 57,
+                            "line": 73
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n\n\n  71 |\n  72 |   test('应该有正确的语义化HTML结构', async ({ page }) => {\n> 73 |     await expect(page.locator('header[role=\"banner\"]')).toBeVisible();\n     |                                                         ^\n  74 |     await expect(page.locator('main, .content-primary')).toBeVisible();\n  75 |     await expect(page.locator('nav[role=\"navigation\"]')).toBeVisible();\n  76 |     await expect(page.locator('footer[role=\"contentinfo\"]')).toBeVisible();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:73:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:48.495Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 57,
+                        "line": 73
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-ddd4596b08408f64fcd6",
+              "file": "basic-functionality.spec.js",
+              "line": 72,
+              "column": 7
+            },
+            {
+              "title": "应该显示页面标题",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1454,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:56.696Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-899b02b62f4b4bf7113a",
+              "file": "basic-functionality.spec.js",
+              "line": 79,
+              "column": 7
+            },
+            {
+              "title": "登录页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2026,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:48:58.302Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-309d65a4f97793cc956e",
+              "file": "basic-functionality.spec.js",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "分类页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 31866,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 99
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.category-link') to be visible\u001b[22m\n\n\n   97 |     // 先获取一个分类链接\n   98 |     await page.goto('/');\n>  99 |     await page.waitForSelector('.category-link', { state: 'visible' });\n      |                ^\n  100 |     \n  101 |     const firstCategoryLink = page.locator('.category-link').first();\n  102 |     const href = await firstCategoryLink.getAttribute('href');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:99:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:00.349Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-c28530b40acce34c2b1b",
+              "file": "basic-functionality.spec.js",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "标签页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 32372,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 120
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.tag-link') to be visible\u001b[22m\n\n\n  118 |     // 先获取一个标签链接\n  119 |     await page.goto('/');\n> 120 |     await page.waitForSelector('.tag-link', { state: 'visible' });\n      |                ^\n  121 |     \n  122 |     const firstTagLink = page.locator('.tag-link').first();\n  123 |     const href = await firstTagLink.getAttribute('href');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:120:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:14.039Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-6586557b0af089712db5",
+              "file": "basic-functionality.spec.js",
+              "line": 117,
+              "column": 7
+            },
+            {
+              "title": "搜索页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7425,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:144:51",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 51,
+                          "line": 144
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 142 |\u001b[39m     \u001b[90m// 检查搜索表单\u001b[39m\n \u001b[90m 143 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.search-form, form[action=\"/search\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 144 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"q\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 145 |\u001b[39m     \n \u001b[90m 146 |\u001b[39m     \u001b[90m// 执行搜索\u001b[39m\n \u001b[90m 147 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mfill(\u001b[32m'input[name=\"q\"]'\u001b[39m\u001b[33m,\u001b[39m \u001b[32m'test'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 51,
+                            "line": 144
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n\n\n  142 |     // 检查搜索表单\n  143 |     await expect(page.locator('.search-form, form[action=\"/search\"]')).toBeVisible();\n> 144 |     await expect(page.locator('input[name=\"q\"]')).toBeVisible();\n      |                                                   ^\n  145 |     \n  146 |     // 执行搜索\n  147 |     await page.fill('input[name=\"q\"]', 'test');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:144:51"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:33.394Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 51,
+                        "line": 144
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-8540e1c2b39427ffc8b9",
+              "file": "basic-functionality.spec.js",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "留言板页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2148,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:42.211Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-ca71a82c93ada12a69cb",
+              "file": "basic-functionality.spec.js",
+              "line": 157,
+              "column": 7
+            },
+            {
+              "title": "全部分类页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2016,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:44.577Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-ad8677715c98b2ddfe82",
+              "file": "basic-functionality.spec.js",
+              "line": 167,
+              "column": 7
+            },
+            {
+              "title": "全部标签页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 2007,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:182:18",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 18,
+                          "line": 182
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 180 |\u001b[39m     \u001b[90m// 检查标签\u001b[39m\n \u001b[90m 181 |\u001b[39m     \u001b[36mconst\u001b[39m tags \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.tag-cloud-item, .tag-link'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m     expect(tags)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m\n \u001b[90m 185 |\u001b[39m   test(\u001b[32m'404页面应该正常工作'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 18,
+                            "line": 182
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  180 |     // 检查标签\n  181 |     const tags = await page.locator('.tag-cloud-item, .tag-link').count();\n> 182 |     expect(tags).toBeGreaterThan(0);\n      |                  ^\n  183 |   });\n  184 |\n  185 |   test('404页面应该正常工作', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:182:18"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:46.614Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 18,
+                        "line": 182
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-0198f8f533b7ca8669a0",
+              "file": "basic-functionality.spec.js",
+              "line": 176,
+              "column": 7
+            },
+            {
+              "title": "404页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 7295,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:190:61",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 61,
+                          "line": 190
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 188 |\u001b[39m     \n \u001b[90m 189 |\u001b[39m     \u001b[90m// 检查错误消息\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 190 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.error-page, .error-title'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 191 |\u001b[39m     \n \u001b[90m 192 |\u001b[39m     \u001b[36mconst\u001b[39m title \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, .error-title'\u001b[39m)\u001b[33m.\u001b[39mtextContent()\u001b[33m;\u001b[39m\n \u001b[90m 193 |\u001b[39m     expect(title)\u001b[33m.\u001b[39mtoContain(\u001b[32m'不存在'\u001b[39m) \u001b[33m||\u001b[39m expect(title)\u001b[33m.\u001b[39mtoContain(\u001b[32m'404'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 61,
+                            "line": 190
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n\n\n  188 |     \n  189 |     // 检查错误消息\n> 190 |     await expect(page.locator('.error-page, .error-title')).toBeVisible();\n      |                                                             ^\n  191 |     \n  192 |     const title = await page.locator('h1, .error-title').textContent();\n  193 |     expect(title).toContain('不存在') || expect(title).toContain('404');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:190:61"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:48.214Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 61,
+                        "line": 190
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-4161edacb0f8ab0a9b8a",
+              "file": "basic-functionality.spec.js",
+              "line": 185,
+              "column": 7
+            },
+            {
+              "title": "应该成功加载首页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1564,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:49.960Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-304c4ab780f42b303da8",
+              "file": "basic-functionality.spec.js",
+              "line": 10,
+              "column": 7
+            },
+            {
+              "title": "应该显示导航菜单",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 6781,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:24:23",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 23,
+                          "line": 24
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 22 |\u001b[39m   test(\u001b[32m'应该显示导航菜单'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 23 |\u001b[39m     \u001b[36mconst\u001b[39m nav \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'nav[role=\"navigation\"]'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 24 |\u001b[39m     \u001b[36mawait\u001b[39m expect(nav)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 25 |\u001b[39m     \n \u001b[90m 26 |\u001b[39m     \u001b[90m// 检查导航链接\u001b[39m\n \u001b[90m 27 |\u001b[39m     \u001b[36mconst\u001b[39m links \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m nav\u001b[33m.\u001b[39mlocator(\u001b[32m'a'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 23,
+                            "line": 24
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('nav[role=\"navigation\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('nav[role=\"navigation\"]')\u001b[22m\n\n\n  22 |   test('应该显示导航菜单', async ({ page }) => {\n  23 |     const nav = page.locator('nav[role=\"navigation\"]');\n> 24 |     await expect(nav).toBeVisible();\n     |                       ^\n  25 |     \n  26 |     // 检查导航链接\n  27 |     const links = await nav.locator('a').count();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:24:23"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:51.675Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示导航菜单-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 23,
+                        "line": 24
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-41d60e972a7117a9eed3",
+              "file": "basic-functionality.spec.js",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "应该显示文章列表",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 6835,
+                      "error": {
+                        "message": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n",
+                        "stack": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:33:16",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 16,
+                          "line": 33
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 31 |\u001b[39m   test(\u001b[32m'应该显示文章列表'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 32 |\u001b[39m     \u001b[90m// 等待文章加载\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 33 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'.posts-section'\u001b[39m\u001b[33m,\u001b[39m { state\u001b[33m:\u001b[39m \u001b[32m'visible'\u001b[39m\u001b[33m,\u001b[39m timeout\u001b[33m:\u001b[39m \u001b[35m5000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 34 |\u001b[39m     \n \u001b[90m 35 |\u001b[39m     \u001b[90m// 检查文章卡片\u001b[39m\n \u001b[90m 36 |\u001b[39m     \u001b[36mconst\u001b[39m postCards \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.post-card'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 33
+                          },
+                          "message": "TimeoutError: page.waitForSelector: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.posts-section') to be visible\u001b[22m\n\n\n  31 |   test('应该显示文章列表', async ({ page }) => {\n  32 |     // 等待文章加载\n> 33 |     await page.waitForSelector('.posts-section', { state: 'visible', timeout: 5000 });\n     |                ^\n  34 |     \n  35 |     // 检查文章卡片\n  36 |     const postCards = await page.locator('.post-card').count();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:33:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:56.860Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示文章列表-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 16,
+                        "line": 33
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-fe4e74a7043f39da8422",
+              "file": "basic-functionality.spec.js",
+              "line": 31,
+              "column": 7
+            },
+            {
+              "title": "应该能点击文章进入详情页",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7821,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:58:55",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 55,
+                          "line": 58
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 56 |\u001b[39m     \n \u001b[90m 57 |\u001b[39m     \u001b[90m// 检查文章详情页元素\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 58 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'article.post-detail'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.post-title'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 60 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 61 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 55,
+                            "line": 58
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('article.post-detail')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('article.post-detail')\u001b[22m\n\n\n  56 |     \n  57 |     // 检查文章详情页元素\n> 58 |     await expect(page.locator('article.post-detail')).toBeVisible();\n     |                                                       ^\n  59 |     await expect(page.locator('.post-title')).toBeVisible();\n  60 |   });\n  61 |\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:58:55"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:49:59.727Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该能点击文章进入详情页-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 55,
+                        "line": 58
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-34c5875ee04333edc3f4",
+              "file": "basic-functionality.spec.js",
+              "line": 45,
+              "column": 7
+            },
+            {
+              "title": "应该显示侧边栏",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31596,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 63
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.sidebar') to be visible\u001b[22m\n\n\n  61 |\n  62 |   test('应该显示侧边栏', async ({ page }) => {\n> 63 |     await page.waitForSelector('.sidebar', { state: 'visible' });\n     |                ^\n  64 |     \n  65 |     await expect(page.locator('.sidebar')).toBeVisible();\n  66 |     \n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:63:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:05.031Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该显示侧边栏-Mobile-Chrome\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-7214ae577ea194d603ba",
+              "file": "basic-functionality.spec.js",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "应该有正确的语义化HTML结构",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 6821,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:73:57",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 57,
+                          "line": 73
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 71 |\u001b[39m\n \u001b[90m 72 |\u001b[39m   test(\u001b[32m'应该有正确的语义化HTML结构'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 73 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'header[role=\"banner\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 74 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'main, .content-primary'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 75 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'nav[role=\"navigation\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 76 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'footer[role=\"contentinfo\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 57,
+                            "line": 73
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('header[role=\"banner\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('header[role=\"banner\"]')\u001b[22m\n\n\n  71 |\n  72 |   test('应该有正确的语义化HTML结构', async ({ page }) => {\n> 73 |     await expect(page.locator('header[role=\"banner\"]')).toBeVisible();\n     |                                                         ^\n  74 |     await expect(page.locator('main, .content-primary')).toBeVisible();\n  75 |     await expect(page.locator('nav[role=\"navigation\"]')).toBeVisible();\n  76 |     await expect(page.locator('footer[role=\"contentinfo\"]')).toBeVisible();\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:73:57"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:08.908Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-应该有正确的语义化HTML结构-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 57,
+                        "line": 73
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-74792cfa0936880fd9e4",
+              "file": "basic-functionality.spec.js",
+              "line": 72,
+              "column": 7
+            },
+            {
+              "title": "应该显示页面标题",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1609,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:17.068Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-fe5b2476253f17e4ed34",
+              "file": "basic-functionality.spec.js",
+              "line": 79,
+              "column": 7
+            },
+            {
+              "title": "登录页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1952,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:18.838Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-27ee7a314293a7454baf",
+              "file": "basic-functionality.spec.js",
+              "line": 85,
+              "column": 7
+            },
+            {
+              "title": "分类页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 31789,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 99
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.category-link') to be visible\u001b[22m\n\n\n   97 |     // 先获取一个分类链接\n   98 |     await page.goto('/');\n>  99 |     await page.waitForSelector('.category-link', { state: 'visible' });\n      |                ^\n  100 |     \n  101 |     const firstCategoryLink = page.locator('.category-link').first();\n  102 |     const href = await firstCategoryLink.getAttribute('href');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:99:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:20.812Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-分类页面应该正常工作-Mobile-Chrome\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-6421e3a458825de68acc",
+              "file": "basic-functionality.spec.js",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "标签页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31677,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 16,
+                            "line": 120
+                          },
+                          "message": "Error: page.waitForSelector: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.tag-link') to be visible\u001b[22m\n\n\n  118 |     // 先获取一个标签链接\n  119 |     await page.goto('/');\n> 120 |     await page.waitForSelector('.tag-link', { state: 'visible' });\n      |                ^\n  121 |     \n  122 |     const firstTagLink = page.locator('.tag-link').first();\n  123 |     const href = await firstTagLink.getAttribute('href');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:120:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:37.991Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-标签页面应该正常工作-Mobile-Chrome\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-580d6917fca884e7148c",
+              "file": "basic-functionality.spec.js",
+              "line": 117,
+              "column": 7
+            },
+            {
+              "title": "搜索页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7514,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:144:51",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 51,
+                          "line": 144
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 142 |\u001b[39m     \u001b[90m// 检查搜索表单\u001b[39m\n \u001b[90m 143 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.search-form, form[action=\"/search\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 144 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'input[name=\"q\"]'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 145 |\u001b[39m     \n \u001b[90m 146 |\u001b[39m     \u001b[90m// 执行搜索\u001b[39m\n \u001b[90m 147 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mfill(\u001b[32m'input[name=\"q\"]'\u001b[39m\u001b[33m,\u001b[39m \u001b[32m'test'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 51,
+                            "line": 144
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('input[name=\"q\"]')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[name=\"q\"]')\u001b[22m\n\n\n  142 |     // 检查搜索表单\n  143 |     await expect(page.locator('.search-form, form[action=\"/search\"]')).toBeVisible();\n> 144 |     await expect(page.locator('input[name=\"q\"]')).toBeVisible();\n      |                                                   ^\n  145 |     \n  146 |     // 执行搜索\n  147 |     await page.fill('input[name=\"q\"]', 'test');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:144:51"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:50:53.961Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-搜索页面应该正常工作-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 51,
+                        "line": 144
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-817720869311ddbe64c1",
+              "file": "basic-functionality.spec.js",
+              "line": 138,
+              "column": 7
+            },
+            {
+              "title": "留言板页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2222,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:51:02.905Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-fd490e3827f8a65e2b3d",
+              "file": "basic-functionality.spec.js",
+              "line": 157,
+              "column": 7
+            },
+            {
+              "title": "全部分类页面应该正常工作",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2075,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:51:05.293Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-116d732b91937857016d",
+              "file": "basic-functionality.spec.js",
+              "line": 167,
+              "column": 7
+            },
+            {
+              "title": "全部标签页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 2171,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:182:18",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 18,
+                          "line": 182
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 180 |\u001b[39m     \u001b[90m// 检查标签\u001b[39m\n \u001b[90m 181 |\u001b[39m     \u001b[36mconst\u001b[39m tags \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'.tag-cloud-item, .tag-link'\u001b[39m)\u001b[33m.\u001b[39mcount()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m     expect(tags)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 184 |\u001b[39m\n \u001b[90m 185 |\u001b[39m   test(\u001b[32m'404页面应该正常工作'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 18,
+                            "line": 182
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  180 |     // 检查标签\n  181 |     const tags = await page.locator('.tag-cloud-item, .tag-link').count();\n> 182 |     expect(tags).toBeGreaterThan(0);\n      |                  ^\n  183 |   });\n  184 |\n  185 |   test('404页面应该正常工作', async ({ page }) => {\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:182:18"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:51:07.387Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-全部标签页面应该正常工作-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 18,
+                        "line": 182
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-d36a363914266f59a0aa",
+              "file": "basic-functionality.spec.js",
+              "line": 176,
+              "column": 7
+            },
+            {
+              "title": "404页面应该正常工作",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 19,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 7319,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:190:61",
+                        "location": {
+                          "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                          "column": 61,
+                          "line": 190
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 188 |\u001b[39m     \n \u001b[90m 189 |\u001b[39m     \u001b[90m// 检查错误消息\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 190 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'.error-page, .error-title'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 191 |\u001b[39m     \n \u001b[90m 192 |\u001b[39m     \u001b[36mconst\u001b[39m title \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'h1, .error-title'\u001b[39m)\u001b[33m.\u001b[39mtextContent()\u001b[33m;\u001b[39m\n \u001b[90m 193 |\u001b[39m     expect(title)\u001b[33m.\u001b[39mtoContain(\u001b[32m'不存在'\u001b[39m) \u001b[33m||\u001b[39m expect(title)\u001b[33m.\u001b[39mtoContain(\u001b[32m'404'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                            "column": 61,
+                            "line": 190
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.error-page, .error-title')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('.error-page, .error-title')\u001b[22m\n\n\n  188 |     \n  189 |     // 检查错误消息\n> 190 |     await expect(page.locator('.error-page, .error-title')).toBeVisible();\n      |                                                             ^\n  191 |     \n  192 |     const title = await page.locator('h1, .error-title').textContent();\n  193 |     expect(title).toContain('不存在') || expect(title).toContain('404');\n    at d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js:190:61"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-17T15:51:10.815Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-Mobile-Chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-Mobile-Chrome\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "d:\\code\\cfblog\\test-results\\basic-functionality-基础功能测试-404页面应该正常工作-Mobile-Chrome\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "d:\\code\\cfblog\\tests\\e2e\\specs\\basic-functionality.spec.js",
+                        "column": 61,
+                        "line": 190
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "2d0e50e3b0c3f296fb10-bec1f1529e86082153fc",
+              "file": "basic-functionality.spec.js",
+              "line": 185,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-01-17T15:48:28.987Z",
+    "duration": 169439.438,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 20,
+    "flaky": 0
+  }
+}

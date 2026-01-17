@@ -32,6 +32,16 @@ commentRoutes.post('/create', async (c) => {
       return c.json(errorResponse('Post ID, author name, and content are required').json(), 400);
     }
 
+    // Check if post allows comments
+    const postResult = await db.prepare('SELECT comment_status FROM posts WHERE id = ?').bind(postId).first();
+    if (!postResult) {
+      return c.json(errorResponse('Post not found').json(), 404);
+    }
+
+    if (postResult.comment_status === 0) {
+      return c.json(errorResponse('Comments are disabled for this post').json(), 403);
+    }
+
     const commentModel = new Comment(db);
     const comment = await commentModel.createComment({
       post_id: postId,

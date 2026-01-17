@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { PostDetailPage } from '../pages/post-detail-page';
+import PostDetailPage from '../pages/post-detail-page';
 import { UserSwitcher } from '../../helpers/user-switcher';
 
 test.describe('评论功能测试', () => {

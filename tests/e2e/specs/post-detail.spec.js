@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from '../pages/home-page';
-import { PostDetailPage } from '../pages/post-detail-page';
+import HomePage from '../pages/home-page';
+import PostDetailPage from '../pages/post-detail-page';
 import testData from '../../fixtures/test-data';
 
 test.describe('文章详情页测试', () => {

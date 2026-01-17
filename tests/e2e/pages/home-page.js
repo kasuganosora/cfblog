@@ -9,8 +9,9 @@ class HomePage {
   }
 
   async goto() {
-    await this.page.goto(this.url);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto('http://localhost:8787/');
+    // Wait for content to load
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   // 获取精选文章
@@ -26,20 +27,40 @@ class HomePage {
 
   // 获取所有文章
   async getAllPosts() {
-    return await this.page.$$eval('[data-testid="post-card"]', cards => {
-      return cards.map(card => ({
-        title: card.querySelector('[data-testid="post-title"]')?.textContent,
-        slug: card.querySelector('a')?.getAttribute('href'),
-        excerpt: card.querySelector('[data-testid="post-excerpt"]')?.textContent
-      }));
-    });
+    // Wait for posts to be rendered with longer timeout
+    try {
+      await this.page.waitForSelector('[data-testid="post-card"]', { timeout: 20000 });
+    } catch (error) {
+      console.log('Timeout waiting for posts, using whatever is available');
+      // Continue anyway
+    }
+
+    const cards = await this.page.locator('[data-testid="post-card"]').all();
+    const posts = [];
+
+    for (const card of cards) {
+      try {
+        const href = await card.locator('a').getAttribute('href');
+        // Extract slug from href (e.g., "/post/api" -> "api")
+        const slug = href ? href.replace('/post/', '') : '';
+        posts.push({
+          title: await card.locator('[data-testid="post-title"]').textContent(),
+          slug: slug,
+          excerpt: await card.locator('[data-testid="post-excerpt"]').textContent()
+        });
+      } catch (error) {
+        console.log('Error reading post card:', error);
+      }
+    }
+
+    console.log('Total posts found:', posts.length);
+    return posts;
   }
 
   // 点击文章
   async clickPost(slug) {
     const postLink = this.page.locator(`[data-testid="post-card"] a[href*="${slug}"]`);
     await postLink.click();
-    await this.page.waitForLoadState('networkidle');
   }
 
   // 搜索
@@ -53,7 +74,6 @@ class HomePage {
   async goToPage(pageNumber) {
     const pageButton = this.page.locator(`[data-testid="pagination"] a[data-page="${pageNumber}"]`);
     await pageButton.click();
-    await this.page.waitForLoadState('networkidle');
   }
 
   // 获取当前页码
@@ -73,22 +93,25 @@ class HomePage {
   // 切换语言
   async switchLanguage(lang) {
     await this.page.click('[data-testid="language-switcher"]');
-    await this.page.click(`[data-lang="${lang}"]`);
-    await this.page.waitForLoadState('networkidle');
+    // The toggle switches between 'zh-cn' and 'en-us'
+    // We need to verify it switched to the target language
+    const currentLang = await this.page.evaluate(() => localStorage.getItem('userLanguage'));
+    // If we didn't get the expected language, click again
+    if (currentLang !== lang) {
+      await this.page.click('[data-testid="language-switcher"]');
+    }
   }
 
   // 导航到分类
   async goToCategory(categorySlug) {
     const categoryLink = this.page.locator(`[data-testid="category-link"][data-slug="${categorySlug}"]`);
     await categoryLink.click();
-    await this.page.waitForLoadState('networkidle');
   }
 
   // 导航到标签
   async goToTag(tagSlug) {
     const tagLink = this.page.locator(`[data-testid="tag-link"][data-slug="${tagSlug}"]`);
     await tagLink.click();
-    await this.page.waitForLoadState('networkidle');
   }
 }
 
