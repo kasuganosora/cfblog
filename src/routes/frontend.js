@@ -1,486 +1,732 @@
-import { getCache, setCache } from '../utils/cache.js';
-import { successResponse, errorResponse } from '../utils/response.js';
-import { renderPage, renderTemplate } from '../utils/template.js';
-import { addFeaturedImagesToPosts, addFeaturedImageToPost } from '../utils/image.js';
-import { Post } from '../models/Post.js';
-import { Category } from '../models/Category.js';
-import { Tag } from '../models/Tag.js';
-import { Comment } from '../models/Comment.js';
+/**
+ * Frontend Routes
+ * Handles all frontend page rendering with themes and i18n
+ */
 
-// 处理前台路由
-export async function handleFrontendRoutes(request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
+import { Router } from 'itty-router';
+
+// Import utilities and components
+import Layout from '../frontend/components/layout.js';
+import { PostCard } from '../frontend/components/post-card.js';
+import { Pagination } from '../frontend/components/pagination.js';
+import TemplateEngine from '../frontend/template-engine.js';
+import { initI18n, t } from '../frontend/utils/i18n.js';
+import { initTheme, DEFAULT_THEME, AVAILABLE_THEMES } from '../frontend/utils/theme.js';
+
+const frontendRouter = Router();
+
+// Initialize systems
+let templateEngine = null;
+let currentTheme = DEFAULT_THEME;
+let currentLang = 'zh-cn';
+
+/**
+ * Initialize frontend systems
+ */
+async function initFrontend() {
+  // Initialize i18n
+  const langPack = await initI18n();
+  currentLang = langPack;
   
-  const env = request.env;
+  // Initialize theme
+  currentTheme = await initTheme('local');
   
-  // 静态资源直接跳过，让 wrangler 处理
-  if (path.startsWith('/static/')) {
-    return null; // 返回 null 让其他处理器处理
-  }
+  // Initialize template engine
+  templateEngine = new TemplateEngine('local');
   
-  try {
-    // 首页
-    if (path === '/' || path === '/index.html') {
-      return await handleHome(request, env);
-    }
-    
-    // 文章详情页
-    if (path.startsWith('/post/')) {
-      return await handlePostDetail(request, env);
-    }
-    
-    // 分类页面
-    if (path.startsWith('/category/')) {
-      return await handleCategoryPosts(request, env);
-    }
-
-    // 分类列表页面
-    if (path === '/categories') {
-      return await handleCategoriesList(request, env);
-    }
-    
-    // 标签页面
-    if (path.startsWith('/tag/')) {
-      return await handleTagPosts(request, env);
-    }
-
-    // 标签列表页面
-    if (path === '/tags') {
-      return await handleTagsList(request, env);
-    }
-
-    // 留言/反馈页面
-    if (path === '/feedback') {
-      return await handleFeedbackPage(request, env);
-    }
-
-    // 登录页面
-    if (path === '/login') {
-      return await handleLoginPage(request, env);
-    }
-    
-    // 搜索页面
-    if (path.startsWith('/search')) {
-      return await handleSearch(request, env);
-    }
-    
-    // 关于页面
-    if (path === '/about') {
-      return await handleAbout(request, env);
-    }
-    
-    // 联系页面
-    if (path === '/contact') {
-      return await handleContact(request, env);
-    }
-    
-    // 反馈提交
-    if (path === '/feedback' && request.method === 'POST') {
-      return await handleSubmitFeedback(request, env);
-    }
-    
-    // 静态资源
-    if (path.startsWith('/static/')) {
-      return await handleStaticResource(request, env);
-    }
-    
-    // 返回 404 页面
-    return await handleNotFound(request, env);
-  } catch (err) {
-    console.error('Frontend error:', err);
-    return await handleServerError(request, env);
-  }
+  console.log(`Frontend initialized: theme=${currentTheme}, lang=${currentLang}`);
 }
 
-// 首页
-async function handleHome(request, env) {
-  const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get('page')) || 1;
-  const limit = 10;
-  
-  try {
-    // 检查缓存
-    const cacheKey = `home:page:${page}`;
-    const cachedPage = await getCache(env, cacheKey);
-    
-    if (cachedPage.success && cachedPage.exists) {
-      return new Response(cachedPage.data, {
-        headers: {
-          'Content-Type': 'text/html',
-          'Cache-Control': 'max-age=300', // 5分钟缓存
-        }
-      });
-    }
-    
-    // 获取文章列表
-    const postModel = new Post(env);
-    const postsResult = await postModel.getPosts({ 
-      page, 
-      limit, 
-      status: 1 // 只获取已发布的文章
-    });
-    
-    // 获取热门分类
-    const categoryModel = new Category(env);
-    const categoriesResult = await categoryModel.getPopularCategories(10);
-    
-    // 获取热门标签
-    const tagModel = new Tag(env);
-    const tagsResult = await tagModel.getPopularTags(20);
-    
-    // 获取网站设置
-    const settings = await getSiteSettings(env);
-    
-    // 为文章添加题图信息
-    const postsWithImages = addFeaturedImagesToPosts(postsResult.success ? postsResult.data : []);
-    
-    // 渲染页面
-    const html = renderPage('home', {
-      posts: postsWithImages,
-      hasPosts: postsWithImages.length > 0,
-      pagination: postsResult.success ? postsResult.pagination : null,
-      hasMorePosts: postsResult.success && postsResult.pagination && (postsResult.pagination.totalPages > 1),
-      hasPrevPage: postsResult.success && postsResult.pagination && postsResult.pagination.page > 1,
-      hasNextPage: postsResult.success && postsResult.pagination && postsResult.pagination.page < postsResult.pagination.totalPages,
-      prevPage: postsResult.success && postsResult.pagination ? postsResult.pagination.page - 1 : null,
-      nextPage: postsResult.success && postsResult.pagination ? postsResult.pagination.page + 1 : null,
-      currentPage: page,
-      totalPages: postsResult.success && postsResult.pagination ? postsResult.pagination.totalPages : 1,
-      categories: categoriesResult.success ? categoriesResult.data : [],
-      tags: tagsResult.success ? tagsResult.data : [],
-      blogTitle: settings.site_title || 'Retrospect',
-      blogDescription: settings.site_description || '记录生活中的美好瞬间，分享摄影与生活的点点滴滴。',
-      pageTitle: '首页',
-      metaDescription: settings.site_description || 'A blog built with Cloudflare Workers',
-      currentYear: new Date().getFullYear(),
-      isHome: true
-    });
-    
-    // 缓存结果
-    await setCache(env, cacheKey, html, 300); // 5分钟缓存
-    
-    return new Response(html, {
-      headers: {
-        'Content-Type': 'text/html',
-        'Cache-Control': 'max-age=300',
-      }
-    });
-  } catch (err) {
-    console.error('Home page error:', err);
-    return await handleServerError(request, env);
+/**
+ * Fetch data from API
+ */
+async function fetchAPI(endpoint) {
+  const response = await fetch(`/api${endpoint}`);
+  if (!response.ok) {
+    console.error(`API Error: ${response.status} ${endpoint}`);
+    return null;
   }
+  return await response.json();
 }
 
-// 文章详情页
-async function handlePostDetail(request, env) {
-  const url = new URL(request.url);
-  const pathParts = url.pathname.split('/');
-  const slug = pathParts[2];
-  
-  if (!slug) {
-    return await handleNotFound(request, env);
+/**
+ * Render page with layout
+ */
+async function renderPage(options) {
+  if (!templateEngine) {
+    await initFrontend();
   }
+
+  const {
+    title = '',
+    description = 'CFBlog - 基于Cloudflare的现代化博客平台',
+    content = '',
+    canonical = '',
+  } = options;
+
+  const layout = new Layout(currentTheme, currentLang);
+  return layout.render({
+    title,
+    description,
+    content,
+    canonical,
+    extraHead: `
+      <link rel="stylesheet" href="/assets/css/themes/${currentTheme}/style.css">
+      <script type="module">
+        window.CFBlogTheme = ${JSON.stringify(AVAILABLE_THEMES)};
+        window.CFBlogI18n = {
+          current: '${currentLang}',
+          default: 'zh-cn'
+        };
+      </script>
+    `,
+  });
+}
+
+/**
+ * Render error page
+ */
+async function renderError(status = 404) {
+  const content = `
+<section class="error-page" aria-labelledby="error-title">
+  <div class="error-container">
+    <div class="error-icon">${status === 404 ? '😕' : '😞'}</div>
+    <h1 id="error-title" class="error-title">
+      ${status === 404 ? '页面不存在' : '服务器错误'}
+    </h1>
+    <p class="error-message">
+      ${status === 404 ? '您访问的页面不存在或已被删除。' : '服务器遇到了一些问题，请稍后再试。'}
+    </p>
+    <a href="/" class="error-btn" aria-label="返回首页">
+      返回首页
+    </a>
+  </div>
+</section>`;
   
+  return renderPage({
+    title: status === 404 ? '页面不存在' : '服务器错误',
+    content,
+  });
+}
+
+// === Page Routes ===
+
+// GET / - Home page
+frontendRouter.get('/', async (request) => {
   try {
-    // 检查缓存
-    const cacheKey = `post:${slug}`;
-    const cachedPage = await getCache(env, cacheKey);
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const perPage = 10;
+
+    // Fetch latest posts
+    const postsData = await fetchAPI(`/post/list?page=${page}&per_page=${perPage}&status=1`);
     
-    if (cachedPage.success && cachedPage.exists) {
-      return new Response(cachedPage.data, {
-        headers: {
-          'Content-Type': 'text/html',
-          'Cache-Control': 'max-age=600', // 10分钟缓存
-        }
+    if (!postsData || !postsData.success) {
+      return renderPage({
+        title: '首页',
+        content: '<div class="loading">加载中...</div>',
       });
     }
-    
-    // 获取文章详情
-    const postModel = new Post(env);
-    const postResult = await postModel.getBySlug(slug);
-    
-    if (!postResult.success || !postResult.result) {
-      return await handleNotFound(request, env);
-    }
-    
-    const post = postResult.result;
-    
-    // 检查文章是否已发布
-    if (post.status !== 1) {
-      return await handleNotFound(request, env);
-    }
-    
-    // 为文章添加题图信息
-    const postWithImage = addFeaturedImageToPost(post);
-    
-    // 获取文章评论
-    const commentModel = new Comment(env);
-    const commentsResult = await commentModel.getComments({
-      postId: post.id,
-      status: 1, // 只获取已批准的评论
-      parentId: null, // 只获取顶级评论
-      limit: 100 // 限制评论数量
+
+    const { data: posts = [], pagination: pag = {} } = postsData;
+
+    // Render post cards
+    const postsHtml = posts.length > 0 
+      ? PostCard.renderList(posts)
+      : `<div class="posts-empty">
+          <div class="empty-icon">📝</div>
+          <h2 class="empty-title">暂无文章</h2>
+          <p class="empty-message">还没有发布任何文章</p>
+         </div>`;
+
+    // Render pagination
+    const paginationHtml = Pagination.render({
+      currentPage: pag.page || page,
+      totalPages: pag.total_pages || 1,
+      totalItems: pag.total || 0,
+      itemsPerPage: perPage,
+      basePath: '/',
     });
+
+    // Fetch sidebar data
+    const featuredData = await fetchAPI('/post/list?featured=1&per_page=5');
+    const categoriesData = await fetchAPI('/category/list');
+    const tagsData = await fetchAPI('/tag/popular?per_page=10');
+
+    const sidebarContent = `
+<aside class="sidebar">
+  <section class="sidebar-section" aria-labelledby="featured-heading">
+    <h2 id="featured-heading" class="sidebar-title">
+      <span class="icon">⭐</span> 精选文章
+    </h2>
+    <div class="featured-posts">
+      ${featuredData?.data?.slice(0, 5).map(post => PostCard.render(post)).join('')}
+    </div>
+  </section>
+
+  <section class="sidebar-section" aria-labelledby="tags-heading">
+    <h2 id="tags-heading" class="sidebar-title">
+      <span class="icon">🏷️</span> 热门标签
+    </h2>
+    <div class="popular-tags">
+      ${tagsData?.data?.slice(0, 10).map(tag => 
+        `<a href="/tag/${tag.slug}" class="tag-link" rel="tag">${tag.name}</a>`
+      ).join('') || '<p>暂无标签</p>'}
+    </div>
+  </section>
+
+  <section class="sidebar-section" aria-labelledby="categories-heading">
+    <h2 id="categories-heading" class="sidebar-title">
+      <span class="icon">📂</span> 分类
+    </h2>
+    <nav class="categories-nav" aria-label="分类导航">
+      <ul class="categories-list">
+        ${categoriesData?.data?.map(cat => 
+          `<li class="category-item">
+            <a href="/category/${cat.slug}" class="category-link" rel="category">
+              <span class="category-icon">📁</span>
+              <span class="category-name">${cat.name}</span>
+              <span class="category-count">${cat.post_count || 0}</span>
+            </a>
+           </li>`
+        ).join('') || '<li class="category-item">暂无分类</li>'}
+      </ul>
+    </nav>
+  </section>
+</aside>`;
+
+    return renderPage({
+      title: '首页',
+      content: `
+<div class="main-wrapper">
+  <div class="content-primary">
+    <section class="posts-section" aria-label="最新文章">
+      <h1 class="section-title">
+        <span class="icon">📝</span> 最新文章
+      </h1>
+      ${postsHtml}
+      ${paginationHtml}
+    </section>
+  </div>
+  ${sidebarContent}
+</div>`,
+    });
+  } catch (error) {
+    console.error('Home page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /post/:slug - Post detail page
+frontendRouter.get('/post/:slug', async (request) => {
+  try {
+    const slug = request.params.slug;
+
+    // Fetch post data
+    const postData = await fetchAPI(`/post/slug/${slug}`);
     
-    // 获取热门分类
-    const categoryModel = new Category(env);
-    const categoriesResult = await categoryModel.getPopularCategories(10);
-    
-    // 获取热门标签
-    const tagModel = new Tag(env);
-    const tagsResult = await tagModel.getPopularTags(20);
-    
-    // 获取网站设置
-    const settings = await getSiteSettings(env);
-    
-    // 格式化日期
-    const formattedDate = new Date(postWithImage.published_at || postWithImage.created_at).toLocaleDateString('zh-CN', {
+    if (!postData || !postData.success || !postData.data) {
+      return renderError(404);
+    }
+
+    const post = postData.data;
+
+    // Fetch comments
+    const commentsData = await fetchAPI(`/comment/post/${post.id}`);
+
+    // Format date
+    const publishedDate = new Date(post.published_at).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-    
-    // 渲染页面
-    const html = renderPage('post', {
-      ...postWithImage,
-      formattedDate,
-      createdAt: postWithImage.published_at || postWithImage.created_at,
-      hasComments: commentsResult.success && commentsResult.data.length > 0,
-      commentsCount: commentsResult.success ? commentsResult.data.length : 0,
-      commentsHtml: commentsResult.success ? renderCommentsHtml(commentsResult.data) : '',
-      hasAttachments: postWithImage.attachments && postWithImage.attachments.length > 0,
-      categories: categoriesResult.success ? categoriesResult.data : [],
-      tags: tagsResult.success ? tagsResult.data : [],
-      blogTitle: settings.site_title || 'Retrospect',
-      blogDescription: settings.site_description || '记录生活中的美好瞬间，分享摄影与生活的点点滴滴。',
-      pageTitle: postWithImage.title,
-      metaDescription: postWithImage.excerpt || postWithImage.title,
-      currentYear: new Date().getFullYear(),
-      isPost: true
-    });
-    
-    // 缓存结果
-    await setCache(env, cacheKey, html, 600); // 10分钟缓存
-    
-    return new Response(html, {
-      headers: {
-        'Content-Type': 'text/html',
-        'Cache-Control': 'max-age=600',
-      }
-    });
-  } catch (err) {
-    console.error('Post detail page error:', err);
-    return await handleServerError(request, env);
-  }
-}
 
-// 其他路由处理函数（简化版本）
-async function handleCategoryPosts(request, env) {
-  // TODO: 实现分类页面
-  return await handleNotFound(request, env);
-}
+    const content = `
+<article class="post-detail" aria-labelledby="post-title">
+  <header class="post-header">
+    <div class="post-meta-top">
+      ${post.category_name 
+        ? `<a href="/category/${post.category_slug || ''}" class="post-category" rel="category tag">
+            <span class="icon">📁</span>
+            ${post.category_name}
+           </a>` 
+        : ''}
+      
+      <time class="post-date" datetime="${post.published_at}">
+        <span class="icon">📅</span>
+        ${publishedDate}
+      </time>
+    </div>
 
-async function handleTagPosts(request, env) {
-  // TODO: 实现标签页面
-  return await handleNotFound(request, env);
-}
+    <h1 id="post-title" class="post-title">${post.title}</h1>
 
-async function handleSearch(request, env) {
-  // TODO: 实现搜索页面
-  return await handleNotFound(request, env);
-}
+    <div class="post-meta-bottom">
+      <div class="post-author" itemscope itemtype="https://schema.org/Person">
+        <span class="icon">👤</span>
+        <span itemprop="name">${post.author_name || post.display_name || 'Unknown'}</span>
+      </div>
+      
+      <span class="post-views" title="浏览次数">
+        <span class="icon">👁</span>
+        ${post.view_count || 0}
+      </span>
+    </div>
+  </header>
 
-async function handleAbout(request, env) {
-  // TODO: 实现关于页面
-  return await handleNotFound(request, env);
-}
+  <div class="post-content">
+    <p class="post-excerpt">${post.excerpt || ''}</p>
+  </div>
 
-async function handleContact(request, env) {
-  // TODO: 实现联系页面
-  return await handleNotFound(request, env);
-}
+  <footer class="post-footer">
+    <div class="post-tags-section">
+      <span class="tags-label">标签:</span>
+      ${post.tags?.length > 0 
+        ? post.tags.map(tag => 
+            `<a href="/tag/${tag.slug}" class="post-tag" rel="tag">${tag.name}</a>`
+          ).join('')
+        : '<span class="no-tags">暂无标签</span>'}
+    </div>
 
-async function handleSubmitFeedback(request, env) {
-  // TODO: 实现反馈提交
-  return await handleNotFound(request, env);
-}
+    <div class="post-share">
+      <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href)">
+        <span class="icon">📤</span> 分享
+      </button>
+    </div>
+  </footer>
+</article>
 
-async function handleStaticResource(request, env) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-  
-  // 移除 /static 前缀，获取实际文件路径
-  const filePath = path.replace('/static/', '');
-  
-  try {
-    // 在开发环境中，我们需要直接返回静态文件内容
-    // 这里我们先返回一个简单的响应，让前端知道文件存在
-    
-    // 根据文件类型设置正确的 Content-Type
-    let contentType = 'text/plain';
-    if (filePath.endsWith('.css')) {
-      contentType = 'text/css';
-    } else if (filePath.endsWith('.js')) {
-      contentType = 'application/javascript';
-    } else if (filePath.endsWith('.png')) {
-      contentType = 'image/png';
-    } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-      contentType = 'image/jpeg';
-    } else if (filePath.endsWith('.gif')) {
-      contentType = 'image/gif';
-    } else if (filePath.endsWith('.svg')) {
-      contentType = 'image/svg+xml';
-    }
-    
-    // 在开发环境中，Cloudflare Workers 无法直接读取本地文件
-    // 我们需要使用不同的方法
-    
-    // 对于开发环境，我们可以返回一个占位符或者让 wrangler dev 处理
-    if (env.ENVIRONMENT === 'development') {
-      // 让 wrangler dev 的静态文件处理器处理
-      return new Response(`/* Static file: ${filePath} */`, {
-        status: 200,
-        headers: {
-          'Content-Type': contentType,
-          'Cache-Control': 'no-cache'
-        }
-      });
-    }
-    
-    return new Response('Static resource not found', { 
-      status: 404,
-      headers: {
-        'Content-Type': 'text/plain'
-      }
+<section class="comments-section" aria-labelledby="comments-title">
+  <h2 id="comments-title" class="comments-title">
+    <span class="icon">💬</span> 
+    评论 (${commentsData?.data?.length || 0})
+  </h2>
+
+  ${post.comment_status 
+    ? `<form class="comment-form" action="/api/comment/create" method="POST">
+          <input type="hidden" name="post_id" value="${post.id}">
+          
+          <div class="form-group">
+            <label for="author_name" class="form-label">姓名</label>
+            <input type="text" 
+                   id="author_name" 
+                   name="author_name" 
+                   class="form-input" 
+                   required
+                   aria-required="true">
+          </div>
+          
+          <div class="form-group">
+            <label for="author_email" class="form-label">邮箱</label>
+            <input type="email" 
+                   id="author_email" 
+                   name="author_email" 
+                   class="form-input"
+                   aria-required="false">
+          </div>
+          
+          <div class="form-group">
+            <label for="content" class="form-label">评论内容</label>
+            <textarea id="content" 
+                      name="content" 
+                      class="form-textarea" 
+                      rows="4"
+                      required
+                      aria-required="true"></textarea>
+          </div>
+          
+          <button type="submit" class="form-submit">提交评论</button>
+        </form>`
+    : '<p class="comments-disabled">此文章已关闭评论功能。</p>'}
+
+  <div class="comments-list">
+    ${commentsData?.data?.map(comment => 
+      `<div class="comment" data-comment-id="${comment.id}">
+        <header class="comment-header">
+          <span class="comment-author">${comment.author_name || 'Anonymous'}</span>
+          <time class="comment-date" datetime="${comment.created_at}">
+            ${new Date(comment.created_at).toLocaleDateString('zh-CN')}
+          </time>
+        </header>
+        <div class="comment-content">${comment.content || ''}</div>
+       </div>`
+    ).join('') || '<p class="no-comments">暂无评论</p>'}
+  </div>
+</section>`;
+
+    return renderPage({
+      title: post.title,
+      description: post.excerpt || post.title,
+      content,
+      canonical: `/post/${slug}`,
     });
   } catch (error) {
-    console.error('Static resource error:', error);
-    return new Response('Static resource error', { 
-      status: 500,
-      headers: {
-        'Content-Type': 'text/plain'
-      }
+    console.error('Post page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /category/:slug - Category page
+frontendRouter.get('/category/:slug', async (request) => {
+  try {
+    const slug = request.params.slug;
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+
+    // Fetch category and posts
+    const catData = await fetchAPI(`/category/${slug}`);
+    const postsData = await fetchAPI(`/post/list?category_id=${catData?.data?.id || 0}&page=${page}&per_page=10&status=1`);
+
+    if (!catData?.success || !catData?.data) {
+      return renderError(404);
+    }
+
+    const category = catData.data;
+    const { data: posts = [], pagination: pag = {} } = postsData;
+
+    const content = `
+<section class="category-page" aria-labelledby="category-title">
+  <div class="category-header">
+    <h1 id="category-title" class="category-title">
+      <span class="icon">📁</span> 
+      ${category.name}
+    </h1>
+    <p class="category-description">${category.description || ''}</p>
+  </div>
+
+  <div class="posts-grid">
+    ${posts.map(post => PostCard.render(post)).join('')}
+  </div>
+
+  ${Pagination.render({
+    currentPage: pag.page || page,
+    totalPages: pag.total_pages || 1,
+    totalItems: pag.total || 0,
+    itemsPerPage: 10,
+    basePath: `/category/${slug}`,
+  })}
+</section>`;
+
+    return renderPage({
+      title: category.name,
+      description: category.description || '',
+      content,
+      canonical: `/category/${slug}`,
     });
+  } catch (error) {
+    console.error('Category page error:', error);
+    return renderError(500);
   }
-}
+});
 
-async function handleCategoriesList(request, env) {
-  // TODO: 实现分类列表页面
-  return await handleNotFound(request, env);
-}
+// GET /categories - All categories page
+frontendRouter.get('/categories', async () => {
+  try {
+    const data = await fetchAPI('/category/list');
 
-async function handleTagsList(request, env) {
-  // TODO: 实现标签列表页面
-  return await handleNotFound(request, env);
-}
-
-async function handleFeedbackPage(request, env) {
-  // TODO: 实现留言板页面
-  return await handleNotFound(request, env);
-}
-
-async function handleLoginPage(request, env) {
-  // TODO: 实现登录页面
-  return await handleNotFound(request, env);
-}
-
-// 404 页面
-async function handleNotFound(request, env) {
-  const settings = await getSiteSettings(env);
-  const html = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>页面未找到 - ${settings.site_title || 'Retrospect'}</title>
-</head>
-<body>
-  <h1>404 - 页面未找到</h1>
-  <p>抱歉，您访问的页面不存在。</p>
-  <p><a href="/">返回首页</a></p>
-</body>
-</html>`;
-  
-  return new Response(html, {
-    status: 404,
-    headers: {
-      'Content-Type': 'text/html',
+    if (!data?.success || !data?.data) {
+      return renderPage({
+        title: '分类',
+        content: '<div class="loading">加载中...</div>',
+      });
     }
-  });
-}
 
-// 服务器错误页面
-async function handleServerError(request, env) {
-  const settings = await getSiteSettings(env);
-  const html = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>服务器错误 - ${settings.site_title || 'Retrospect'}</title>
-</head>
-<body>
-  <h1>500 - 服务器错误</h1>
-  <p>抱歉，服务器出现了错误。</p>
-  <p><a href="/">返回首页</a></p>
-</body>
-</html>`;
+    const categories = data.data;
+
+    const content = `
+<section class="categories-page" aria-labelledby="categories-title">
+  <h1 id="categories-title" class="page-title">
+    <span class="icon">📂</span> 全部分类
+  </h1>
   
-  return new Response(html, {
-    status: 500,
-    headers: {
-      'Content-Type': 'text/html',
-    }
-  });
-}
+  <div class="categories-grid">
+    ${categories.map(cat => 
+      `<a href="/category/${cat.slug}" class="category-card" rel="category">
+        <div class="category-card-icon">📁</div>
+        <div class="category-card-content">
+          <h2 class="category-card-title">${cat.name}</h2>
+          <p class="category-card-description">${cat.description || ''}</p>
+          <span class="category-card-count">${cat.post_count || 0} 篇文章</span>
+        </div>
+       </a>`
+    ).join('')}
+  </div>
+</section>`;
 
-// 获取网站设置
-async function getSiteSettings(env) {
-  // 这里应该从数据库或配置中获取网站设置
-  // 暂时返回默认设置
-  return {
-    site_title: 'Retrospect',
-    site_description: '记录生活中的美好瞬间，分享摄影与生活的点点滴滴。'
-  };
-}
-
-// 渲染评论 HTML
-function renderCommentsHtml(comments) {
-  if (!Array.isArray(comments) || comments.length === 0) {
-    return '';
+    return renderPage({
+      title: '分类',
+      content,
+    });
+  } catch (error) {
+    console.error('Categories page error:', error);
+    return renderError(500);
   }
+});
+
+// GET /tag/:slug - Tag page
+frontendRouter.get('/tag/:slug', async (request) => {
+  try {
+    const slug = request.params.slug;
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+
+    // Fetch tag and posts
+    const tagData = await fetchAPI(`/tag/${slug}`);
+    const postsData = await fetchAPI(`/post/list?tag_id=${tagData?.data?.id || 0}&page=${page}&per_page=10&status=1`);
+
+    if (!tagData?.success || !tagData?.data) {
+      return renderError(404);
+    }
+
+    const tag = tagData.data;
+    const { data: posts = [], pagination: pag = {} } = postsData;
+
+    const content = `
+<section class="tag-page" aria-labelledby="tag-title">
+  <div class="tag-header">
+    <h1 id="tag-title" class="tag-title">
+      <span class="icon">🏷️</span> 
+      ${tag.name}
+    </h1>
+    <p class="tag-count">${pag.total || 0} 篇文章</p>
+  </div>
+
+  <div class="posts-grid">
+    ${posts.map(post => PostCard.render(post)).join('')}
+  </div>
+
+  ${Pagination.render({
+    currentPage: pag.page || page,
+    totalPages: pag.total_pages || 1,
+    totalItems: pag.total || 0,
+    itemsPerPage: 10,
+    basePath: `/tag/${slug}`,
+  })}
+</section>`;
+
+    return renderPage({
+      title: `标签: ${tag.name}`,
+      content,
+      canonical: `/tag/${slug}`,
+    });
+  } catch (error) {
+    console.error('Tag page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /tags - All tags page
+frontendRouter.get('/tags', async () => {
+  try {
+    const data = await fetchAPI('/tag/list');
+
+    if (!data?.success || !data?.data) {
+      return renderPage({
+        title: '标签',
+        content: '<div class="loading">加载中...</div>',
+      });
+    }
+
+    const tags = data.data;
+
+    const content = `
+<section class="tags-page" aria-labelledby="tags-title">
+  <h1 id="tags-title" class="page-title">
+    <span class="icon">🏷️</span> 全部标签
+  </h1>
   
-  return comments.map(comment => `
-    <div class="comment" id="comment-${comment.id}">
-      <div class="comment-header">
-        <div class="comment-author">
-          <div class="author-avatar">
-            <i class="fas fa-user-circle"></i>
-          </div>
-          <strong>${comment.author_name || comment.author_display_name || '匿名用户'}</strong>
-        </div>
-        <time datetime="${comment.created_at}">
-          ${new Date(comment.created_at).toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </time>
-      </div>
-      <div class="comment-content">
-        <p>${comment.content}</p>
-      </div>
-      <div class="comment-actions">
-        <button class="reply-btn" data-comment-id="${comment.id}">回复</button>
-      </div>
-      ${comment.replies && comment.replies.length > 0 ? `
-        <div class="comment-replies">
-          ${renderCommentsHtml(comment.replies)}
-        </div>
-      ` : ''}
+  <div class="tags-cloud">
+    ${tags.map(tag => 
+      `<a href="/tag/${tag.slug}" class="tag-cloud-item" rel="tag" style="font-size: ${1 + Math.random() * 1}rem">
+        ${tag.name}
+        <span class="tag-count">${tag.post_count || 0}</span>
+       </a>`
+    ).join('')}
+  </div>
+</section>`;
+
+    return renderPage({
+      title: '标签',
+      content,
+    });
+  } catch (error) {
+    console.error('Tags page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /search - Search page
+frontendRouter.get('/search', async (request) => {
+  try {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get('q') || '';
+    const page = parseInt(url.searchParams.get('page') || '1');
+
+    if (!keyword) {
+      return renderPage({
+        title: '搜索',
+        content: `
+<section class="search-page" aria-labelledby="search-title">
+  <h1 id="search-title" class="page-title">
+    <span class="icon">🔍</span> 搜索
+  </h1>
+  
+  <form action="/search" method="GET" class="search-form">
+    <div class="search-input-wrapper">
+      <input type="text" 
+             name="q" 
+             class="search-input" 
+             placeholder="搜索文章、标签、分类..." 
+             value="${keyword}"
+             aria-label="搜索内容"
+             autofocus>
+      <button type="submit" class="search-button">搜索</button>
     </div>
-  `).join('');
-}
+  </form>
+</section>`,
+      });
+    }
+
+    // Perform search
+    const results = await fetchAPI(`/search?q=${encodeURIComponent(keyword)}&page=${page}&per_page=10`);
+
+    const content = `
+<section class="search-results" aria-labelledby="results-title">
+  <div class="search-header">
+    <h1 id="results-title" class="page-title">
+      <span class="icon">🔍</span> 搜索结果: "${keyword}"
+    </h1>
+    <p class="search-info">找到 ${results?.pagination?.total || 0} 条结果</p>
+  </div>
+
+  ${results?.data && results.data.length > 0
+    ? `<div class="posts-grid">
+         ${results.data.map(result => PostCard.render(result)).join('')}
+       </div>
+       ${Pagination.render({
+         currentPage: page,
+         totalPages: results.pagination?.total_pages || 1,
+         totalItems: results.pagination?.total || 0,
+         itemsPerPage: 10,
+         basePath: `/search?q=${encodeURIComponent(keyword)}`,
+       })}`
+    : `<div class="no-results">
+         <div class="empty-icon">🔍</div>
+         <h2 class="empty-title">未找到相关内容</h2>
+         <p class="empty-message">尝试使用其他关键词搜索</p>
+       </div>`}
+</section>`;
+
+    return renderPage({
+      title: `搜索: ${keyword}`,
+      content,
+    });
+  } catch (error) {
+    console.error('Search page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /feedback - Guestbook page
+frontendRouter.get('/feedback', async () => {
+  try {
+    const data = await fetchAPI('/feedback/list');
+
+    const content = `
+<section class="feedback-page" aria-labelledby="feedback-title">
+  <h1 id="feedback-title" class="page-title">
+    <span class="icon">📝</span> 留言板
+  </h1>
+
+  <form action="/api/feedback/create" method="POST" class="feedback-form">
+    <div class="form-group">
+      <label for="name" class="form-label">姓名</label>
+      <input type="text" id="name" name="name" class="form-input" required aria-required="true">
+    </div>
+    
+    <div class="form-group">
+      <label for="email" class="form-label">邮箱 (可选)</label>
+      <input type="email" id="email" name="email" class="form-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="content" class="form-label">留言内容</label>
+      <textarea id="content" name="content" class="form-textarea" rows="5" required aria-required="true"></textarea>
+    </div>
+    
+    <button type="submit" class="form-submit">提交留言</button>
+  </form>
+
+  <div class="feedback-list">
+    <h2 class="feedback-list-title">最近留言</h2>
+    ${data?.data?.slice(0, 10).map(item => 
+      `<div class="feedback-item">
+        <header class="feedback-header">
+          <span class="feedback-author">${item.name}</span>
+          <time class="feedback-date">${new Date(item.created_at).toLocaleDateString('zh-CN')}</time>
+        </header>
+        <div class="feedback-content">${item.content || ''}</div>
+       </div>`
+    ).join('') || '<p class="no-feedbacks">暂无留言</p>'}
+  </div>
+</section>`;
+
+    return renderPage({
+      title: '留言板',
+      content,
+    });
+  } catch (error) {
+    console.error('Feedback page error:', error);
+    return renderError(500);
+  }
+});
+
+// GET /login - Login page
+frontendRouter.get('/login', async () => {
+  const content = `
+<section class="login-page" aria-labelledby="login-title">
+  <div class="login-container">
+    <div class="login-header">
+      <h1 id="login-title" class="login-title">
+        <span class="icon">🔐</span> 登录
+      </h1>
+      <p class="login-subtitle">登录到CFBlog后台管理</p>
+    </div>
+
+    <form action="/api/user/login" method="POST" class="login-form">
+      <div class="form-group">
+        <label for="username" class="form-label">用户名</label>
+        <input type="text" id="username" name="username" class="form-input" required aria-required="true" autofocus>
+      </div>
+      
+      <div class="form-group">
+        <label for="password" class="form-label">密码</label>
+        <input type="password" id="password" name="password" class="form-input" required aria-required="true">
+      </div>
+      
+      <button type="submit" class="form-submit form-submit-full">登录</button>
+    </form>
+
+    <div class="login-footer">
+      <a href="/" class="back-link">返回首页</a>
+    </div>
+  </div>
+</section>`;
+
+  return renderPage({
+    title: '登录',
+    content,
+  });
+});
+
+// GET /assets/* - Serve static assets
+frontendRouter.get('/assets/*', (request) => {
+  const path = request.params['*'];
+  return new Response('Asset not found', { status: 404 });
+});
+
+// Catch-all 404
+frontendRouter.all('*', async () => {
+  return renderError(404);
+});
+
+export { frontendRouter as frontendRoutes };

@@ -1,197 +1,233 @@
+/**
+ * User Model
+ * Handles user data operations
+ */
+
 import { BaseModel } from './BaseModel.js';
-import { executeOne } from '../utils/db.js';
+import { hashPassword, verifyPassword } from '../utils/auth.js';
+import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
 
 export class User extends BaseModel {
-  constructor(env) {
-    super(env);
+  constructor(db) {
+    super(db);
+    this.tableName = 'users';
   }
-  
-  // 根据用户名获取用户
-  async getByUsername(username) {
-    return await this.findOne('users', 'username = ?', [username]);
+
+  /**
+   * Find user by username
+   */
+  async findByUsername(username) {
+    return this.queryFirst(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
   }
-  
-  // 根据邮箱获取用户
-  async getByEmail(email) {
-    return await this.findOne('users', 'email = ?', [email]);
+
+  /**
+   * Find user by email
+   */
+  async findByEmail(email) {
+    return this.queryFirst(
+      'SELECT * FROM users WHERE email = ?',
+      [email]
+    );
   }
-  
-  // 验证用户密码
-  async validatePassword(username, password) {
-    const result = await this.getByUsername(username);
-    if (!result.success || !result.result) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    const user = result.result;
-    
-    // 在实际应用中，这里应该使用安全的密码比较方法
-    // 这里简化处理，实际应该使用 bcrypt 等密码哈希库
-    if (user.password_hash === password) {
-      // 移除密码哈希，不返回给客户端
-      delete user.password_hash;
-      return { success: true, user };
-    }
-    
-    return { success: false, message: '密码错误' };
-  }
-  
-  // 创建用户
+
+  /**
+   * Create a new user
+   */
   async createUser(userData) {
-    const { username, email, password, displayName, role = 'contributor' } = userData;
-    
-    // 检查用户名和邮箱是否已存在
-    const existingUserByUsername = await this.getByUsername(username);
-    if (existingUserByUsername.success && existingUserByUsername.result) {
-      return { success: false, message: '用户名已存在' };
-    }
-    
-    const existingUserByEmail = await this.getByEmail(email);
-    if (existingUserByEmail.success && existingUserByEmail.result) {
-      return { success: false, message: '邮箱已存在' };
-    }
-    
-    // 创建用户
-    const newUserData = {
+    const { username, email, password, displayName, role, bio, avatar, status } = userData;
+
+    // Hash password
+    const passwordHash = hashPassword(password);
+
+    // Create user
+    const user = await this.create({
       username,
       email,
-      password_hash: password, // 实际应用中应该使用哈希
+      password_hash: passwordHash,
       display_name: displayName,
-      role,
-      status: 1 // active
-    };
-    
-    const result = await this.insert('users', newUserData);
-    
-    if (!result.success) {
-      return { success: false, message: '创建用户失败', error: result.error };
-    }
-    
-    // 获取新创建的用户
-    const newUser = await this.getById('users', result.meta.lastRowId);
-    
-    if (!newUser.success || !newUser.result) {
-      return { success: false, message: '获取新用户信息失败' };
-    }
-    
-    // 移除密码哈希
-    delete newUser.result.password_hash;
-    
-    return { 
-      success: true, 
-      message: '用户创建成功', 
-      user: newUser.result 
-    };
+      avatar,
+      role: role || 'member',
+      bio,
+      status: status !== undefined ? status : 1
+    });
+
+    // Remove password hash from response
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
-  
-  // 更新用户信息
-  async updateUser(userId, userData) {
-    const { username, email, displayName, bio, avatar } = userData;
-    
-    // 检查用户是否存在
-    const existingUser = await this.getById('users', userId);
-    if (!existingUser.success || !existingUser.result) {
-      return { success: false, message: '用户不存在' };
-    }
-    
-    // 如果更新用户名，检查是否已存在
-    if (username && username !== existingUser.result.username) {
-      const userWithSameUsername = await this.getByUsername(username);
-      if (userWithSameUsername.success && userWithSameUsername.result) {
-        return { success: false, message: '用户名已存在' };
-      }
-    }
-    
-    // 如果更新邮箱，检查是否已存在
-    if (email && email !== existingUser.result.email) {
-      const userWithSameEmail = await this.getByEmail(email);
-      if (userWithSameEmail.success && userWithSameEmail.result) {
-        return { success: false, message: '邮箱已存在' };
-      }
-    }
-    
-    // 准备更新数据
+
+  /**
+   * Update user
+   */
+  async updateUser(id, userData) {
+    const { displayName, bio, avatar, role, status } = userData;
+
     const updateData = {};
-    if (username) updateData.username = username;
-    if (email) updateData.email = email;
-    if (displayName) updateData.display_name = displayName;
+    if (displayName !== undefined) updateData.display_name = displayName;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar !== undefined) updateData.avatar = avatar;
-    updateData.updated_at = new Date().toISOString();
-    
-    const result = await this.update('users', userId, updateData);
-    
-    if (!result.success) {
-      return { success: false, message: '更新用户失败', error: result.error };
+    if (role !== undefined) updateData.role = role;
+    if (status !== undefined) updateData.status = status;
+
+    if (Object.keys(updateData).length === 0) {
+      throw new Error('No fields to update');
     }
-    
-    // 获取更新后的用户信息
-    const updatedUser = await this.getById('users', userId);
-    
-    if (!updatedUser.success || !updatedUser.result) {
-      return { success: false, message: '获取更新后的用户信息失败' };
-    }
-    
-    // 移除密码哈希
-    delete updatedUser.result.password_hash;
-    
-    return { 
-      success: true, 
-      message: '用户更新成功', 
-      user: updatedUser.result 
-    };
+
+    updateData.updated_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    const user = await this.update(id, updateData);
+
+    // Remove password hash from response
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
-  
-  // 更新用户状态
-  async updateUserStatus(userId, status) {
-    const result = await this.update('users', userId, { 
-      status, 
-      updated_at: new Date().toISOString() 
+
+  /**
+   * Change password
+   */
+  async changePassword(id, oldPassword, newPassword) {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify old password
+    if (!verifyPassword(oldPassword, user.password_hash)) {
+      throw new Error('Incorrect password');
+    }
+
+    // Update password
+    const passwordHash = hashPassword(newPassword);
+
+    await this.update(id, {
+      password_hash: passwordHash,
+      updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
     });
-    
-    if (!result.success) {
-      return { success: false, message: '更新用户状态失败', error: result.error };
-    }
-    
-    return { success: true, message: '用户状态更新成功' };
+
+    return true;
   }
-  
-  // 更新用户角色
-  async updateUserRole(userId, role) {
-    const result = await this.update('users', userId, { 
-      role, 
-      updated_at: new Date().toISOString() 
-    });
-    
-    if (!result.success) {
-      return { success: false, message: '更新用户角色失败', error: result.error };
+
+  /**
+   * Verify user credentials
+   */
+  async verifyCredentials(username, password) {
+    const user = await this.findByUsername(username);
+
+    if (!user) {
+      throw new Error('User not found');
     }
-    
-    return { success: true, message: '用户角色更新成功' };
+
+    if (user.status !== 1) {
+      throw new Error('User account is disabled');
+    }
+
+    if (!verifyPassword(password, user.password_hash)) {
+      throw new Error('Incorrect password');
+    }
+
+    // Remove password hash from response
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
-  
-  // 获取用户列表
-  async getUsers(options = {}) {
+
+  /**
+   * Get user list with filters
+   */
+  async getUserList(options = {}) {
     const { page = 1, limit = 10, role, status } = options;
-    
-    let where = '1=1';
-    const params = [];
-    
+
+    let where = [];
+    let params = [];
+
     if (role) {
-      where += ' AND role = ?';
+      where.push('role = ?');
       params.push(role);
     }
-    
+
     if (status !== undefined) {
-      where += ' AND status = ?';
+      where.push('status = ?');
       params.push(status);
     }
-    
-    return await this.findMany('users', where, params, {
-      select: 'id, username, email, display_name, avatar, role, bio, status, created_at, updated_at',
+
+    const whereClause = where.length > 0 ? where.join(' AND ') : '';
+
+    const result = await this.paginate({
+      where: whereClause,
+      params,
       orderBy: 'created_at DESC',
       page,
       limit
     });
+
+    // Remove password hashes from results
+    const dataWithoutPasswords = result.data.map(user => {
+      const { password_hash, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    return {
+      data: dataWithoutPasswords,
+      pagination: result.pagination
+    };
+  }
+
+  /**
+   * Update user status
+   */
+  async updateStatus(id, status) {
+    return this.updateUser(id, { status });
+  }
+
+  /**
+   * Update user role
+   */
+  async updateRole(id, role) {
+    const validRoles = ['admin', 'contributor', 'member'];
+
+    if (!validRoles.includes(role)) {
+      throw new Error('Invalid role');
+    }
+
+    return this.updateUser(id, { role });
+  }
+
+  /**
+   * Delete user
+   */
+  async deleteUser(id) {
+    // Check if user exists
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Delete user
+    await this.delete(id);
+
+    return true;
+  }
+
+  /**
+   * Get user statistics
+   */
+  async getUserStats() {
+    const totalUsers = await this.count();
+    const activeUsers = await this.count({ where: 'status = ?' });
+    const adminCount = await this.count({ where: 'role = ?' });
+    const contributorCount = await this.count({ where: 'role = ?' });
+    const memberCount = await this.count({ where: 'role = ?' });
+
+    return {
+      total: totalUsers,
+      active: activeUsers,
+      admin: adminCount,
+      contributor: contributorCount,
+      member: memberCount
+    };
   }
 }

@@ -1,80 +1,86 @@
-// 标准化 API 响应格式
-export function successResponse(data = null, message = '操作成功', extraHeaders = {}) {
-  return new Response(JSON.stringify({
-    success: true,
-    message,
-    data
-  }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...extraHeaders
-    }
-  });
-}
+/**
+ * Response Helpers
+ * Utility functions for creating consistent API responses
+ */
 
-// 错误响应
-export function errorResponse(message = '操作失败', status = 400, data = null) {
-  return new Response(JSON.stringify({
-    success: false,
-    message,
-    data
-  }), {
+/**
+ * Success response
+ */
+export const successResponse = (data = null, message = 'Success', status = 200) => {
+  return {
     status,
     headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-}
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      success: true,
+      message,
+      data
+    })
+  };
+};
 
-// 未找到资源响应
-export function notFoundResponse(message = '资源不存在') {
-  return new Response(JSON.stringify({
-    success: false,
-    message
-  }), {
-    status: 404,
+/**
+ * Error response
+ */
+export const errorResponse = (message = 'Error', status = 400, error = null) => {
+  return {
+    status,
     headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-}
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      success: false,
+      message,
+      error: process.env.ENVIRONMENT === 'development' ? error : undefined
+    })
+  };
+};
 
-// 未授权响应
-export function unauthorizedResponse(message = '未授权访问') {
-  return new Response(JSON.stringify({
-    success: false,
+/**
+ * Pagination response
+ */
+export const paginatedResponse = (data, pagination, message = 'Success') => {
+  return successResponse(
+    {
+      ...data,
+      pagination
+    },
     message
-  }), {
-    status: 401,
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-}
+  );
+};
 
-// 禁止访问响应
-export function forbiddenResponse(message = '禁止访问') {
-  return new Response(JSON.stringify({
-    success: false,
-    message
-  }), {
-    status: 403,
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-}
+/**
+ * Not found response
+ */
+export const notFoundResponse = (message = 'Resource not found') => {
+  return errorResponse(message, 404);
+};
 
-// 服务器错误响应
-export function serverErrorResponse(message = '服务器内部错误') {
-  return new Response(JSON.stringify({
-    success: false,
-    message
-  }), {
-    status: 500,
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-}
+/**
+ * Unauthorized response
+ */
+export const unauthorizedResponse = (message = 'Unauthorized') => {
+  return errorResponse(message, 401);
+};
+
+/**
+ * Forbidden response
+ */
+export const forbiddenResponse = (message = 'Forbidden') => {
+  return errorResponse(message, 403);
+};
+
+/**
+ * Validation error response
+ */
+export const validationErrorResponse = (errors) => {
+  return errorResponse('Validation failed', 400, errors);
+};
+
+/**
+ * Server error response
+ */
+export const serverErrorResponse = (message = 'Internal server error', error = null) => {
+  return errorResponse(message, 500, error);
+};

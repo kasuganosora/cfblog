@@ -1,3 +1,0 @@
-@echo off
-echo Running authentication tests...
-node tests\test-auth-standalone.mjs

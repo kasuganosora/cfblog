@@ -1,11 +1,14 @@
-# 示例开发环境变量文件
-# 复制此文件为 dev.vars 并填入实际值
+# Environment Configuration
+ENVIRONMENT=development
 
-# JWT 密钥 (请使用随机生成的长字符串)
-JWT_SECRET=your-super-secret-jwt-key-here
+# JWT Secret (Use strong random string in production)
+JWT_SECRET=your-jwt-secret-key-change-in-production
 
-# SessionID HMAC 签名密钥 (必需，至少32字符)
-SESSION_SECRET=your-session-secret-key-here-change-in-production
+# Admin Password (Change this in production)
+ADMIN_PASSWORD=admin123
 
-# 管理员默认密码
-ADMIN_PASSWORD=your-admin-password-here
+# Session Secret (Use strong random string in production)
+SESSION_SECRET=your-session-secret-key-change-in-production
+
+# CORS Settings (Optional)
+CORS_ORIGIN=*

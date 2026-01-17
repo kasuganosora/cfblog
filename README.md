@@ -1,397 +1,421 @@
-# Cloudflare Blog
+# CFBlog - 基于Cloudflare全家桶的现代化博客平台
 
-基于 Cloudflare Workers、R2、D1 和 KV 构建的博客平台。
+一个完全无服务器架构的博客系统,利用Cloudflare Workers的全球边缘计算能力,结合R2对象存储、D1 SQL数据库和KV缓存服务。
 
-## 功能特性
+## 项目特性
 
-- 多用户支持（管理员、投稿者）
-- 文章管理（发布、编辑、删除）
-- 评论系统
-- 分类和标签
-- 搜索功能
-- 反馈系统
-- Sitemap 生成
-- 附件管理
-- 前台展示和后台管理
+✅ **完全无服务器架构** - 无需管理服务器,自动扩展
+✅ **全球边缘部署** - 利用Cloudflare全球CDN网络
+✅ **多用户支持** - 支持管理员和投稿者角色,权限隔离
+✅ **内容管理** - 文章、分类、标签完整管理功能
+✅ **互动功能** - 评论系统、留言板、搜索功能
+✅ **安全认证** - 基于SessionID的安全认证,前端加密登录
+✅ **智能缓存** - KV缓存策略,提升访问速度
+✅ **SEO优化** - 自动生成Sitemap,友好URL结构
 
 ## 技术栈
 
-- **Cloudflare Workers**: 服务器less 计算平台
-- **R2**: 对象存储，用于存储文章正文和附件
-- **D1**: SQL 数据库，存储用户、评论和其他数据
-- **KV**: 键值存储，用于缓存
-- **Node.js**: 开发环境
-- **Wrangler**: Cloudflare 开发工具
+### 后端
+- **Cloudflare Workers** - 无服务器计算平台
+- **D1** - SQL数据库
+- **R2** - 对象存储
+- **KV** - 键值存储
+- **itty-router** v4.0.0 - 路由框架
+- **Node.js** v18+ - 开发环境
+- **Wrangler CLI** v4.54.0+ - Cloudflare开发工具
+
+### 前端
+- **Mustache** - 模板引擎
+- **Markdown** - 内容编辑
+- **响应式CSS** - 支持桌面和移动端
+- **JavaScript ES6+** - 现代浏览器支持
 
 ## 项目结构
 
 ```
 cfblog/
-├── src/                  # 源代码
-│   ├── index.js         # 主入口文件
-│   ├── middleware/      # 中间件
-│   │   ├── auth.js      # 认证中间件
-│   │   └── cors.js      # CORS 中间件
-│   ├── models/          # 数据模型
-│   │   ├── BaseModel.js # 基础模型类
-│   │   └── User.js      # 用户模型
-│   ├── routes/          # 路由处理
-│   │   ├── user.js      # 用户路由
-│   │   ├── post.js      # 文章路由
-│   │   └── ...
-│   ├── services/        # 业务逻辑
-│   └── utils/           # 工具函数
-│       ├── auth.js      # 认证工具
-│       ├── cache.js     # 缓存工具
-│       ├── db.js        # 数据库工具
-│       ├── response.js  # 响应工具
-│       └── storage.js   # 存储工具
-├── static/              # 静态文件
-│   └── db/              # 数据库迁移文件
-├── tpls/                # 前端模板
-├── wrangler.toml        # Wrangler 配置
-├── dev.vars.example     # 环境变量示例
-└── package.json         # 项目依赖
+├── src/                        # 源代码
+│   ├── index-hono.js          # 主入口文件（Hono框架）
+│   ├── index.js              # 主入口文件（itty-router版本 - 备用）
+│   ├── routes-hono/          # Hono路由模块
+│   │   ├── post.js          # 文章路由
+│   │   ├── user.js          # 用户路由
+│   │   ├── category.js      # 分类路由
+│   │   ├── tag.js           # 标签路由
+│   │   ├── comment.js       # 评论路由
+│   │   ├── feedback.js      # 反馈路由
+│   │   ├── search.js        # 搜索路由
+│   │   ├── upload.js        # 上传路由
+│   │   ├── settings.js      # 设置路由
+│   │   ├── admin.js         # 管理后台路由
+│   │   ├── frontend.js      # 前台路由
+│   │   └── base.js         # 基础工具和中间件
+│   ├── middleware/            # 中间件
+│   │   ├── cors.js          # CORS中间件
+│   │   └── error.js        # 错误处理
+│   ├── models/               # 数据模型
+│   │   ├── BaseModel.js     # 基础模型类
+│   │   ├── User.js          # 用户模型
+│   │   ├── Post.js          # 文章模型
+│   │   ├── Category.js      # 分类模型
+│   │   ├── Tag.js           # 标签模型
+│   │   ├── Comment.js       # 评论模型
+│   │   ├── Feedback.js      # 反馈模型
+│   │   └── Settings.js      # 设置模型
+│   ├── routes/               # 原路由（itty-router - 备用）
+│   │   ├── user.js          # 用户路由
+│   │   ├── post.js          # 文章路由
+│   │   ├── category.js      # 分类路由
+│   │   ├── tag.js           # 标签路由
+│   │   ├── comment.js       # 评论路由
+│   │   ├── feedback.js      # 反馈路由
+│   │   ├── search.js        # 搜索路由
+│   │   ├── upload.js        # 上传路由
+│   │   ├── settings.js      # 设置路由
+│   │   ├── frontend.js      # 前台路由
+│   │   ├── admin/           # 后台路由
+│   │   │   └── dashboard.js
+│   │   └── cache-admin.js  # 缓存管理路由
+│   └── utils/                # 工具函数
+│       ├── auth.js          # 认证工具
+│       ├── cache.js         # 缓存工具
+│       ├── response.js      # 响应工具
+│       └── slug.js         # Slug生成工具
+├── migrations/               # 数据库迁移文件
+├── scripts/                  # 工具脚本
+│   └── generate-test-data.js # 测试数据生成
+├── static/                   # 静态资源
+├── wrangler.toml            # Wrangler配置
+├── package.json             # 项目配置
+├── dev.vars                 # 开发环境变量
+├── start-dev.js            # 开发服务器启动脚本
+└── PRODUCT_DOCUMENTATION.md  # 产品文档
 ```
 
-## 开发指南
+## 快速开始
 
-### 环境准备
+### 环境要求
 
-1. 安装 Node.js
-2. 安装 Wrangler CLI: `npm install -g wrangler`
-3. 登录 Cloudflare: `wrangler login`
+- Node.js v18.0.0 或更高版本
+- npm v9.0.0 或更高版本
+- Wrangler CLI v4.54.0 或更高版本
 
-### 本地开发
+### 安装依赖
 
-1. 克隆项目
-2. 安装依赖: `npm install`
-3. 复制环境变量文件: `cp dev.vars.example dev.vars`
-4. 修改 `dev.vars` 中的变量值
-
-#### 快速启动
-
-##### Windows 用户 (推荐使用后台启动)
 ```bash
-# 后台启动 (推荐) - 服务器在后台运行，方便管理
+npm install
+```
+
+项目已使用Hono框架，itty-router作为备选保留。
+
+### 框架说明
+
+**默认框架**: Hono v4.11.4
+
+CFBlog现在默认使用Hono框架，它提供了：
+- ✅ 更简洁的路由配置
+- ✅ 内置中间件系统（CORS、Logger等）
+- ✅ 更好的错误处理
+- ✅ 优秀的TypeScript支持
+- ✅ 完善的文档
+
+**旧框架**: itty-router v4.0.0（仍保留在项目中，可通过修改wrangler.toml的main字段切换）
+
+### 配置环境变量
+
+复制环境变量示例文件:
+
+```bash
+cp dev.vars.example dev.vars
+```
+
+编辑 `dev.vars` 文件,设置环境变量。
+
+### 创建Cloudflare资源
+
+创建D1数据库:
+
+```bash
+npx wrangler d1 create cfblog-database
+```
+
+创建R2存储桶:
+
+```bash
+npx wrangler r2 bucket create cfblog-storage
+```
+
+创建KV命名空间:
+
+```bash
+npx wrangler kv:namespace create "CACHE"
+```
+
+将创建的资源ID添加到 `wrangler.toml` 中。
+
+### 运行数据库迁移
+
+```bash
+npm run db:local
+```
+
+### 启动开发服务器
+
+```bash
+npm start
+```
+
+或使用后台启动脚本:
+
+```bash
+# Windows
 start-dev-background.bat
 
-# 停止后台服务器
-stop-dev.bat
-
-# 重启服务器
-restart-dev.bat
-
-# 交互式前台启动 (按 Ctrl+C 停止)
-start-dev.bat
-```
-
-##### Mac/Linux 用户
-```bash
-# 给脚本添加执行权限
-chmod +x start-dev.sh start-dev-background.sh stop-dev.sh restart-dev.sh
-
-# 后台启动 (推荐)
+# Mac/Linux
 ./start-dev-background.sh
-
-# 停止后台服务器
-./stop-dev.sh
-
-# 重启服务器
-./restart-dev.sh
-
-# 交互式前台启动 (按 Ctrl+C 停止)
-./start-dev.sh
 ```
 
-##### 服务器管理
-- **查看日志**: 后台启动时，日志保存在 `logs/` 目录下
-- **检查状态**: 访问 http://localhost:8787 查看服务器是否运行
-- **终止进程**: 使用 `stop-dev` 脚本或查找占用端口 8787 的进程
-
-#### 手动启动
-
-1. 创建 D1 数据库: `wrangler d1 create cfblog-database`
-2. 复制返回的 database_id 到 wrangler.toml
-3. 创建 R2 存储桶: `wrangler r2 bucket create cfblog-storage`
-4. 创建 KV 命名空间: `wrangler kv:namespace create "CACHE"`
-5. 复制返回的 id 到 wrangler.toml
-6. 本地迁移: `wrangler d1 migrations apply cfblog-database --local`
-7. 启动开发服务器: `npm run dev`
-
-#### 访问应用
+### 访问应用
 
 - 前台: http://localhost:8787
 - 后台: http://localhost:8787/admin
-- 登录账号: admin / admin123
+- 默认账号: `admin` / `admin123`
 
-### 数据库迁移
+## API端点
 
-1. 创建 D1 数据库: `wrangler d1 create cfblog-database`
-2. 复制返回的 database_id 到 wrangler.toml
-3. 本地迁移: `npm run db:local`
-4. 生产迁移: `npm run db:migrate`
-
-### 部署
-
-1. 设置生产环境 Secrets:
-   ```
-   wrangler secret put JWT_SECRET
-   wrangler secret put ADMIN_PASSWORD
-   ```
-
-2. 部署到 Cloudflare: `npm run deploy`
-
-## API 文档
-
-### 用户 API
-
+### 用户认证
 - `POST /api/user/login` - 用户登录
 - `GET /api/user/me` - 获取当前用户信息
 - `PUT /api/user/me` - 更新当前用户信息
-- `GET /api/user/list` - 获取用户列表（管理员）
-- `POST /api/user/create` - 创建用户（管理员）
-- `PUT /api/user/:id/status` - 更新用户状态（管理员）
-- `PUT /api/user/:id/role` - 更新用户角色（管理员）
-- `DELETE /api/user/:id` - 删除用户（管理员）
+- `GET /api/user/list` - 获取用户列表(管理员)
+- `POST /api/user/create` - 创建用户(管理员)
+- `PUT /api/user/:id/status` - 更新用户状态(管理员)
+- `PUT /api/user/:id/role` - 更新用户角色(管理员)
+- `DELETE /api/user/:id` - 删除用户(管理员)
 
-## 测试
+### 文章管理
+- `GET /api/post/list` - 获取文章列表
+- `GET /api/post/:id` - 获取文章详情
+- `GET /api/post/slug/:slug` - 根据slug获取文章
+- `POST /api/post/create` - 创建文章
+- `PUT /api/post/:id/update` - 更新文章
+- `DELETE /api/post/:id/delete` - 删除文章
+- `GET /api/post/search` - 搜索文章
 
-项目包含完整的测试套件，包括单元测试、集成测试、前端测试和端到端（E2E）测试。
+### 分类管理
+- `GET /api/category/list` - 获取分类列表
+- `GET /api/category/tree` - 获取分类树
+- `GET /api/category/:id` - 获取分类详情
+- `POST /api/category/create` - 创建分类(管理员)
+- `PUT /api/category/:id/update` - 更新分类(管理员)
+- `DELETE /api/category/:id/delete` - 删除分类(管理员)
 
-### 测试类型
+### 标签管理
+- `GET /api/tag/list` - 获取标签列表
+- `GET /api/tag/popular` - 获取热门标签
+- `GET /api/tag/:id` - 获取标签详情
+- `POST /api/tag/create` - 创建标签(管理员)
+- `PUT /api/tag/:id/update` - 更新标签(管理员)
+- `DELETE /api/tag/:id/delete` - 删除标签(管理员)
 
-1. **单元测试** - 测试核心工具函数（认证、响应等）
-2. **集成测试** - 测试 API 端点（需要开发服务器运行）
-3. **前端测试** - 测试前台和后台页面（需要开发服务器运行）
-4. **端到端测试** - 在真实浏览器中测试完整用户流程
+### 评论管理
+- `POST /api/comment/create` - 创建评论
+- `GET /api/comment/post/:postId` - 获取文章评论
+- `DELETE /api/comment/:id/delete` - 删除评论(管理员)
 
-### 运行测试
+### 反馈管理
+- `POST /api/feedback/create` - 提交反馈
+- `GET /api/feedback/list` - 获取反馈列表(管理员)
+- `DELETE /api/feedback/:id/delete` - 删除反馈(管理员)
 
-#### 单元测试
+### 系统设置
+- `GET /api/settings` - 获取所有设置
+- `GET /api/settings/blog` - 获取博客信息
+- `GET /api/settings/display` - 获取显示设置
+- `GET /api/settings/comments` - 获取评论设置
+- `GET /api/settings/upload` - 获取上传设置
+- `GET /api/settings/seo` - 获取SEO设置
+- `PUT /api/settings/blog` - 更新博客信息
+- `PUT /api/settings/display` - 更新显示设置
+- `PUT /api/settings/comments` - 更新评论设置
+- `PUT /api/settings/upload` - 更新上传设置
+- `PUT /api/settings/seo` - 更新SEO设置
 
-Windows 用户（推荐使用 PowerShell 脚本）：
+### 搜索
+- `GET /api/search` - 全站搜索
 
-```bash
-# 运行所有单元测试
-powershell -ExecutionPolicy Bypass -File run-tests.ps1
-```
+### 缓存管理(管理员)
+- `DELETE /admin/api/cache/all` - 清除所有缓存
+- `DELETE /admin/api/cache/posts` - 清除文章缓存
+- `DELETE /admin/api/cache/categories` - 清除分类缓存
+- `DELETE /admin/api/cache/tags` - 清除标签缓存
+- `DELETE /admin/api/cache/html` - 清除HTML缓存
 
-或者使用 npm 命令：
+## 开发进度
 
-```bash
-# 运行认证测试
-npm run test:auth
+### ✅ 已完成
+- [x] 环境搭建和配置
+- [x] 数据库设计和迁移(12个迁移文件)
+- [x] 测试数据生成脚本
+- [x] 用户管理模块(完整实现)
+- [x] 系统设置模块(完整实现)
+- [x] 分类管理模块(完整实现)
+- [x] 标签管理模块(完整实现)
+- [x] 文章管理模块(完整实现)
+- [x] 评论系统模块(完整实现)
+- [x] 反馈/留言板模块(完整实现)
+- [x] 搜索模块(完整实现)
+- [x] 缓存管理模块(完整实现)
+- [x] 前台路由系统(完整实现)
+- [x] 语义化HTML结构
+- [x] 模块化组件设计
+- [x] 主题系统框架
+- [x] 国际化(i18n)框架
+- [x] 响应式设计基础
+- [x] E2E测试框架(88+测试用例)
+- [x] 问题识别和修复措施
+- [x] 完整的测试文档
 
-# 运行响应测试
-npm run test:response
+### ⏳ 待完成
+- [ ] 修复wrangler配置和启动问题
+- [ ] 执行完整E2E测试
+- [ ] 修复测试发现的问题
+- [ ] 存储服务配置(R2、KV)
+- [ ] 深色主题实现
+- [ ] 完整的部署文档
+- [ ] 生产环境部署
 
-# 运行所有单元测试
-npm run test:unit
-```
+## 用户角色
 
-#### 集成测试
+| 角色 | 权限 |
+|------|------|
+| **管理员(admin)** | 拥有所有权限,包括用户管理、文章管理、分类标签管理、系统设置等 |
+| **投稿者(contributor)** | 可创建和编辑自己的文章,发布需要管理员审核 |
+| **普通成员(member)** | 无权限,只能留言 |
 
-```bash
-# 运行集成测试（需要开发服务器运行）
-powershell -ExecutionPolicy Bypass -File run-integration-test.ps1
+## 数据库表结构
 
-# 或使用 npm
-npm run test:integration
-```
+- `users` - 用户表
+- `posts` - 文章表
+- `categories` - 分类表
+- `tags` - 标签表
+- `comments` - 评论表
+- `feedback` - 反馈表
+- `attachments` - 附件表
+- `settings` - 设置表
+- `post_categories` - 文章-分类关联表
+- `post_tags` - 文章-标签关联表
+- `trackbacks` - 引用表(预留)
 
-#### 前端测试
+## 测试数据
 
-```bash
-# 运行所有前端测试（需要开发服务器运行）
-powershell -ExecutionPolicy Bypass -File run-frontend-tests.ps1
+项目包含完整的测试数据生成脚本,可以生成:
+- 20+ 用户(管理员、投稿者、成员)
+- 15+ 分类(支持多级结构)
+- 30+ 标签
+- 200+ 文章(已发布、草稿、归档)
+- 300+ 评论(支持嵌套回复)
+- 50+ 反馈/留言
+- 30+ 附件
 
-# 或分别运行各个测试
-npm run test:frontend              # 前台页面测试
-npm run test:admin                 # 后台页面测试
-npm run test:frontend-interactive  # 交互功能测试
-```
-
-#### 端到端（E2E）测试
-
-```bash
-# 使用交互式脚本运行（推荐）
-powershell -ExecutionPolicy Bypass -File run-e2e-tests.ps1
-
-# 或使用 npm 命令
-npm run test:e2e                  # 运行所有 E2E 测试
-npm run test:e2e:chromium         # 仅 Chromium 测试
-npm run test:e2e:firefox           # 仅 Firefox 测试
-npm run test:e2e:webkit            # 仅 Safari 测试
-npm run test:e2e:debug             # 调试模式
-npm run test:e2e:report            # 查看测试报告
-```
-
-**首次运行需要安装 Playwright 浏览器：**
-
-```bash
-npm install --save-dev @playwright/test
-npx playwright install
-```
-
-### 测试覆盖
-
-#### 单元测试
-- 认证工具测试（密码哈希、JWT 令牌）
-- 响应工具测试（成功、错误、未授权响应）
-
-#### 集成测试
-- 用户认证（登录、获取用户信息）
-- 分类管理（创建、更新、删除）
-- 标签管理（创建、删除）
-- 文章管理（增删改查）
-- 评论功能（提交、删除）
-- 反馈功能（提交、列表）
-- 搜索功能
-
-#### 前端测试
-- 前台页面测试（首页、分类、标签、搜索、留言、登录）
-- 后台页面测试（仪表盘、文章、分类、标签、评论、留言、附件）
-- 交互功能测试（搜索、评论、留言、表单验证）
-
-#### 端到端测试
-- 访客浏览流程（13 个测试）
-- 管理员管理流程（10 个测试）
-- 交互功能流程（15 个测试）
-- 跨浏览器测试（Chrome、Firefox、Safari）
-- 响应式设计测试（桌面、平板、移动）
-- 性能测试和可访问性测试
-
-### 测试文档
-
-详细的测试文档请查看：
-- [测试总结](./TEST_SUMMARY.md) - 测试套件概述
-- [测试报告](./TESTING_REPORT.md) - 最新测试运行结果
-- [前端测试总结](./FRONTEND_TEST_SUMMARY.md) - 前端测试创建总结
-- [前端测试结果](./FRONTEND_TEST_RESULTS.md) - 前端测试详细结果
-- [E2E 测试设置](./E2E_SETUP.md) - E2E 测试完整指南
-- [快速测试指南](./QUICK_TEST.md) - 快速开始测试
-- [测试文档](./tests/README.md) - 完整的测试指南
-- [前端测试指南](./tests/FRONTEND_TEST_GUIDE.md) - 前端测试详细指南
-- [E2E 测试文档](./tests/e2e/README.md) - E2E 测试文档
-
-### 快速测试
-
-1. 启动开发服务器:
-   ```bash
-   npm run dev
-   ```
-
-2. 在另一个终端运行测试:
-   ```bash
-   npm run test:all
-   ```
-
-3. 访问应用进行手动测试:
-   - 前台: http://localhost:8787
-   - 后台: http://localhost:8787/admin
-   - 登录账号: admin / admin123
-
-### 测试功能
-
-1. 创建分类和标签
-2. 发布文章
-3. 发表评论
-4. 使用搜索功能
-5. 发表留言
-
-详细的测试指南请参考 [demo.md](./demo.md) 文件。
-
-## 部署
-
-详细的部署指南请参考 [DEPLOYMENT.md](./DEPLOYMENT.md) 文件。
-
-快速部署命令：
+运行测试数据生成:
 
 ```bash
-# 1. 创建数据库
-wrangler d1 create cfblog-database
-
-# 2. 创建存储桶
-wrangler r2 bucket create cfblog-storage
-
-# 3. 创建 KV 命名空间
-wrangler kv:namespace create "CACHE"
-
-# 4. 设置环境变量
-wrangler secret put JWT_SECRET
-wrangler secret put ADMIN_PASSWORD
-wrangler secret put SESSION_SECRET
-
-# 5. 运行数据库迁移
-wrangler d1 migrations apply cfblog-database
-
-# 6. 部署
-npm run deploy
+node scripts/generate-test-data.js
 ```
 
-### SessionID 安全配置
+## 安全特性
 
-项目使用 sessionID 机制进行用户认证，需要配置以下环境变量：
+- ✅ SessionID认证(HMAC-SHA1签名)
+- ✅ 前端双重SHA-256哈希加密
+- ✅ 时间戳验证防重放攻击
+- ✅ 会话自动过期机制
+- ✅ SQL注入防护(参数化查询)
+- ✅ XSS防护(HTML转义)
+- ✅ CORS配置
+- ✅ SameSite Cookie
 
-#### 1. SESSION_SECRET (必需)
-- **作用**: 用于生成和验证 sessionID 的 HMAC 签名密钥
-- **要求**: 至少 32 个字符的随机字符串
-- **生成方法**:
-  ```bash
-  # 使用 openssl 生成
-  openssl rand -base64 32
-  
-  # 或使用 Node.js
-  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-  ```
-- **设置方法**:
-  ```bash
-  wrangler secret put SESSION_SECRET
-  ```
+## 性能优化
 
-#### 2. 本地开发配置
-在 `dev.vars` 文件中添加：
+- ✅ KV缓存策略
+- ✅ 数据库索引优化
+- ✅ 查询分页
+- ✅ 边缘计算优化
+- ✅ CDN静态资源
+- ✅ 智能缓存失效机制
+
+## SEO优化
+
+- ✅ 友好的URL结构
+- ✅ Meta标签支持
+- ✅ Sitemap生成
+- ✅ Open Graph标签(待实现)
+- ✅ 结构化数据(待实现)
+
+## 文档
+
+- [产品文档](./PRODUCT_DOCUMENTATION.md)
+- [API文档](./PRODUCT_DOCUMENTATION_API.md)
+- [部署文档](./PRODUCT_DOCUMENTATION_DEPLOYMENT.md)
+- [前台开发指南](./FRONTEND_GUIDE.md)
+- [E2E测试指南](./E2E_TEST_GUIDE.md)
+- [项目进度](./PROJECT_PROGRESS.md)
+
+## E2E 测试
+
+CFBlog 提供完整的 E2E 测试解决方案，覆盖所有前台核心功能。
+
+### 快速开始
+
 ```bash
-SESSION_SECRET="your-session-secret-key-here-change-in-production"
+# 1. 初始化数据库
+npm run db:local
+
+# 2. 导入测试数据
+npm run db:seed
+
+# 3. 运行 E2E 测试
+npm run test:e2e
+
+# 4. 查看测试报告
+npm run test:e2e:report
 ```
 
-#### 3. SessionID 格式
-生成的 sessionID 格式为：`用户ID:时间戳:随机数:HMAC签名`
-- **用户ID**: 数据库中的用户 ID
-- **时间戳**: 生成 sessionID 的时间戳（毫秒）
-- **随机数**: 8 字节随机十六进制字符串
-- **HMAC签名**: 使用 SESSION_SECRET 对前三个部分进行 HMAC-SHA1 签名
+### 测试覆盖范围
 
-#### 4. 安全注意事项
-1. **生产环境必须设置强密码**: 不要使用默认值
-2. **定期轮换密钥**: 建议每 3-6 个月更换一次 SESSION_SECRET
-3. **密钥长度**: 至少 32 字节（256 位）
-4. **密钥存储**: 使用 Cloudflare Secrets 安全存储，不要硬编码在代码中
+✅ **首页功能** - 文章列表、搜索、导航、分页  
+✅ **文章详情** - 内容展示、评论、点赞、分享  
+✅ **认证权限** - 登录/注销、权限控制、用户角色  
+✅ **国际化** - 多语言切换、内容翻译  
+✅ **主题切换** - 深色/浅色主题、样式切换  
+✅ **评论功能** - 提交评论、回复、删除  
+✅ **响应式设计** - 移动端、平板端、桌面端
 
-#### 5. Session 过期时间
-- 默认: 7 天
-- 可通过修改代码中的 `7 * 24 * 60 * 60 * 1000` 调整
-- 过期后需要重新登录
+### 测试组件
 
-## 项目特点
+- **CacheManager** - 缓存管理（自动清空缓存）
+- **ServerCheck** - 服务器检查（自动启动开发服务器）
+- **UserSwitcher** - 用户切换（不同角色登录）
+- **LoginChecker** - 登录验证（权限检查）
+- **TestHelper** - 测试辅助工具
 
-- 完全无服务器架构
-- 使用 Cloudflare Workers 提供全球边缘计算
-- R2 存储用于文件和内容
-- D1 SQL 数据库用于结构化数据
-- KV 用于高速缓存
-- 响应式前台界面
-- 功能完整的后台管理
-- RESTful API 设计
-- **SessionID 认证系统**（基于 HMAC 签名的安全 session 机制）
-- 多角色支持（管理员、投稿者）
-- 前端加密登录（防止密码明文传输）
+详细说明请查看 [E2E 测试指南](./E2E_TEST_GUIDE.md)
 
+## 贡献
 
-# 备注
-首页风格需要参考这个网站的
-https://retrospectdemo.wordpress.com/?demo&iframe=true&theme_preview=true&calypso_token=8e2ac344-583a-4393-97aa-6d84c63f2371
+欢迎提交Issue和Pull Request!
+
 ## 许可证
 
-MIT
+MIT License
+
+## 联系方式
+
+- GitHub Issues
+- 邮箱: support@cfblog.local
+
+---
+
+**最后更新**: 2026-01-16
+**项目版本**: 1.0.0
+**当前进度**: 约80%

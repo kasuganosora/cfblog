@@ -1,156 +1,183 @@
-import { executeQuery, executeOne, executeRun, paginate, getTotalPages } from '../utils/db.js';
+/**
+ * BaseModel
+ * Base class for all data models
+ */
 
 export class BaseModel {
-  constructor(env) {
-    this.env = env;
+  constructor(db) {
+    this.db = db;
   }
-  
-  // 执行查询
-  async executeQuery(query, params = []) {
-    return await executeQuery(this.env, query, params);
-  }
-  
-  // 执行单行查询
-  async executeOne(query, params = []) {
-    return await executeOne(this.env, query, params);
-  }
-  
-  // 执行插入/更新/删除操作
-  async executeRun(query, params = []) {
-    return await executeRun(this.env, query, params);
-  }
-  
-  // 获取所有记录
-  async getAll(table, options = {}) {
-    const { 
-      select = '*', 
-      where = '', 
-      params = [], 
-      orderBy = 'created_at DESC',
-      page = 1, 
-      limit = 10 
-    } = options;
-    
-    let query = `SELECT ${select} FROM ${table}`;
-    
-    if (where) {
-      query += ` WHERE ${where}`;
+
+  /**
+   * Execute a query and return results
+   */
+  async query(sql, params = []) {
+    try {
+      const result = await this.db.prepare(sql).bind(...params).all();
+      return result.results;
+    } catch (error) {
+      console.error('Query error:', error);
+      throw error;
     }
-    
-    query += ` ORDER BY ${orderBy}`;
-    
-    // 分页处理
-    const paginatedQuery = paginate(query, page, limit);
-    const result = await executeQuery(this.env, paginatedQuery, params);
-    
-    if (!result.success) {
+  }
+
+  /**
+   * Execute a query and return first result
+   */
+  async queryFirst(sql, params = []) {
+    try {
+      const result = await this.db.prepare(sql).bind(...params).first();
       return result;
+    } catch (error) {
+      console.error('Query error:', error);
+      throw error;
     }
-    
-    // 获取总数
-    let countQuery = `SELECT COUNT(*) as total FROM ${table}`;
-    if (where) {
-      countQuery += ` WHERE ${where}`;
-    }
-    
-    const countResult = await executeOne(this.env, countQuery, params);
-    
-    if (!countResult.success) {
-      return countResult;
-    }
-    
-    const total = countResult.result.total;
-    
-    return {
-      success: true,
-      data: result.results,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        totalPages: getTotalPages(total, limit)
-      }
-    };
   }
-  
-  // 根据 ID 获取记录
-  async getById(table, id, select = '*') {
-    const query = `SELECT ${select} FROM ${table} WHERE id = ?`;
-    const result = await executeOne(this.env, query, [id]);
-    return result;
-  }
-  
-  // 插入记录
-  async insert(table, data) {
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = keys.map(() => '?').join(', ');
-    
-    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-    return await executeRun(this.env, query, values);
-  }
-  
-  // 更新记录
-  async update(table, id, data) {
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    const setClause = keys.map(key => `${key} = ?`).join(', ');
-    
-    const query = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
-    return await executeRun(this.env, query, [...values, id]);
-  }
-  
-  // 删除记录
-  async delete(table, id) {
-    const query = `DELETE FROM ${table} WHERE id = ?`;
-    return await executeRun(this.env, query, [id]);
-  }
-  
-  // 根据条件查找记录
-  async findOne(table, where, params = [], select = '*') {
-    const query = `SELECT ${select} FROM ${table} WHERE ${where}`;
-    const result = await executeOne(this.env, query, params);
-    return result;
-  }
-  
-  // 根据条件查找多个记录
-  async findMany(table, where, params = [], options = {}) {
-    const { 
-      select = '*', 
-      orderBy = 'created_at DESC',
-      page = 1, 
-      limit = 10 
-    } = options;
-    
-    let query = `SELECT ${select} FROM ${table} WHERE ${where}`;
-    query += ` ORDER BY ${orderBy}`;
-    
-    // 分页处理
-    const paginatedQuery = paginate(query, page, limit);
-    const result = await executeQuery(this.env, paginatedQuery, params);
-    
-    if (!result.success) {
+
+  /**
+   * Execute a query and return no results (INSERT, UPDATE, DELETE)
+   */
+  async execute(sql, params = []) {
+    try {
+      const result = await this.db.prepare(sql).bind(...params).run();
       return result;
+    } catch (error) {
+      console.error('Execute error:', error);
+      throw error;
     }
-    
-    // 获取总数
-    let countQuery = `SELECT COUNT(*) as total FROM ${table} WHERE ${where}`;
-    const countResult = await executeOne(this.env, countQuery, params);
-    
-    if (!countResult.success) {
-      return countResult;
+  }
+
+  /**
+   * Get all records
+   */
+  async all(options = {}) {
+    const { where = '', params = [], orderBy = '', limit = '' } = options;
+
+    let sql = `SELECT * FROM ${this.tableName}`;
+    if (where) {
+      sql += ` WHERE ${where}`;
     }
-    
-    const total = countResult.result.total;
-    
+    if (orderBy) {
+      sql += ` ORDER BY ${orderBy}`;
+    }
+    if (limit) {
+      sql += ` LIMIT ${limit}`;
+    }
+
+    return this.query(sql, params);
+  }
+
+  /**
+   * Find by ID
+   */
+  async findById(id) {
+    return this.queryFirst(
+      `SELECT * FROM ${this.tableName} WHERE id = ?`,
+      [id]
+    );
+  }
+
+  /**
+   * Find one record
+   */
+  async findOne(options = {}) {
+    const { where = '', params = [], orderBy = '' } = options;
+
+    let sql = `SELECT * FROM ${this.tableName}`;
+    if (where) {
+      sql += ` WHERE ${where}`;
+    }
+    if (orderBy) {
+      sql += ` ORDER BY ${orderBy}`;
+    }
+    sql += ' LIMIT 1';
+
+    return this.queryFirst(sql, params);
+  }
+
+  /**
+   * Create a new record
+   */
+  async create(data) {
+    const fields = Object.keys(data).join(', ');
+    const placeholders = Object.keys(data).map(() => '?').join(', ');
+    const values = Object.values(data);
+
+    const sql = `INSERT INTO ${this.tableName} (${fields}) VALUES (${placeholders})`;
+
+    const result = await this.execute(sql, values);
+    return this.findById(result.meta.last_row_id);
+  }
+
+  /**
+   * Update a record
+   */
+  async update(id, data) {
+    const fields = Object.keys(data).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(data);
+    values.push(id);
+
+    const sql = `UPDATE ${this.tableName} SET ${fields} WHERE id = ?`;
+
+    await this.execute(sql, values);
+    return this.findById(id);
+  }
+
+  /**
+   * Delete a record
+   */
+  async delete(id) {
+    const sql = `DELETE FROM ${this.tableName} WHERE id = ?`;
+    return this.execute(sql, [id]);
+  }
+
+  /**
+   * Count records
+   */
+  async count(options = {}) {
+    const { where = '', params = [] } = options;
+
+    let sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
+    if (where) {
+      sql += ` WHERE ${where}`;
+    }
+
+    const result = await this.queryFirst(sql, params);
+    return result ? result.count : 0;
+  }
+
+  /**
+   * Paginate records
+   */
+  async paginate(options = {}) {
+    const {
+      where = '',
+      params = [],
+      orderBy = '',
+      page = 1,
+      limit = 10
+    } = options;
+
+    const offset = (page - 1) * limit;
+
+    // Get total count
+    const total = await this.count({ where, params });
+
+    // Get records
+    const records = await this.all({
+      where,
+      params,
+      orderBy,
+      limit: `${offset}, ${limit}`
+    });
+
     return {
-      success: true,
-      data: result.results,
+      data: records,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page,
+        limit,
         total,
-        totalPages: getTotalPages(total, limit)
+        totalPages: Math.ceil(total / limit)
       }
     };
   }

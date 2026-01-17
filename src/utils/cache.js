@@ -1,161 +1,113 @@
-// 从 KV 获取缓存
-export async function getCache(env, key) {
-  try {
-    const value = await env.BLOG.get(key);
-    
-    if (value === null) {
-      return {
-        success: false,
-        exists: false
-      };
-    }
-    
-    // 尝试解析为 JSON，如果失败则返回原始字符串
-    let data;
-    try {
-      data = JSON.parse(value);
-    } catch (e) {
-      data = value;
-    }
-    
-    return {
-      success: true,
-      exists: true,
-      data
-    };
-  } catch (error) {
-    console.error('KV get error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
+/**
+ * Cache Utilities
+ * KV cache operations
+ */
 
-// 设置 KV 缓存
-export async function setCache(env, key, value, expirationTtl = null) {
-  try {
-    let stringValue;
-    
-    // 如果是对象，转换为 JSON 字符串
-    if (typeof value === 'object') {
-      stringValue = JSON.stringify(value);
-    } else {
-      stringValue = value.toString();
-    }
-    
-    const options = {};
-    if (expirationTtl) {
-      options.expirationTtl = expirationTtl;
-    }
-    
-    await env.BLOG.put(key, stringValue, options);
-    
-    return {
-      success: true,
-      message: '缓存设置成功'
-    };
-  } catch (error) {
-    console.error('KV put error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
+/**
+ * Cache keys
+ */
+export const CACHE_KEYS = {
+  POST: 'post',
+  POST_LIST: 'post_list',
+  CATEGORY: 'category',
+  CATEGORY_TREE: 'category_tree',
+  TAG: 'tag',
+  TAG_LIST: 'tag_list',
+  SETTINGS: 'settings',
+  HTML: 'html'
+};
 
-// 删除 KV 缓存
-export async function deleteCache(env, key) {
+/**
+ * Get cache value
+ */
+export const getCache = async (kv, key) => {
   try {
-    await env.BLOG.delete(key);
-    
-    return {
-      success: true,
-      message: '缓存删除成功'
-    };
+    const value = await kv.get(key, 'json');
+    return value;
   } catch (error) {
-    console.error('KV delete error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error('Cache get error:', error);
+    return null;
   }
-}
+};
 
-// 批量获取缓存
-export async function getMultipleCache(env, keys) {
+/**
+ * Set cache value
+ */
+export const setCache = async (kv, key, value, ttl = 3600) => {
   try {
-    const results = await env.BLOG.get(keys);
-    
-    const processedResults = {};
-    
-    keys.forEach((key, index) => {
-      const value = results[index];
-      
-      if (value === null) {
-        processedResults[key] = {
-          exists: false
-        };
-      } else {
-        // 尝试解析为 JSON
-        try {
-          processedResults[key] = {
-            exists: true,
-            data: JSON.parse(value)
-          };
-        } catch (e) {
-          processedResults[key] = {
-            exists: true,
-            data: value
-          };
-        }
-      }
+    await kv.put(key, JSON.stringify(value), {
+      expirationTtl: ttl
     });
-    
-    return {
-      success: true,
-      results: processedResults
-    };
+    return true;
   } catch (error) {
-    console.error('KV get multiple error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error('Cache set error:', error);
+    return false;
   }
-}
+};
 
-// 生成缓存键
-export function generateCacheKey(prefix, identifier) {
-  return `${prefix}:${identifier}`;
-}
+/**
+ * Delete cache value
+ */
+export const deleteCache = async (kv, key) => {
+  try {
+    await kv.delete(key);
+    return true;
+  } catch (error) {
+    console.error('Cache delete error:', error);
+    return false;
+  }
+};
 
-// 缓存装饰器函数
-export function withCache(cacheKeyPrefix, expirationTtl = 3600) {
-  return function(target, propertyKey, descriptor) {
-    const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args) {
-      const env = args[0]; // 假设第一个参数是 env
-      const cacheKey = generateCacheKey(cacheKeyPrefix, JSON.stringify(args.slice(1)));
-      
-      // 尝试从缓存获取
-      const cached = await getCache(env, cacheKey);
-      if (cached.success && cached.exists) {
-        return cached.data;
-      }
-      
-      // 执行原始方法
-      const result = await originalMethod.apply(this, args);
-      
-      // 将结果存入缓存
-      if (result && result.success !== false) {
-        await setCache(env, cacheKey, result, expirationTtl);
-      }
-      
-      return result;
-    };
-    
-    return descriptor;
-  };
-}
+/**
+ * Clear all cache
+ */
+export const clearAllCache = async (kv) => {
+  try {
+    const list = await kv.list();
+    const keys = list.keys.map(k => k.name);
+
+    for (const key of keys) {
+      await kv.delete(key);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Clear cache error:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear cache by prefix
+ */
+export const clearCacheByPrefix = async (kv, prefix) => {
+  try {
+    const list = await kv.list({ prefix });
+    const keys = list.keys.map(k => k.name);
+
+    for (const key of keys) {
+      await kv.delete(key);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Clear cache by prefix error:', error);
+    return false;
+  }
+};
+
+/**
+ * Get or set cache (cache-aside pattern)
+ */
+export const getOrSetCache = async (kv, key, fn, ttl = 3600) => {
+  const cached = await getCache(kv, key);
+
+  if (cached !== null) {
+    return cached;
+  }
+
+  const value = await fn();
+  await setCache(kv, key, value, ttl);
+
+  return value;
+};
