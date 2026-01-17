@@ -5,15 +5,6 @@
   "main": "src/index-hono.js",
   "scripts": {
     "dev": "npx wrangler dev --local --port 8787 --config wrangler-hono.toml",
-    "dev:hono": "npx wrangler dev --local --port 8787 --config wrangler-hono.toml",
-    "dev:simple": "npx wrangler dev --local --port 8787 --config wrangler-simple-test.toml",
-    "dev:fixed": "npx wrangler dev --local --port 8787 --config wrangler-fixed-test.toml",
-    "dev:direct": "npx wrangler dev --local --port 8787 --config wrangler-direct.toml",
-    "dev:hono-test": "npx wrangler dev --local --port 8788 --config wrangler-hono-test.toml",
-    "dev:hono-post": "npx wrangler dev --local --port 8789 --config wrangler-hono-post-test.toml",
-    "dev:hono-no-db": "npx wrangler dev --local --port 8790 --config wrangler-hono-no-db.toml",
-    "dev:hono-real-db": "npx wrangler dev --local --port 8791 --config wrangler-hono-real-db.toml",
-    "dev:full": "node start-dev.js",
     "start": "npx wrangler dev",
     "deploy": "npx wrangler deploy",
     "db:local": "npx wrangler d1 migrations apply cfblog-database --local",
@@ -48,7 +39,6 @@
   },
   "dependencies": {
     "hono": "^4.11.4",
-    "itty-router": "^4.0.0",
     "markdown-it": "^13.0.2",
     "marked": "^9.1.6"
   }

@@ -20,7 +20,7 @@
 - **D1** - SQL数据库
 - **R2** - 对象存储
 - **KV** - 键值存储
-- **itty-router** v4.0.0 - 路由框架
+- **Hono** v4.11.4 - Web框架
 - **Node.js** v18+ - 开发环境
 - **Wrangler CLI** v4.54.0+ - Cloudflare开发工具
 
