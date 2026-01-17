@@ -1,19 +1,51 @@
 /**
  * Authentication Utilities
  * SessionID generation and validation
+ * Using Web Crypto API for Cloudflare Workers compatibility
  */
 
-import { createHmac } from 'node:crypto';
+/**
+ * Helper: Convert ArrayBuffer to hex string
+ */
+const bufferToHex = (buffer) => {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+};
+
+/**
+ * Helper: Generate HMAC-SHA1 signature using Web Crypto API
+ */
+async function hmacSha1(message, secret) {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(message)
+  );
+
+  return bufferToHex(signature);
+}
 
 /**
  * Generate SessionID
  * Format: userId:timestamp:random:HMAC
  */
-export const generateSessionId = (userId, secret) => {
+export const generateSessionId = async (userId, secret) => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 10);
   const data = `${userId}:${timestamp}:${random}`;
-  const signature = createHmac('sha1', secret).update(data).digest('hex');
+  const signature = await hmacSha1(data, secret);
 
   return `${data}:${signature}`;
 };
@@ -21,7 +53,7 @@ export const generateSessionId = (userId, secret) => {
 /**
  * Validate SessionID
  */
-export const validateSessionId = (sessionId, secret) => {
+export const validateSessionId = async (sessionId, secret) => {
   try {
     const parts = sessionId.split(':');
     if (parts.length !== 4) {
@@ -30,13 +62,13 @@ export const validateSessionId = (sessionId, secret) => {
 
     const [userId, timestamp, random, signature] = parts;
     const data = `${userId}:${timestamp}:${random}`;
-    const expectedSignature = createHmac('sha1', secret).update(data).digest('hex');
+    const expectedSignature = await hmacSha1(data, secret);
 
     if (signature !== expectedSignature) {
       return false;
     }
 
-    // Check timestamp (5 minutes validity)
+    // Check timestamp (7 days validity)
     const sessionTime = parseInt(timestamp);
     const currentTime = Date.now();
     const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -56,26 +88,28 @@ export const validateSessionId = (sessionId, secret) => {
 };
 
 /**
- * Hash password (SHA-256)
+ * Hash password (SHA-256) using Web Crypto API
  */
-export const hashPassword = (password) => {
-  const crypto = require('node:crypto');
-  return crypto.createHash('sha256').update(password).digest('hex');
+export const hashPassword = async (password) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return bufferToHex(hashBuffer);
 };
 
 /**
  * Verify password
  */
-export const verifyPassword = (password, hash) => {
-  const crypto = require('node:crypto');
-  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+export const verifyPassword = async (password, hash) => {
+  const passwordHash = await hashPassword(password);
   return passwordHash === hash;
 };
 
 /**
- * Generate random token
+ * Generate random token using Web Crypto API
  */
-export const generateToken = (length = 32) => {
-  const crypto = require('node:crypto');
-  return crypto.randomBytes(length).toString('hex');
+export const generateToken = async (length = 32) => {
+  const buffer = new Uint8Array(length);
+  crypto.getRandomValues(buffer);
+  return bufferToHex(buffer);
 };

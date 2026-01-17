@@ -37,7 +37,7 @@ tagRoutes.get('/list', async (c) => {
 });
 
 // GET /api/tag/popular - 获取热门标签
-tagRoutes.get('/tag/popular', async (c) => {
+tagRoutes.get('/popular', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -49,6 +49,11 @@ tagRoutes.get('/tag/popular', async (c) => {
 
     const tagModel = new Tag(db);
     const tags = await tagModel.getPopularTags({ limit });
+
+    // Return empty array if no tags
+    if (!tags || tags.length === 0) {
+      return c.json({ data: [], success: true });
+    }
 
     return c.json(tags);
   } catch (error) {

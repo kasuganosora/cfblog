@@ -37,7 +37,7 @@ categoryRoutes.get('/list', async (c) => {
 });
 
 // GET /api/category/tree - 获取分类树
-categoryRoutes.get('/category/tree', async (c) => {
+categoryRoutes.get('/tree', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -46,6 +46,11 @@ categoryRoutes.get('/category/tree', async (c) => {
 
     const categoryModel = new Category(db);
     const tree = await categoryModel.getCategoryTree();
+
+    // Return empty array if no categories
+    if (!tree || tree.length === 0) {
+      return c.json({ data: [], success: true });
+    }
 
     return c.json(tree);
   } catch (error) {

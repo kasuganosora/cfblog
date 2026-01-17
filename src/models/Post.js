@@ -26,7 +26,27 @@ export class Post extends BaseModel {
    * Create post
    */
   async createPost(postData) {
-    const { title, excerpt, authorId, status, featured, commentStatus, content, categoryIds, tagIds, publishedAt } = postData;
+    // Support both camelCase and snake_case field names
+    const {
+      title,
+      excerpt,
+      author_id: authorIdSnake,
+      authorId: authorIdCamel,
+      status = 0,
+      featured = 0,
+      comment_status: commentStatusSnake,
+      commentStatus: commentStatusCamel,
+      content,
+      content_key: contentKey,
+      published_at: publishedAtSnake,
+      publishedAt: publishedAtCamel,
+      categoryIds,
+      tagIds
+    } = postData;
+
+    const authorId = authorIdCamel || authorIdSnake;
+    const commentStatus = commentStatusCamel !== undefined ? commentStatusCamel : (commentStatusSnake !== undefined ? commentStatusSnake : 1);
+    const publishedAt = publishedAtCamel || publishedAtSnake;
 
     // Generate unique slug
     const slug = await generateUniqueSlug(title, async (s) => {
@@ -40,10 +60,10 @@ export class Post extends BaseModel {
       slug,
       excerpt,
       author_id: authorId,
-      status: status || 0,
+      status: status,
       featured: featured ? 1 : 0,
       comment_status: commentStatus ? 1 : 0,
-      content_key: content ? `posts/${slug}.md` : null,
+      content_key: contentKey || (content ? `posts/${slug}.md` : null),
       published_at: publishedAt || (status === 1 ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null)
     });
 

@@ -15,7 +15,23 @@ export class Comment extends BaseModel {
    * Create comment
    */
   async createComment(commentData) {
-    const { postId, authorName, authorEmail, content, parentId } = commentData;
+    // Support both camelCase and snake_case field names
+    const {
+      postId: postIdCamel,
+      post_id: postIdSnake,
+      authorName: authorNameCamel,
+      author_name: authorNameSnake,
+      authorEmail: authorEmailCamel,
+      author_email: authorEmailSnake,
+      content,
+      parentId: parentIdCamel,
+      parent_id: parentIdSnake
+    } = commentData;
+
+    const postId = postIdCamel || postIdSnake;
+    const authorName = authorNameCamel || authorNameSnake;
+    const authorEmail = authorEmailCamel || authorEmailSnake;
+    const parentId = parentIdCamel || parentIdSnake;
 
     const comment = await this.create({
       post_id: postId,

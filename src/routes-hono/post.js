@@ -102,12 +102,45 @@ postRoutes.post('/create', async (c) => {
 
     const body = await c.req.json();
 
-    if (!body.title || !body.authorId) {
+    // Support both camelCase and snake_case field names
+    const authorId = body.authorId || body.author_id;
+    const categoryId = body.categoryId || body.category_id || null;
+
+    if (!body.title || !authorId) {
       return c.json(errorResponse('Title and author ID are required').json(), 400);
     }
 
+    // Convert to snake_case for database, only include defined fields
+    const postData = {
+      title: body.title,
+      author_id: authorId
+    };
+
+    // Only add optional fields if they exist
+    if (body.slug !== undefined) postData.slug = body.slug;
+    if (body.excerpt !== undefined) postData.excerpt = body.excerpt;
+    if (body.content !== undefined) postData.content = body.content;
+    if (body.content_key !== undefined) postData.content_key = body.content_key;
+    if (body.status !== undefined) postData.status = body.status;
+    if (body.featured !== undefined) postData.featured = body.featured;
+    if (body.comment_status !== undefined) postData.comment_status = body.comment_status;
+    if (body.published_at !== undefined) postData.published_at = body.published_at;
+
     const postModel = new Post(db);
-    const post = await postModel.createPost(body);
+    const post = await postModel.createPost(postData);
+
+    // Handle categories if provided
+    if (categoryId) {
+      await postModel.addCategoryToPost(post.id, categoryId);
+    }
+
+    // Handle tags if provided
+    if (body.tagIds || body.tag_ids) {
+      const tagIds = body.tagIds || body.tag_ids;
+      for (const tagId of tagIds) {
+        await postModel.addTagToPost(post.id, tagId);
+      }
+    }
 
     return c.json(post, 201);
   } catch (error) {

@@ -22,12 +22,24 @@ commentRoutes.post('/create', async (c) => {
 
     const body = await c.req.json();
 
-    if (!body.postId || !body.authorName || !body.content) {
+    // Support both camelCase and snake_case field names
+    const postId = body.postId || body.post_id;
+    const authorName = body.authorName || body.author_name;
+    const authorEmail = body.authorEmail || body.author_email;
+    const parentId = body.parentId || body.parent_id || null;
+
+    if (!postId || !authorName || !body.content) {
       return c.json(errorResponse('Post ID, author name, and content are required').json(), 400);
     }
 
     const commentModel = new Comment(db);
-    const comment = await commentModel.createComment(body);
+    const comment = await commentModel.createComment({
+      post_id: postId,
+      author_name: authorName,
+      author_email: authorEmail,
+      content: body.content,
+      parent_id: parentId
+    });
 
     return c.json(comment, 201);
   } catch (error) {
@@ -36,8 +48,8 @@ commentRoutes.post('/create', async (c) => {
   }
 });
 
-// GET /api/comment/post/:postId - 获取文章的评论
-commentRoutes.get('/comment/post/:postId', async (c) => {
+// GET /post/:postId - 获取文章的评论
+commentRoutes.get('/post/:postId', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

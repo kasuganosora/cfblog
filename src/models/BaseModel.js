@@ -99,9 +99,17 @@ export class BaseModel {
    * Create a new record
    */
   async create(data) {
-    const fields = Object.keys(data).join(', ');
-    const placeholders = Object.keys(data).map(() => '?').join(', ');
-    const values = Object.values(data);
+    // Filter out undefined values
+    const filteredData = Object.entries(data)
+      .filter(([key, value]) => value !== undefined && value !== null)
+      .reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+
+    const fields = Object.keys(filteredData).join(', ');
+    const placeholders = Object.keys(filteredData).map(() => '?').join(', ');
+    const values = Object.values(filteredData);
 
     const sql = `INSERT INTO ${this.tableName} (${fields}) VALUES (${placeholders})`;
 
