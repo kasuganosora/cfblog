@@ -22,16 +22,22 @@ userRoutes.post('/login', async (c) => {
     }
 
     let username, password;
+    const contentType = c.req.header('Content-Type') || '';
 
     // Try JSON first, then fall back to form data
-    try {
+    if (contentType.includes('application/json')) {
       const body = await c.req.json();
       username = body.username;
       password = body.password;
-    } catch {
-      const body = await c.req.parseBody();
-      username = body.username;
-      password = body.password;
+    } else {
+      // Parse form data
+      try {
+        const body = await c.req.parseBody();
+        username = body.username;
+        password = body.password;
+      } catch (e) {
+        return c.json(errorResponse('Invalid request format').json(), 400);
+      }
     }
 
     if (!username || !password) {
