@@ -4,7 +4,7 @@
   "description": "A modern blog platform built on Cloudflare full stack",
   "main": "src/index-hono.js",
   "scripts": {
-    "dev": "npx wrangler dev --local --port 8787 --config wrangler-hono.toml",
+    "dev": "npx wrangler dev --local --port 8787",
     "start": "npx wrangler dev",
     "deploy": "npx wrangler deploy",
     "db:local": "npx wrangler d1 migrations apply cfblog-database --local",
