@@ -144,9 +144,15 @@ img{max-width:100%;height:auto}
 .cmt-item,.comment-item{padding:.75rem 0;border-bottom:1px solid var(--border2)}
 .cmt-item:last-child,.comment-item:last-child{border-bottom:none}
 .cmt-author{font-weight:600;font-size:.9rem;margin-bottom:.15rem}
+.cmt-author-is-poster{color:#FD4C5C}
+.cmt-user-info{font-size:.875rem;color:var(--text2);margin-bottom:.75rem;padding:.5rem .75rem;background:var(--bg2);border-radius:6px}
 .cmt-text{color:var(--text2);line-height:1.6;font-size:.9rem}
-.cmt-date{font-size:.75rem;color:var(--muted);margin-top:.15rem}
+.cmt-footer{display:flex;align-items:center;gap:.75rem;margin-top:.2rem}
+.cmt-date{font-size:.75rem;color:var(--muted)}
+.cmt-reply-btn{font-size:.75rem;color:var(--accent);text-decoration:none;cursor:pointer}
+.cmt-reply-btn:hover{text-decoration:underline}
 .cmt-reply{margin-left:1.5rem;padding-left:1rem;border-left:2px solid var(--border2)}
+#reply-hint{display:flex;align-items:center;padding:.5rem .75rem;background:var(--bg2);border-radius:6px;font-size:.85rem;margin-bottom:.75rem}
 #comment-message{padding:.65rem .85rem;border-radius:6px;margin-bottom:.75rem;display:none;font-size:.875rem}
 #comment-message.success{display:block;background:var(--ok-bg);color:var(--ok-c)}
 #comment-message.error{display:block;background:var(--err-bg);color:var(--err-c)}
@@ -449,6 +455,24 @@ frontendRoutes.get('/post/:slug', async (c) => {
   const settings = await getSettings(c);
   const blogTitle = settings.blog_title || 'CFBlog';
 
+  // Detect logged-in user
+  let currentUser = null;
+  try {
+    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    if (sessionId) {
+      const { validateSessionId } = await import('../utils/auth.js');
+      const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
+      if (session?.userId && c.env?.DB) {
+        const { User } = await import('../models/User.js');
+        const userModel = new User(c.env.DB);
+        const user = await userModel.findById(session.userId);
+        if (user) {
+          currentUser = { id: user.id, displayName: user.display_name || user.username, email: user.email };
+        }
+      }
+    }
+  } catch {}
+
   return c.html(layout({
     title: '文章详情',
     blogTitle,
@@ -472,6 +496,8 @@ frontendRoutes.get('/post/:slug', async (c) => {
 var API='/api';
 var postParam='${escJs(slug)}';
 var currentPostId=null;
+var currentUser=${currentUser ? JSON.stringify(currentUser) : 'null'};
+var postAuthorName=null;
 
 document.addEventListener('DOMContentLoaded',async function(){
   try{
@@ -480,6 +506,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     var res=await fetch(url);var result=await res.json();
     if(result&&result.id){
       currentPostId=result.id;
+      postAuthorName=result.author_name||null;
       document.querySelector('[data-testid="post-title"]').textContent=result.title;
       document.title=escapeHtml(result.title)+' - ${escJs(blogTitle)}';
 
@@ -538,15 +565,24 @@ document.addEventListener('DOMContentLoaded',async function(){
   }
 });
 
+var replyToId=null;
+
 function renderCommentsSection(pid){
   var c=document.getElementById('comments-container');
+  var formFields='';
+  if(currentUser){
+    formFields='<div class="cmt-user-info">以 <b>'+escapeHtml(currentUser.displayName)+'</b> 身份评论</div>';
+  }else{
+    formFields='<div class="cmt-row-inline">'+
+      '<div class="cmt-row" style="flex:1"><label for="author">昵称</label><input type="text" id="author" name="author" required></div>'+
+      '<div class="cmt-row" style="flex:1"><label for="email">邮箱 (可选)</label><input type="email" id="email" name="email"></div>'+
+    '</div>';
+  }
   c.innerHTML='<section class="comments" data-testid="comments-section">'+
     '<h2>评论</h2><div id="comment-message"></div>'+
+    '<div id="reply-hint" style="display:none"></div>'+
     '<form class="cmt-form" id="comment-form">'+
-      '<div class="cmt-row-inline">'+
-        '<div class="cmt-row" style="flex:1"><label for="author">昵称</label><input type="text" id="author" name="author" required></div>'+
-        '<div class="cmt-row" style="flex:1"><label for="email">邮箱 (可选)</label><input type="email" id="email" name="email"></div>'+
-      '</div>'+
+      formFields+
       '<div class="cmt-row"><label for="comment-content">评论内容</label><textarea id="comment-content" name="content" rows="4" required></textarea></div>'+
       '<button type="submit" class="cmt-btn">发表评论</button>'+
     '</form>'+
@@ -554,6 +590,22 @@ function renderCommentsSection(pid){
   '</section>';
   loadComments(pid);
   document.getElementById('comment-form').addEventListener('submit',handleComment);
+}
+
+function setReply(id,name){
+  replyToId=id;
+  var h=document.getElementById('reply-hint');
+  h.style.display='flex';
+  h.innerHTML='<span>回复 <b>'+escapeHtml(name)+'</b></span><a class="cancel-reply" href="javascript:void(0)" style="margin-left:auto;color:var(--accent);font-size:.8rem">取消回复</a>';
+  h.querySelector('.cancel-reply').addEventListener('click',cancelReply);
+  document.getElementById('comment-content').focus();
+  document.getElementById('comment-form').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelReply(){
+  replyToId=null;
+  var h=document.getElementById('reply-hint');
+  h.style.display='none';h.innerHTML='';
 }
 
 async function loadComments(pid){
@@ -583,25 +635,39 @@ function renderComments(comments){
 function addComment(container,cm,isReply){
   var d=document.createElement('div');
   d.className='comment-item'+(isReply?' cmt-reply':'');
-  d.innerHTML='<div class="cmt-author">'+escapeHtml(cm.author_name)+'</div>'+
+  var isAuthor=postAuthorName&&cm.author_name===postAuthorName;
+  var authorHtml=isAuthor?'<div class="cmt-author cmt-author-is-poster">'+escapeHtml(cm.author_name)+'</div>':'<div class="cmt-author">'+escapeHtml(cm.author_name)+'</div>';
+  var html=authorHtml+
     '<div class="cmt-text">'+escapeHtml(cm.content)+'</div>'+
-    '<div class="cmt-date">'+new Date(cm.created_at).toLocaleString('zh-CN')+'</div>';
+    '<div class="cmt-footer"><span class="cmt-date">'+new Date(cm.created_at).toLocaleString('zh-CN')+'</span>';
+  if(!isReply)html+='<a class="cmt-reply-btn" href="javascript:void(0)">回复</a>';
+  html+='</div>';
+  d.innerHTML=html;
+  if(!isReply){var btn=d.querySelector('.cmt-reply-btn');if(btn)btn.addEventListener('click',function(){setReply(cm.id,cm.author_name)})}
   container.appendChild(d);
 }
 
 async function handleComment(e){
   e.preventDefault();
-  var author=document.getElementById('author').value.trim();
-  var email=document.getElementById('email').value.trim();
+  var author,email;
+  if(currentUser){
+    author=currentUser.displayName;
+    email=currentUser.email||'';
+  }else{
+    author=document.getElementById('author').value.trim();
+    email=document.getElementById('email').value.trim();
+  }
   var content=document.getElementById('comment-content').value.trim();
   if(!author||!content){showMsg('请填写昵称和评论内容','error');return}
   try{
+    var payload={post_id:currentPostId,author_name:author,author_email:email,content:content};
+    if(replyToId)payload.parent_id=replyToId;
     var res=await fetch(API+'/comment/create',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({post_id:currentPostId,author_name:author,author_email:email,content:content})
+      body:JSON.stringify(payload)
     });
     var result=await res.json();
-    if(res.ok){showMsg('评论发表成功！','success');document.getElementById('comment-form').reset();loadComments(currentPostId)}
+    if(res.ok){showMsg('评论发表成功！','success');document.getElementById('comment-content').value='';cancelReply();loadComments(currentPostId)}
     else showMsg(result.message||'评论发表失败','error');
   }catch(e){console.error(e);showMsg('评论发表失败','error')}
 }
@@ -620,6 +686,16 @@ function showMsg(text,type){
 // ═════════════════════════════════════════════════════════════
 
 frontendRoutes.get('/login', async (c) => {
+  // If already logged in, redirect to admin
+  try {
+    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    if (sessionId) {
+      const { validateSessionId } = await import('../utils/auth.js');
+      const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
+      if (session?.userId) return c.redirect('/admin');
+    }
+  } catch {}
+
   const settings = await getSettings(c);
   const blogTitle = settings.blog_title || 'CFBlog';
   return c.html(`
@@ -631,30 +707,39 @@ frontendRoutes.get('/login', async (c) => {
 <title>登录 - ${esc(blogTitle)}</title>
 <link rel="stylesheet" href="/static/admin-bundle.css">
 <style>
-body{margin:0;background:#f0f2f5;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.login-card{width:400px}
-.login-title{text-align:center;margin-bottom:24px;font-size:24px;color:#333}
-.login-footer{text-align:center;margin-top:16px;font-size:13px;color:#999}
-.login-footer a{color:#0052d9;text-decoration:none}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+[v-cloak]{display:none}
+.login-wrap{width:100%;max-width:380px;padding:0 20px}
+.login-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:36px 32px 28px}
+.login-title{text-align:center;font-size:20px;font-weight:600;color:#333;margin-bottom:24px}
+.login-card .t-form__item,.login-card .t-form__controls,.login-card .t-form__controls-content{margin-left:0!important;width:100%!important;max-width:100%!important}
+.login-actions{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px;width:100%}
+.login-actions .home-link{color:#666;text-decoration:none;font-size:13px;white-space:nowrap;transition:color .2s}
+.login-actions .home-link:hover{color:#0052d9}
 </style>
 </head>
 <body>
 <div id="app" v-cloak>
-  <t-card class="login-card" :bordered="true">
-    <div class="login-title">${esc(blogTitle)} 登录</div>
-    <t-form data-testid="login-form" @submit="onSubmit">
-      <t-form-item label="用户名" name="username">
-        <t-input v-model="form.username" placeholder="请输入用户名" data-testid="username-input"></t-input>
-      </t-form-item>
-      <t-form-item label="密码" name="password">
-        <t-input v-model="form.password" type="password" placeholder="请输入密码" data-testid="password-input"></t-input>
-      </t-form-item>
-      <t-form-item>
-        <t-button theme="primary" type="submit" block :loading="loading" data-testid="login-button">登录</t-button>
-      </t-form-item>
-    </t-form>
-    <div class="login-footer"><a href="/">返回首页</a></div>
-  </t-card>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-title">${esc(blogTitle)}</div>
+      <t-form data-testid="login-form" @submit="onSubmit">
+        <t-form-item name="username">
+          <t-input v-model="form.username" placeholder="用户名" data-testid="username-input"></t-input>
+        </t-form-item>
+        <t-form-item name="password">
+          <t-input v-model="form.password" type="password" placeholder="密码" data-testid="password-input"></t-input>
+        </t-form-item>
+        <t-form-item>
+          <div class="login-actions">
+            <t-button theme="primary" type="submit" :loading="loading" data-testid="login-button">登录</t-button>
+            <a class="home-link" href="/">返回首页</a>
+          </div>
+        </t-form-item>
+      </t-form>
+    </div>
+  </div>
 </div>
 <script src="/static/admin-bundle.js"></script>
 <script>

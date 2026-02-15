@@ -179,6 +179,12 @@ export class Post extends BaseModel {
       return null;
     }
 
+    // Get author info
+    const author = await this.queryFirst(
+      'SELECT username, display_name, avatar FROM users WHERE id = ?',
+      [post.author_id]
+    );
+
     // Get categories
     const categories = await this.query(`
       SELECT c.* FROM categories c
@@ -195,6 +201,8 @@ export class Post extends BaseModel {
 
     return {
       ...post,
+      author_name: author?.display_name || author?.username || null,
+      author_avatar: author?.avatar || null,
       categories,
       tags
     };
