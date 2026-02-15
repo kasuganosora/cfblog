@@ -13,7 +13,7 @@ function escapeHtml(text) {
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function adminLayout(title, activePage, templateHtml, scriptContent) {
+function adminLayout(title, activePage, templateHtml, scriptContent, options = {}) {
   const navItems = [
     { key: 'dashboard', label: '仪表板', icon: '&#9632;', href: '/admin' },
     { key: 'posts', label: '文章管理', icon: '&#9998;', href: '/admin/posts' },
@@ -21,6 +21,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
     { key: 'tags', label: '标签管理', icon: '&#9830;', href: '/admin/tags' },
     { key: 'comments', label: '评论管理', icon: '&#9993;', href: '/admin/comments' },
     { key: 'feedback', label: '留言管理', icon: '&#9733;', href: '/admin/feedback' },
+    { key: 'attachments', label: '附件管理', icon: '&#128206;', href: '/admin/attachments' },
     { key: 'users', label: '用户管理', icon: '&#9786;', href: '/admin/users' },
     { key: 'settings', label: '系统设置', icon: '&#9881;', href: '/admin/settings' },
   ];
@@ -29,13 +30,38 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
     return `<a href="${item.href}" class="nav-item${cls}"><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
   }).join('\n');
 
+  const isModule = options.module === true;
+
+  const moduleHeadCss = isModule
+    ? '\n  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/md-editor-v3@5/lib/style.css">'
+    : '';
+
+  const scriptsHtml = isModule
+    ? `<script type="importmap">
+{
+  "imports": {
+    "vue": "https://esm.sh/vue@3",
+    "tdesign-vue-next": "https://esm.sh/tdesign-vue-next@1",
+    "md-editor-v3": "https://esm.sh/md-editor-v3@5?external=vue"
+  }
+}
+</script>
+<script type="module">
+${scriptContent}
+</script>`
+    : `<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.js"></script>
+<script>
+${scriptContent}
+</script>`;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)} - CFBlog Admin</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.css">${moduleHeadCss}
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f0f2f5; }
@@ -83,16 +109,13 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
       return data;
     }
     function fmtDate(d){if(!d)return '-';return new Date(d).toLocaleDateString('zh-CN');}
+    function fmtSize(bytes){if(!bytes)return '0 B';var k=1024;var sizes=['B','KB','MB','GB'];var i=Math.floor(Math.log(bytes)/Math.log(k));return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+' '+sizes[i];}
     document.getElementById('logout-btn').addEventListener('click',function(e){
       e.preventDefault();
       fetch(API+'/user/logout',{method:'POST'}).then(function(){window.location.href='/login';}).catch(function(){window.location.href='/login';});
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.js"></script>
-  <script>
-  ${scriptContent}
-  </script>
+  ${scriptsHtml}
 </body>
 </html>`;
 }
@@ -255,7 +278,7 @@ adminRoutes.get('/posts', requireAdmin, (c) => {
 });
 
 // ============================================================
-// New Post
+// New Post (md-editor-v3 + import map)
 // ============================================================
 adminRoutes.get('/posts/new', requireAdmin, (c) => {
   return c.html(adminLayout('新建文章', 'posts', `
@@ -268,7 +291,7 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
           <t-textarea v-model="form.excerpt" placeholder="请输入文章摘要" :autosize="{minRows:2,maxRows:4}"></t-textarea>
         </t-form-item>
         <t-form-item label="内容">
-          <t-textarea v-model="form.content" placeholder="请输入文章内容" :autosize="{minRows:10,maxRows:30}"></t-textarea>
+          <md-editor v-model="form.content" language="zh-CN" style="height:500px" @on-upload-img="onUploadImg"></md-editor>
         </t-form-item>
         <t-row :gutter="[24,0]">
           <t-col :span="6">
@@ -309,38 +332,52 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
       </t-form>
     </t-card>
   `, `
-    var { createApp, ref, reactive, onMounted } = Vue;
-    var { MessagePlugin } = TDesign;
-    var app = createApp({
-      setup: function() {
-        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
-        var tagInput = ref('');
-        var categories = ref([]);
-        var allTags = ref([]);
-        var selectLoading = ref(true);
-        var saving = ref(false);
+    import { createApp, ref, reactive, onMounted } from 'vue';
+    import TDesign, { MessagePlugin } from 'tdesign-vue-next';
+    import { MdEditor } from 'md-editor-v3';
+    const app = createApp({
+      components: { MdEditor },
+      setup() {
+        const form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        const tagInput = ref('');
+        const categories = ref([]);
+        const allTags = ref([]);
+        const selectLoading = ref(true);
+        const saving = ref(false);
+        async function onUploadImg(files, callback) {
+          const urls = [];
+          for (const file of files) {
+            try {
+              const fd = new FormData();
+              fd.append('file', file);
+              const res = await fetch('/api/upload', { method:'POST', body:fd });
+              const data = await res.json();
+              if (data.success && data.data?.url) urls.push(data.data.url);
+            } catch(e) { console.error('Upload failed:', e); }
+          }
+          callback(urls);
+        }
         function onTagEnter() {
-          var t = tagInput.value.trim();
+          const t = tagInput.value.trim();
           if (t && !form.tagNames.includes(t)) form.tagNames.push(t);
           tagInput.value = '';
         }
         function onTagInputChange(val) {
           if (val && val.includes(' ')) {
-            val.split(/\\s+/).filter(function(s){return s;}).forEach(function(s) {
+            val.split(/\\s+/).filter(s => s).forEach(s => {
               if (!form.tagNames.includes(s)) form.tagNames.push(s);
             });
             tagInput.value = '';
           }
         }
         async function resolveTagIds(names) {
-          var ids = [];
-          for (var i = 0; i < names.length; i++) {
-            var name = names[i];
-            var found = allTags.value.find(function(t){return t.name===name;});
+          const ids = [];
+          for (const name of names) {
+            const found = allTags.value.find(t => t.name === name);
             if (found) { ids.push(found.id); }
             else {
               try {
-                var created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})});
+                const created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
                 if (created.id) { ids.push(created.id); allTags.value.push(created); }
               } catch(e) { console.error('Tag create failed:', name); }
             }
@@ -351,40 +388,40 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
           if (!form.title) { MessagePlugin.warning('请输入标题'); return; }
           saving.value = true;
           try {
-            var tagIds = await resolveTagIds(form.tagNames);
+            const tagIds = await resolveTagIds(form.tagNames);
             await apiCall('/post/create',{
               method:'POST', headers:{'Content-Type':'application/json'},
               body:JSON.stringify({
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
-                categoryIds:form.categoryIds, tagIds:tagIds, author_id:1
+                categoryIds:form.categoryIds, tagIds, author_id:1
               })
             });
             MessagePlugin.success('文章创建成功');
-            setTimeout(function(){window.location.href='/admin/posts';},800);
-          } catch(e) {}
+            setTimeout(() => { window.location.href='/admin/posts'; }, 800);
+          } catch(e) { console.error(e); }
           saving.value = false;
         }
         function goBack() { window.location.href='/admin/posts'; }
-        onMounted(async function() {
+        onMounted(async () => {
           try {
-            var results = await Promise.all([apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')]);
+            const results = await Promise.all([apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')]);
             categories.value = results[0].data || [];
             allTags.value = results[1].data || [];
           } catch(e) {}
           selectLoading.value = false;
         });
-        return { form, tagInput, categories, selectLoading, saving, onTagEnter, onTagInputChange, save, goBack };
+        return { form, tagInput, categories, selectLoading, saving, onUploadImg, onTagEnter, onTagInputChange, save, goBack };
       }
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, { module: true }));
 });
 
 // ============================================================
-// Edit Post
+// Edit Post (md-editor-v3 + import map)
 // ============================================================
 adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
   const postId = c.req.param('id');
@@ -398,7 +435,7 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
           <t-textarea v-model="form.excerpt" placeholder="请输入文章摘要" :autosize="{minRows:2,maxRows:4}"></t-textarea>
         </t-form-item>
         <t-form-item label="内容">
-          <t-textarea v-model="form.content" placeholder="请输入文章内容" :autosize="{minRows:10,maxRows:30}"></t-textarea>
+          <md-editor v-model="form.content" language="zh-CN" style="height:500px" @on-upload-img="onUploadImg"></md-editor>
         </t-form-item>
         <t-row :gutter="[24,0]">
           <t-col :span="6">
@@ -439,40 +476,54 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
       </t-form>
     </t-card>
   `, `
-    var postId = ${escapeHtml(postId)};
-    var { createApp, ref, reactive, onMounted } = Vue;
-    var { MessagePlugin } = TDesign;
-    var app = createApp({
-      setup: function() {
-        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
-        var tagInput = ref('');
-        var categories = ref([]);
-        var allTags = ref([]);
-        var selectLoading = ref(true);
-        var pageLoading = ref(true);
-        var saving = ref(false);
+    import { createApp, ref, reactive, onMounted } from 'vue';
+    import TDesign, { MessagePlugin } from 'tdesign-vue-next';
+    import { MdEditor } from 'md-editor-v3';
+    const postId = ${escapeHtml(postId)};
+    const app = createApp({
+      components: { MdEditor },
+      setup() {
+        const form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        const tagInput = ref('');
+        const categories = ref([]);
+        const allTags = ref([]);
+        const selectLoading = ref(true);
+        const pageLoading = ref(true);
+        const saving = ref(false);
+        async function onUploadImg(files, callback) {
+          const urls = [];
+          for (const file of files) {
+            try {
+              const fd = new FormData();
+              fd.append('file', file);
+              const res = await fetch('/api/upload', { method:'POST', body:fd });
+              const data = await res.json();
+              if (data.success && data.data?.url) urls.push(data.data.url);
+            } catch(e) { console.error('Upload failed:', e); }
+          }
+          callback(urls);
+        }
         function onTagEnter() {
-          var t = tagInput.value.trim();
+          const t = tagInput.value.trim();
           if (t && !form.tagNames.includes(t)) form.tagNames.push(t);
           tagInput.value = '';
         }
         function onTagInputChange(val) {
           if (val && val.includes(' ')) {
-            val.split(/\\s+/).filter(function(s){return s;}).forEach(function(s) {
+            val.split(/\\s+/).filter(s => s).forEach(s => {
               if (!form.tagNames.includes(s)) form.tagNames.push(s);
             });
             tagInput.value = '';
           }
         }
         async function resolveTagIds(names) {
-          var ids = [];
-          for (var i = 0; i < names.length; i++) {
-            var name = names[i];
-            var found = allTags.value.find(function(t){return t.name===name;});
+          const ids = [];
+          for (const name of names) {
+            const found = allTags.value.find(t => t.name === name);
             if (found) { ids.push(found.id); }
             else {
               try {
-                var created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})});
+                const created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
                 if (created.id) { ids.push(created.id); allTags.value.push(created); }
               } catch(e) { console.error('Tag create failed:', name); }
             }
@@ -483,47 +534,47 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
           if (!form.title) { MessagePlugin.warning('请输入标题'); return; }
           saving.value = true;
           try {
-            var tagIds = await resolveTagIds(form.tagNames);
+            const tagIds = await resolveTagIds(form.tagNames);
             await apiCall('/post/'+postId+'/update',{
               method:'PUT', headers:{'Content-Type':'application/json'},
               body:JSON.stringify({
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
-                categoryIds:form.categoryIds, tagIds:tagIds
+                categoryIds:form.categoryIds, tagIds
               })
             });
             MessagePlugin.success('文章更新成功');
-          } catch(e) {}
+          } catch(e) { console.error(e); }
           saving.value = false;
         }
         function goBack() { window.location.href='/admin/posts'; }
-        onMounted(async function() {
+        onMounted(async () => {
           try {
-            var results = await Promise.all([
+            const results = await Promise.all([
               apiCall('/post/'+postId), apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')
             ]);
-            var post = results[0];
+            const post = results[0];
             form.title = post.title || '';
             form.excerpt = post.excerpt || '';
             form.content = post.content || '';
             form.status = post.status || 0;
             form.featured = !!post.featured;
             form.commentStatus = post.comment_status !== 0;
-            form.categoryIds = (post.categories||[]).map(function(c){return c.id;});
-            form.tagNames = (post.tags||[]).map(function(t){return t.name;});
+            form.categoryIds = (post.categories||[]).map(c => c.id);
+            form.tagNames = (post.tags||[]).map(t => t.name);
             categories.value = results[1].data || [];
             allTags.value = results[2].data || [];
           } catch(e) { MessagePlugin.error('加载文章失败'); }
           selectLoading.value = false;
           pageLoading.value = false;
         });
-        return { form, tagInput, categories, selectLoading, pageLoading, saving, onTagEnter, onTagInputChange, save, goBack };
+        return { form, tagInput, categories, selectLoading, pageLoading, saving, onUploadImg, onTagEnter, onTagInputChange, save, goBack };
       }
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, { module: true }));
 });
 
 // ============================================================
@@ -900,6 +951,155 @@ adminRoutes.get('/feedback', requireAdmin, (c) => {
         }
         onMounted(loadData);
         return { list, loading, page, total, pageSize, statusFilter, columns, detailVisible, detailItem, loadData, onFilterChange, showDetail, toggleStatus, del, fmtDate };
+      }
+    });
+    app.use(TDesign);
+    app.mount('#app');
+  `));
+});
+
+// ============================================================
+// Attachments Management
+// ============================================================
+adminRoutes.get('/attachments', requireAdmin, (c) => {
+  return c.html(adminLayout('附件管理', 'attachments', `
+    <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+      <t-space>
+        <t-select v-model="typeFilter" placeholder="全部类型" :clearable="true" style="width:150px" @change="onFilterChange">
+          <t-option value="image" label="图片"></t-option>
+          <t-option value="application/pdf" label="PDF"></t-option>
+          <t-option value="text" label="文本"></t-option>
+        </t-select>
+      </t-space>
+      <t-button theme="primary" @click="showUploadDialog">上传文件</t-button>
+    </div>
+    <t-card :bordered="true">
+      <t-table :data="list" :columns="columns" row-key="id" :loading="loading" :hover="true" :stripe="true">
+        <template #original_name="{ row }">
+          <div style="display:flex;align-items:center;gap:8px">
+            <img v-if="row.mime_type && row.mime_type.startsWith('image/')" :src="row.url"
+              style="width:40px;height:40px;object-fit:cover;border-radius:4px;cursor:pointer"
+              @click="previewImage(row.url)">
+            <span>{{ row.original_name }}</span>
+          </div>
+        </template>
+        <template #file_size="{ row }">{{ fmtSize(row.file_size) }}</template>
+        <template #created_at="{ row }">{{ fmtDate(row.created_at) }}</template>
+        <template #op="{ row }">
+          <t-space size="small">
+            <t-link theme="primary" @click="copyUrl(row.url)">复制链接</t-link>
+            <t-popconfirm content="确定要删除这个附件吗？" @confirm="del(row.id)">
+              <t-link theme="danger">删除</t-link>
+            </t-popconfirm>
+          </t-space>
+        </template>
+      </t-table>
+      <div style="display:flex;justify-content:flex-end;padding:16px" v-if="total>pageSize">
+        <t-pagination v-model:current="page" :total="total" :page-size="pageSize" @current-change="loadData"></t-pagination>
+      </div>
+    </t-card>
+    <t-dialog v-model:visible="uploadVisible" header="上传文件" :footer="false" width="500px">
+      <div style="text-align:center;padding:20px">
+        <input type="file" id="fileInput" @change="handleFileSelect" style="display:none" multiple>
+        <t-button theme="primary" variant="outline" @click="document.getElementById('fileInput').click()" :loading="uploading">
+          {{ uploading ? '上传中...' : '选择文件' }}
+        </t-button>
+        <p style="margin-top:12px;color:#888;font-size:13px">支持 jpg, png, gif, webp, pdf, zip 等格式，最大 10MB</p>
+        <div v-if="uploadResults.length" style="margin-top:16px;text-align:left">
+          <div v-for="(r,i) in uploadResults" :key="i" style="padding:4px 0;font-size:13px">
+            <span :style="{color: r.success ? '#2ba471' : '#e34d59'}">{{ r.success ? '&#10003;' : '&#10007;' }}</span>
+            {{ r.name }} {{ r.success ? '' : '- ' + r.error }}
+          </div>
+        </div>
+      </div>
+    </t-dialog>
+    <t-dialog v-model:visible="previewVisible" header="图片预览" :footer="false" width="auto" style="max-width:90vw">
+      <img :src="previewUrl" style="max-width:100%;max-height:80vh">
+    </t-dialog>
+  `, `
+    var { createApp, ref, onMounted } = Vue;
+    var { MessagePlugin } = TDesign;
+    var app = createApp({
+      setup: function() {
+        var list = ref([]); var loading = ref(false);
+        var page = ref(1); var total = ref(0); var pageSize = 20;
+        var typeFilter = ref(null);
+        var uploadVisible = ref(false);
+        var uploading = ref(false);
+        var uploadResults = ref([]);
+        var previewVisible = ref(false);
+        var previewUrl = ref('');
+        var columns = [
+          { colKey:'original_name', title:'文件名', ellipsis:true },
+          { colKey:'mime_type', title:'类型', width:130 },
+          { colKey:'file_size', title:'大小', width:100 },
+          { colKey:'uploader_name', title:'上传者', width:100 },
+          { colKey:'created_at', title:'日期', width:110 },
+          { colKey:'op', title:'操作', width:140 }
+        ];
+        async function loadData() {
+          loading.value = true;
+          try {
+            var url = '/upload/list?page=' + page.value + '&limit=' + pageSize;
+            if (typeFilter.value) url += '&type=' + typeFilter.value;
+            var data = await apiCall(url);
+            list.value = data.data || [];
+            total.value = data.pagination?.total || 0;
+          } catch(e) { console.error(e); }
+          loading.value = false;
+        }
+        function onFilterChange() { page.value = 1; loadData(); }
+        function showUploadDialog() { uploadResults.value = []; uploadVisible.value = true; }
+        async function handleFileSelect(e) {
+          var files = e.target.files;
+          if (!files || !files.length) return;
+          uploading.value = true;
+          uploadResults.value = [];
+          for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            try {
+              var fd = new FormData();
+              fd.append('file', file);
+              var res = await fetch(API + '/upload', { method:'POST', body:fd });
+              var data = await res.json();
+              if (data.success) {
+                uploadResults.value.push({ name:file.name, success:true });
+              } else {
+                uploadResults.value.push({ name:file.name, success:false, error:data.message });
+              }
+            } catch(err) {
+              uploadResults.value.push({ name:file.name, success:false, error:'Upload failed' });
+            }
+          }
+          uploading.value = false;
+          e.target.value = '';
+          loadData();
+        }
+        async function del(id) {
+          try {
+            await apiCall('/upload/' + id, { method:'DELETE' });
+            MessagePlugin.success('附件已删除');
+            loadData();
+          } catch(e) { console.error(e); }
+        }
+        function copyUrl(url) {
+          var fullUrl = window.location.origin + url;
+          navigator.clipboard.writeText(fullUrl).then(function() {
+            MessagePlugin.success('链接已复制');
+          }).catch(function() { MessagePlugin.info(fullUrl); });
+        }
+        function previewImage(url) {
+          previewUrl.value = url;
+          previewVisible.value = true;
+        }
+        onMounted(loadData);
+        return {
+          list, loading, page, total, pageSize, typeFilter, columns,
+          uploadVisible, uploading, uploadResults,
+          previewVisible, previewUrl,
+          loadData, onFilterChange, showUploadDialog, handleFileSelect,
+          del, copyUrl, previewImage, fmtDate, fmtSize
+        };
       }
     });
     app.use(TDesign);

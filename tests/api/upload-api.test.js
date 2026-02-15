@@ -17,6 +17,20 @@ beforeAll(async () => {
   userCookie = await getUserSessionCookie();
 });
 
+// Mock R2 bucket
+function createMockBucket() {
+  const store = new Map();
+  return {
+    put: async (key, data, options) => { store.set(key, { data, options }); },
+    get: async (key) => {
+      const obj = store.get(key);
+      if (!obj) return null;
+      return { body: obj.data, httpMetadata: obj.options?.httpMetadata, httpEtag: '"mock-etag"' };
+    },
+    delete: async (key) => { store.delete(key); }
+  };
+}
+
 function getDB() {
   return createMockDB([
     {
@@ -26,6 +40,15 @@ function getDB() {
         if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
         return null;
       }
+    },
+    {
+      match: 'INSERT INTO attachments',
+      result: () => null,
+      meta: { last_row_id: 1 }
+    },
+    {
+      match: 'FROM attachments WHERE id',
+      result: () => ({ id: 1, filename: 'test.txt', original_name: 'test.txt', mime_type: 'text/plain', file_size: 4, storage_key: 'attachments/test.txt', upload_user_id: 1, created_at: '2024-01-01' })
     },
   ]);
 }
@@ -38,7 +61,7 @@ describe('POST /api/upload', () => {
     const res = await request('/api/upload', {
       method: 'POST',
       body: formData
-    }, { DB: getDB() });
+    }, { DB: getDB(), BUCKET: createMockBucket() });
 
     expect(res.status).toBe(401);
   });
@@ -51,12 +74,13 @@ describe('POST /api/upload', () => {
       method: 'POST',
       headers: { 'Cookie': adminCookie },
       body: formData
-    }, { DB: getDB() });
+    }, { DB: getDB(), BUCKET: createMockBucket() });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.success).toBe(true);
-    expect(json.data.filename).toBe('test.txt');
+    expect(json.data.original_name).toBe('test.txt');
+    expect(json.data.url).toContain('/api/upload/file/');
   });
 
   it('普通用户也应该可以上传', async () => {
@@ -67,9 +91,9 @@ describe('POST /api/upload', () => {
       method: 'POST',
       headers: { 'Cookie': userCookie },
       body: formData
-    }, { DB: getDB() });
+    }, { DB: getDB(), BUCKET: createMockBucket() });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.success).toBe(true);
   });
@@ -81,7 +105,7 @@ describe('POST /api/upload', () => {
       method: 'POST',
       headers: { 'Cookie': adminCookie },
       body: formData
-    }, { DB: getDB() });
+    }, { DB: getDB(), BUCKET: createMockBucket() });
 
     expect(res.status).toBe(400);
     const json = await res.json();

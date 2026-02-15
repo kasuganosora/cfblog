@@ -13,6 +13,21 @@ import {
   parsePagination,
   requireAuth
 } from './base.js';
+import { validateSessionId } from '../utils/auth.js';
+
+// Helper: optionally get current user ID from session cookie (no auth required)
+async function getCurrentUserId(c) {
+  try {
+    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    if (!sessionId) return null;
+    const secret = c.env?.SESSION_SECRET;
+    if (!secret) return null;
+    const sessionData = await validateSessionId(sessionId, secret);
+    return sessionData?.userId || null;
+  } catch {
+    return null;
+  }
+}
 
 const postRoutes = new Hono();
 
@@ -85,8 +100,13 @@ postRoutes.get('/:id', async (c) => {
       return c.json(notFoundResponse('Post not found').json(), 404);
     }
 
-    // Increment view count
-    await postModel.incrementViewCount(id);
+    // Increment view count only for published posts and non-author visitors
+    if (post.status === 1) {
+      const currentUserId = await getCurrentUserId(c);
+      if (!currentUserId || currentUserId !== post.author_id) {
+        await postModel.incrementViewCount(id);
+      }
+    }
 
     return c.json(post);
   } catch (error) {
@@ -111,8 +131,13 @@ postRoutes.get('/slug/:slug', async (c) => {
       return c.json(notFoundResponse('Post not found').json(), 404);
     }
 
-    // Increment view count
-    await postModel.incrementViewCount(post.id);
+    // Increment view count only for published posts and non-author visitors
+    if (post.status === 1) {
+      const currentUserId = await getCurrentUserId(c);
+      if (!currentUserId || currentUserId !== post.author_id) {
+        await postModel.incrementViewCount(post.id);
+      }
+    }
 
     return c.json(post);
   } catch (error) {
