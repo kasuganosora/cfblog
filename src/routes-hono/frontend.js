@@ -92,7 +92,7 @@ img{max-width:100%;height:auto}
 .read-more:hover{text-decoration:underline}
 
 /* ── Post detail ── */
-.post-hero{width:100%;border-radius:8px;margin-bottom:1.5rem;max-height:420px;object-fit:cover}
+.post-hero{width:100%;border-radius:8px;margin-bottom:1.5rem;max-height:420px;object-fit:cover;cursor:zoom-in}
 .post-header{margin-bottom:2rem}
 .post-header h1{font-size:1.8rem;font-weight:700;line-height:1.3;margin-bottom:.5rem}
 .post-body{line-height:1.85;font-size:1.025rem}
@@ -116,7 +116,11 @@ img{max-width:100%;height:auto}
 .post-body pre{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;overflow-x:auto;margin:1em 0;font-family:var(--mono);font-size:.85rem;line-height:1.5}
 .post-body code{font-family:var(--mono);font-size:.85em;background:var(--bg2);padding:.15em .35em;border-radius:4px}
 .post-body pre code{background:none;padding:0;font-size:inherit}
-.post-body img{max-width:100%;height:auto;border-radius:6px;margin:1em 0}
+.post-body img{max-width:100%;height:auto;border-radius:6px;margin:1em 0;cursor:zoom-in}
+.img-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;transition:opacity .2s;padding:24px}
+.img-lightbox.show{opacity:1}
+.img-lightbox img{max-width:95%;max-height:95vh;border-radius:6px;object-fit:contain;transform:scale(.95);transition:transform .2s}
+.img-lightbox.show img{transform:scale(1)}
 .post-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 .post-body a:hover{color:var(--accent2)}
 .post-body table{width:100%;border-collapse:collapse;margin:1em 0}
@@ -541,6 +545,19 @@ document.addEventListener('DOMContentLoaded',async function(){
         };
         probe.src=imgSrc;
       }
+
+      // Image lightbox
+      function openLightbox(src){
+        var box=document.createElement('div');box.className='img-lightbox';
+        var img=document.createElement('img');img.src=src;img.alt='';
+        box.appendChild(img);document.body.appendChild(box);
+        requestAnimationFrame(function(){box.classList.add('show')});
+        function close(){box.classList.remove('show');setTimeout(function(){box.remove()},200)}
+        box.addEventListener('click',close);
+        document.addEventListener('keydown',function onKey(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',onKey)}});
+      }
+      contentEl.querySelectorAll('img').forEach(function(img){img.addEventListener('click',function(){openLightbox(img.src)})});
+      if(document.getElementById('hero').src)document.getElementById('hero').addEventListener('click',function(){openLightbox(this.src)});
 
       // Tags
       if(result.tags&&result.tags.length){
@@ -1117,25 +1134,79 @@ document.addEventListener('DOMContentLoaded',async function(){
 async function handleRSS(c) {
   const bucket = c.env?.BUCKET;
   const db = c.env?.DB;
-  const { getCachedRSS, refreshRSSCache } = await import('../utils/cache.js');
 
-  let xml = await getCachedRSS(bucket);
+  // Always generate fresh RSS from DB for accuracy
+  if (db) {
+    try {
+      const { Post } = await import('../models/Post.js');
+      const { Settings } = await import('../models/Settings.js');
+      const settingsModel = new Settings(db);
+      const postModel = new Post(db);
 
-  // If no cache or cache has no items, regenerate
-  if (db && (!xml || !xml.includes('<item>'))) {
-    const origin = new URL(c.req.url).origin;
-    await refreshRSSCache(bucket, db, origin);
-    xml = await getCachedRSS(bucket);
+      const settings = await settingsModel.getAllSettings();
+      const blogTitle = settings.blog_title || 'CFBlog';
+      const blogDesc = settings.blog_description || '';
+      const url = new URL(c.req.url).origin;
+
+      const result = await postModel.getPostList({ page: 1, limit: 20, status: 1 });
+      const posts = result.data || [];
+
+      const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const toRFC822 = (d) => new Date(d).toUTCString();
+
+      const items = posts.map(p => `    <item>
+      <title>${esc(p.title)}</title>
+      <link>${esc(url)}/post/${esc(p.slug)}</link>
+      <description>${esc(p.excerpt || '')}</description>
+      <pubDate>${toRFC822(p.published_at || p.created_at)}</pubDate>
+      <guid isPermaLink="true">${esc(url)}/post/${esc(p.slug)}</guid>
+    </item>`).join('\n');
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${esc(blogTitle)}</title>
+    <link>${esc(url)}</link>
+    <description>${esc(blogDesc)}</description>
+    <language>zh-CN</language>
+    <atom:link href="${esc(url)}/rss" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>`;
+
+      // Write-through to R2 for backup
+      if (bucket) {
+        bucket.put('cache/rss.xml', xml, {
+          httpMetadata: { contentType: 'application/xml; charset=utf-8' }
+        }).catch(() => {});
+      }
+
+      return new Response(xml, {
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=600'
+        }
+      });
+    } catch (e) {
+      console.error('Generate RSS error:', e);
+    }
   }
 
-  if (!xml) return c.text('RSS feed not available', 500);
-
-  return new Response(xml, {
-    headers: {
-      'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600'
+  // Fallback: serve from R2 cache if DB query failed
+  if (bucket) {
+    const { getCachedRSS } = await import('../utils/cache.js');
+    const xml = await getCachedRSS(bucket);
+    if (xml) {
+      return new Response(xml, {
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=600'
+        }
+      });
     }
-  });
+  }
+
+  return c.text('RSS feed not available', 500);
 }
 
 frontendRoutes.get('/rss', handleRSS);
