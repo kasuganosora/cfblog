@@ -1,4 +1,5 @@
-import * as Vue from 'vue';
+// Use the full Vue build (includes template compiler for in-DOM templates)
+import * as Vue from 'vue/dist/vue.esm-bundler.js';
 import TDesignPlugin from 'tdesign-vue-next';
 import * as TDesignExports from 'tdesign-vue-next';
 import { MdEditor } from 'md-editor-v3';
