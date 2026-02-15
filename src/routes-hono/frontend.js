@@ -3,9 +3,6 @@
  */
 
 import { Hono } from 'hono';
-import { marked } from 'marked';
-import { getCachedPost } from '../utils/cache.js';
-import { Post } from '../models/Post.js';
 
 const frontendRoutes = new Hono();
 
@@ -21,20 +18,6 @@ function escJs(text) {
   if (!text) return '';
   return String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"')
     .replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/</g, '\\x3c').replace(/>/g, '\\x3e');
-}
-
-function getFirstImgFromMd(text) {
-  if (!text) return null;
-  const htmlMatch = text.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (htmlMatch) return htmlMatch[1];
-  const mdMatch = text.match(/!\[[^\]]*\]\(([^)]+)\)/);
-  return mdMatch ? mdMatch[1] : null;
-}
-
-function calcReadTime(text) {
-  if (!text) return '1 min';
-  const t = text.replace(/<[^>]+>/g, '').replace(/[#*_~>|[\]()-]/g, '');
-  return Math.max(1, Math.ceil(t.length / 500)) + ' min';
 }
 
 async function getSettings(c) {
@@ -255,7 +238,7 @@ img{max-width:100%;height:auto}
 
 const BASE_JS = `
 function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.textContent=t;return d.innerHTML}
-function getFirstImg(text){if(!text)return null;var m=text.match(/<img[^>]+src=["']([^"']+)["']/i);if(m)return m[1];var md=text.match(/!\[[^\]]*\]\(([^)]+)\)/);return md?md[1]:null}
+function getFirstImg(text){if(!text)return null;var m=text.match(/<img[^>]+src=["']([^"']+)["']/i);if(m)return m[1];var md=text.match(/!\[[^\]]*\\]\\(([^)]+)\\)/);return md?md[1]:null}
 function checkThumb(el,src){
   if(!src){el.style.display='none';return}
   var img=new Image();
@@ -264,6 +247,7 @@ function checkThumb(el,src){
   img.src=src;
 }
 function readTime(text){if(!text)return'1 min';var t=text.replace(/<[^>]+>/g,'').replace(/[#*_~>|\\[\\]()-]/g,'');return Math.max(1,Math.ceil(t.length/500))+' min'}
+function renderMd(s){return typeof marked!=='undefined'?marked.parse(s||''):s||''}
 (function(){
   var t=localStorage.getItem('userTheme')||'default';
   document.body.setAttribute('data-theme',t);
@@ -283,6 +267,7 @@ function layout({ title, blogTitle = 'CFBlog', content, script = '', activePage 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)} - ${esc(blogTitle)}</title>
 <style>${CSS}</style>
+<script src="/static/marked.min.js"></script>
 </head>
 <body${bodyAttrs}>
 <header class="navbar" data-testid="header">
@@ -398,7 +383,8 @@ function renderPosts(posts,pagination){
     if(p.author_name)html+='<span>'+escapeHtml(p.author_name)+'</span>';
     html+='<span>'+readTime(p.content)+'</span>';
     html+='<span>阅读 '+(p.view_count||0)+'</span></div>';
-    html+='<p class="article-excerpt" data-testid="post-excerpt">'+escapeHtml(p.excerpt||'暂无摘要')+'</p>';
+    var excerptSrc=p.excerpt||(p.content?p.content.replace(/!\[[^\]]*\]\([^)]+\)/g,'').replace(/<[^>]+>/g,'').substring(0,200)+'...':'暂无摘要');
+    html+='<div class="article-excerpt" data-testid="post-excerpt">'+renderMd(excerptSrc)+'</div>';
     html+='<a class="read-more" href="'+href+'">阅读全文 &rarr;</a>';
     el.innerHTML=html;
     c.appendChild(el);
@@ -464,96 +450,88 @@ async function loadTags(){
 });
 
 // ═════════════════════════════════════════════════════════════
-// Post detail (server-side rendered)
+// Post detail (client-side rendered)
 // ═════════════════════════════════════════════════════════════
 
 frontendRoutes.get('/post/:slug', async (c) => {
   const slug = c.req.param('slug');
   const settings = await getSettings(c);
   const blogTitle = settings.blog_title || 'CFBlog';
-  const db = c.env?.DB;
-  const bucket = c.env?.BUCKET;
-
-  // Fetch post server-side
-  let post = null;
-  const isNum = /^\d+$/.test(slug);
-
-  if (!isNum && bucket) {
-    post = await getCachedPost(bucket, slug);
-  }
-  if (!post && db) {
-    const postModel = new Post(db);
-    post = isNum ? await postModel.getPostById(parseInt(slug)) : await postModel.getPostBySlug(slug);
-  }
-
-  if (!post) {
-    return c.html(layout({
-      title: '文章不存在',
-      blogTitle,
-      bodyAttrs: ' data-testid="post-detail"',
-      content: `<div class="page narrow"><div class="content"><h1 class="pg-title">404 - 文章不存在</h1><p class="empty">您访问的文章不存在或已被删除。</p></div></div>`
-    }), 404);
-  }
-
-  // Increment view count asynchronously
-  if (post.status === 1 && db) {
-    const postModel = new Post(db);
-    postModel.incrementViewCount(post.id).catch(() => {});
-  }
-
-  // Parse markdown to HTML server-side
-  const contentHtml = post.content ? marked.parse(post.content) : '<p>暂无内容</p>';
-  const firstImg = getFirstImgFromMd(post.content);
-  const date = post.published_at || post.created_at;
-  const dateStr = date ? new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-  const rt = calcReadTime(post.content);
-
-  // Build tags HTML
-  let tagsHtml = '';
-  if (post.tags && post.tags.length) {
-    tagsHtml = '<div class="post-tags"><span class="label">标签:</span>';
-    post.tags.forEach(t => {
-      const s = t.slug || t.id;
-      tagsHtml += `<a class="post-tag-link" href="/tag/${esc(String(s))}">${esc(t.name)}</a>`;
-    });
-    tagsHtml += '</div>';
-  }
 
   return c.html(layout({
-    title: esc(post.title),
+    title: '文章详情',
     blogTitle,
     bodyAttrs: ' data-testid="post-detail"',
     content: `
 <div class="page narrow">
   <div class="content">
     <article data-testid="post-article">
-      ${firstImg ? '<img class="post-hero" id="hero" style="display:none" alt="">' : ''}
+      <img class="post-hero" id="hero" style="display:none" alt="">
       <div class="post-header">
-        <h1 data-testid="post-title">${esc(post.title)}</h1>
-        <div data-testid="post-meta" class="article-meta">
-          <span>${dateStr}</span>
-          ${post.author_name ? '<span>' + esc(post.author_name) + '</span>' : ''}
-          <span>${rt}</span>
-          <span>阅读 ${post.view_count || 0}</span>
-        </div>
+        <h1 data-testid="post-title">加载中...</h1>
+        <div data-testid="post-meta" class="article-meta"></div>
       </div>
-      <div data-testid="post-content" class="post-body">${contentHtml}</div>
-      <div id="post-tags-area">${tagsHtml}</div>
+      <div data-testid="post-content" class="post-body"><p>内容加载中...</p></div>
+      <div id="post-tags-area"></div>
     </article>
     <div id="comments-container"></div>
   </div>
 </div>`,
     script: `
 var API='/api';
-var postId=${post.id};
-var commentStatus=${post.comment_status ?? 1};
-${firstImg ? `checkThumb(document.getElementById('hero'),'${escJs(firstImg)}');` : ''}
+var postParam='${escJs(slug)}';
+var currentPostId=null;
 
-document.addEventListener('DOMContentLoaded',function(){
-  if(commentStatus===0){
-    document.getElementById('comments-container').innerHTML='<div class="comments-disabled">本文已关闭评论</div>';
-  }else{
-    renderCommentsSection(postId);
+document.addEventListener('DOMContentLoaded',async function(){
+  try{
+    var isNum=!isNaN(parseInt(postParam))&&String(parseInt(postParam))===postParam;
+    var url=isNum?API+'/post/'+postParam:API+'/post/slug/'+postParam;
+    var res=await fetch(url);var result=await res.json();
+    if(result&&result.id){
+      currentPostId=result.id;
+      document.querySelector('[data-testid="post-title"]').textContent=result.title;
+      document.title=escapeHtml(result.title)+' - ${escJs(blogTitle)}';
+
+      // Hero image
+      var imgSrc=getFirstImg(result.content);
+      if(imgSrc)checkThumb(document.getElementById('hero'),imgSrc);
+
+      // Meta
+      var date=result.published_at||result.created_at;
+      var dateStr=date?new Date(date).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'}):'';
+      var metaHtml='<span>'+dateStr+'</span>';
+      if(result.author_name)metaHtml+='<span>'+escapeHtml(result.author_name)+'</span>';
+      metaHtml+='<span>'+readTime(result.content)+'</span>';
+      metaHtml+='<span>阅读 '+(result.view_count||0)+'</span>';
+      document.querySelector('[data-testid="post-meta"]').innerHTML=metaHtml;
+
+      // Content - parse markdown to HTML
+      document.querySelector('[data-testid="post-content"]').innerHTML=renderMd(result.content)||'<p>暂无内容</p>';
+
+      // Tags
+      if(result.tags&&result.tags.length){
+        var tagsHtml='<div class="post-tags"><span class="label">标签:</span>';
+        result.tags.forEach(function(t){
+          var s=t.slug||t.id;
+          tagsHtml+='<a class="post-tag-link" href="/tag/'+s+'">'+escapeHtml(t.name)+'</a>';
+        });
+        tagsHtml+='</div>';
+        document.getElementById('post-tags-area').innerHTML=tagsHtml;
+      }
+
+      // Comments
+      if(result.comment_status===0){
+        document.getElementById('comments-container').innerHTML='<div class="comments-disabled">本文已关闭评论</div>';
+      }else{
+        renderCommentsSection(result.id);
+      }
+    }else{
+      document.querySelector('[data-testid="post-title"]').textContent='文章不存在';
+      document.querySelector('[data-testid="post-content"]').innerHTML='';
+    }
+  }catch(e){
+    console.error('Load post:',e);
+    document.querySelector('[data-testid="post-content"]').innerHTML='<p>加载失败</p>';
   }
 });
 
@@ -617,10 +595,10 @@ async function handleComment(e){
   try{
     var res=await fetch(API+'/comment/create',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({post_id:postId,author_name:author,author_email:email,content:content})
+      body:JSON.stringify({post_id:currentPostId,author_name:author,author_email:email,content:content})
     });
     var result=await res.json();
-    if(res.ok){showMsg('评论发表成功！','success');document.getElementById('comment-form').reset();loadComments(postId)}
+    if(res.ok){showMsg('评论发表成功！','success');document.getElementById('comment-form').reset();loadComments(currentPostId)}
     else showMsg(result.message||'评论发表失败','error');
   }catch(e){console.error(e);showMsg('评论发表失败','error')}
 }
