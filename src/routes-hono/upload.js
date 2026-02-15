@@ -127,7 +127,8 @@ uploadRoutes.get('/file/*', async (c) => {
     const bucket = c.env?.BUCKET;
     if (!bucket) return c.json(serverErrorResponse('Storage not configured').json(), 500);
 
-    const key = c.req.param('*');
+    const path = new URL(c.req.url).pathname;
+    const key = path.replace(/^.*\/api\/upload\/file\//, '');
     if (!key) return c.json(errorResponse('File key is required').json(), 400);
 
     const object = await bucket.get(key);
