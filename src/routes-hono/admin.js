@@ -137,7 +137,7 @@ adminRoutes.get('/', requireAdmin, (c) => {
             <template #status="{ row }">
               <t-tag :theme="row.status===1?'success':'warning'" variant="light" size="small">{{ row.status===1?'已发布':'草稿' }}</t-tag>
             </template>
-            <template #created_at="{ row }">{{ fmtDate(row.created_at) }}</template>
+            <template #publish_date="{ row }">{{ fmtDate(row.published_at || row.created_at) }}</template>
           </t-table>
         </t-card>
       </t-col>
@@ -165,7 +165,7 @@ adminRoutes.get('/', requireAdmin, (c) => {
         var postCols = [
           { colKey:'title', title:'标题', ellipsis:true },
           { colKey:'status', title:'状态', width:80 },
-          { colKey:'created_at', title:'日期', width:110 }
+          { colKey:'publish_date', title:'日期', width:110 }
         ];
         var commentCols = [
           { colKey:'author_name', title:'作者', width:100 },
@@ -211,7 +211,7 @@ adminRoutes.get('/posts', requireAdmin, (c) => {
         <template #status="{ row }">
           <t-tag :theme="row.status===1?'success':'warning'" variant="light" size="small">{{ row.status===1?'已发布':'草稿' }}</t-tag>
         </template>
-        <template #created_at="{ row }">{{ fmtDate(row.created_at) }}</template>
+        <template #publish_date="{ row }">{{ fmtDate(row.published_at || row.created_at) }}</template>
         <template #op="{ row }">
           <t-space size="small">
             <t-link theme="primary" :href="'/admin/posts/edit/'+row.id">编辑</t-link>
@@ -240,7 +240,7 @@ adminRoutes.get('/posts', requireAdmin, (c) => {
           { colKey:'author_name', title:'作者', width:100 },
           { colKey:'status', title:'状态', width:80 },
           { colKey:'view_count', title:'浏览', width:70 },
-          { colKey:'created_at', title:'日期', width:110 },
+          { colKey:'publish_date', title:'日期', width:110 },
           { colKey:'op', title:'操作', width:120 }
         ];
         async function loadData() {
