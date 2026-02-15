@@ -225,10 +225,11 @@ export class Post extends BaseModel {
    * Get post list
    */
   async getPostList(options = {}) {
-    const { page = 1, limit = 10, status, featured } = options;
+    const { page = 1, limit = 10, status, featured, categoryId, tagId } = options;
 
     let where = [];
     let params = [];
+    let joins = '';
 
     if (status !== undefined) {
       where.push('p.status = ?');
@@ -240,11 +241,23 @@ export class Post extends BaseModel {
       params.push(featured ? 1 : 0);
     }
 
+    if (categoryId !== undefined) {
+      joins += ' JOIN post_categories pc ON p.id = pc.post_id';
+      where.push('pc.category_id = ?');
+      params.push(categoryId);
+    }
+
+    if (tagId !== undefined) {
+      joins += ' JOIN post_tags pt ON p.id = pt.tag_id';
+      where.push('pt.tag_id = ?');
+      params.push(tagId);
+    }
+
     const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
 
     // Count total
     const countResult = await this.query(`
-      SELECT COUNT(*) as count FROM posts p ${whereClause}
+      SELECT COUNT(*) as count FROM posts p${joins} ${whereClause}
     `, params);
 
     const total = countResult[0]?.count || 0;
@@ -255,6 +268,7 @@ export class Post extends BaseModel {
       SELECT p.*, u.username, u.display_name as author_name, u.avatar as author_avatar
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
+      ${joins}
       ${whereClause}
       ORDER BY p.published_at DESC, p.created_at DESC
       LIMIT ? OFFSET ?

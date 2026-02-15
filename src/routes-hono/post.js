@@ -48,7 +48,7 @@ postRoutes.get('/list', async (c) => {
 
     const url = new URL(c.req.url);
     const params = Object.fromEntries(url.searchParams);
-    const hasFilters = params.status !== undefined || params.featured !== undefined;
+    const hasFilters = params.status !== undefined || params.featured !== undefined || params.category_id !== undefined || params.tag_id !== undefined;
     const page = params.page ? parseInt(params.page) : 1;
     const limit = params.limit ? parseInt(params.limit) : 10;
     const isDefault = !hasFilters && page === 1 && limit === 10;
@@ -64,7 +64,9 @@ postRoutes.get('/list', async (c) => {
       page,
       limit,
       status: params.status !== undefined ? parseInt(params.status) : undefined,
-      featured: params.featured !== undefined ? params.featured === 'true' : undefined
+      featured: params.featured !== undefined ? params.featured === 'true' : undefined,
+      categoryId: params.category_id !== undefined ? parseInt(params.category_id) : undefined,
+      tagId: params.tag_id !== undefined ? parseInt(params.tag_id) : undefined
     });
 
     // Populate R2 cache on miss for default requests

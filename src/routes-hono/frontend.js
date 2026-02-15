@@ -254,6 +254,34 @@ function checkThumb(el,src){
 }
 function readTime(text){if(!text)return'1 min';var t=text.replace(/<[^>]+>/g,'').replace(/[#*_~>|\\[\\]()-]/g,'');return Math.max(1,Math.ceil(t.length/500))+' min'}
 function renderMd(s){return typeof marked!=='undefined'?marked.parse(s||''):s||''}
+function renderArticleList(container,posts,opts){
+  opts=opts||{};
+  if(!posts.length){container.innerHTML='<div class="empty">'+(opts.emptyText||'暂无文章')+'</div>';return}
+  container.innerHTML='';
+  posts.forEach(function(p,i){
+    var el=document.createElement('article');
+    el.className='article';
+    el.setAttribute('data-testid','post-card');
+    var imgSrc=getFirstImg(p.content);
+    var href=p.slug?'/post/'+p.slug:'/post/'+p.id;
+    var date=p.published_at||p.created_at;
+    var dateStr=date?new Date(date).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'}):'';
+    var uid=opts.prefix||('' + Math.random()).slice(2,8);
+    var html='';
+    if(imgSrc)html+='<img class="article-thumb" id="thumb-'+uid+'-'+i+'" style="display:none" alt="">';
+    html+='<h2 class="article-title"><a href="'+href+'">'+escapeHtml(p.title)+'</a></h2>';
+    html+='<div class="article-meta"><span>'+dateStr+'</span>';
+    if(p.author_name)html+='<span>'+escapeHtml(p.author_name)+'</span>';
+    html+='<span>'+readTime(p.content)+'</span>';
+    html+='<span>阅读 '+(p.view_count||0)+'</span></div>';
+    var excerptSrc=p.excerpt||(p.content?p.content.replace(/!\[[^\]]*\]\([^)]+\)/g,'').replace(/<[^>]+>/g,'').substring(0,200)+'...':'');
+    if(excerptSrc)html+='<div class="article-excerpt">'+renderMd(excerptSrc)+'</div>';
+    html+='<a class="read-more" href="'+href+'">阅读全文 &rarr;</a>';
+    el.innerHTML=html;
+    container.appendChild(el);
+    if(imgSrc)checkThumb(document.getElementById('thumb-'+uid+'-'+i),imgSrc);
+  });
+}
 (function(){
   var t=localStorage.getItem('userTheme')||'default';
   document.body.setAttribute('data-theme',t);
@@ -362,31 +390,7 @@ async function loadPosts(){
 
 function renderPosts(posts,pagination){
   var c=document.getElementById('posts-list');
-  if(!posts.length){c.innerHTML='<div class="empty">暂无文章</div>';return}
-  c.innerHTML='';
-  posts.forEach(function(p,i){
-    var el=document.createElement('article');
-    el.className='article';
-    el.setAttribute('data-testid','post-card');
-    el.setAttribute('data-slug',p.slug||p.id);
-    var imgSrc=getFirstImg(p.content);
-    var href=p.slug?'/post/'+p.slug:'/post/'+p.id;
-    var date=p.published_at||p.created_at;
-    var dateStr=date?new Date(date).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'}):'';
-    var html='';
-    if(imgSrc)html+='<img class="article-thumb" id="thumb-'+i+'" style="display:none" alt="">';
-    html+='<h2 class="article-title" data-testid="post-title"><a href="'+href+'">'+escapeHtml(p.title)+'</a></h2>';
-    html+='<div class="article-meta"><span>'+dateStr+'</span>';
-    if(p.author_name)html+='<span>'+escapeHtml(p.author_name)+'</span>';
-    html+='<span>'+readTime(p.content)+'</span>';
-    html+='<span>阅读 '+(p.view_count||0)+'</span></div>';
-    var excerptSrc=p.excerpt||(p.content?p.content.replace(/!\[[^\]]*\]\([^)]+\)/g,'').replace(/<[^>]+>/g,'').substring(0,200)+'...':'暂无摘要');
-    html+='<div class="article-excerpt" data-testid="post-excerpt">'+renderMd(excerptSrc)+'</div>';
-    html+='<a class="read-more" href="'+href+'">阅读全文 &rarr;</a>';
-    el.innerHTML=html;
-    c.appendChild(el);
-    if(imgSrc)checkThumb(document.getElementById('thumb-'+i),imgSrc);
-  });
+  renderArticleList(c,posts,{prefix:'home'});
   if(pagination)renderPager(pagination);
 }
 
@@ -811,14 +815,14 @@ async function doSearch(keyword){
 function renderResults(posts,keyword){
   var c=document.getElementById('results');
   if(!posts.length){c.innerHTML='<p class="empty">未找到包含 "'+escapeHtml(keyword)+'" 的文章</p>';return}
-  var html='<p style="color:var(--muted);margin-bottom:1rem">找到 '+posts.length+' 篇相关文章</p>';
-  posts.forEach(function(p){
-    var href=p.slug?'/post/'+p.slug:'/post/'+p.id;
-    html+='<div class="result-item"><h2><a href="'+href+'">'+escapeHtml(p.title)+'</a></h2>';
-    html+='<p>'+escapeHtml(p.excerpt||'暂无摘要')+'</p>';
-    html+='<small>'+new Date(p.created_at).toLocaleDateString('zh-CN')+'</small></div>';
-  });
-  c.innerHTML=html;
+  var header=document.createElement('p');
+  header.style.cssText='color:var(--muted);margin-bottom:1rem';
+  header.textContent='找到 '+posts.length+' 篇相关文章';
+  c.innerHTML='';
+  c.appendChild(header);
+  var listEl=document.createElement('div');
+  c.appendChild(listEl);
+  renderArticleList(listEl,posts,{prefix:'search',emptyText:'未找到相关文章'});
 }
 `
   }));
@@ -832,6 +836,35 @@ frontendRoutes.get('/feedback', async (c) => {
   const settings = await getSettings(c);
   const blogTitle = settings.blog_title || 'CFBlog';
 
+  // Detect logged-in user
+  let currentUser = null;
+  try {
+    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    if (sessionId) {
+      const { validateSessionId } = await import('../utils/auth.js');
+      const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
+      if (session?.userId && c.env?.DB) {
+        const { User } = await import('../models/User.js');
+        const userModel = new User(c.env.DB);
+        const user = await userModel.findById(session.userId);
+        if (user) {
+          currentUser = { id: user.id, displayName: user.display_name || user.username, email: user.email };
+        }
+      }
+    }
+  } catch {}
+
+  const identityFields = currentUser
+    ? `<div class="cmt-user-info">以 <b>${esc(currentUser.displayName)}</b> 身份留言</div>`
+    : `<div class="fb-row">
+        <label for="name">姓名</label>
+        <input type="text" id="name" name="name" required data-testid="feedback-name-input">
+      </div>
+      <div class="fb-row">
+        <label for="email">邮箱</label>
+        <input type="email" id="email" name="email" data-testid="feedback-email-input">
+      </div>`;
+
   return c.html(layout({
     title: '留言板',
     blogTitle,
@@ -842,14 +875,7 @@ frontendRoutes.get('/feedback', async (c) => {
     <h1 class="pg-title">留言板</h1>
     <div id="message"></div>
     <form class="fb-form" data-testid="feedback-form" id="feedback-form">
-      <div class="fb-row">
-        <label for="name">姓名</label>
-        <input type="text" id="name" name="name" required data-testid="feedback-name-input">
-      </div>
-      <div class="fb-row">
-        <label for="email">邮箱</label>
-        <input type="email" id="email" name="email" data-testid="feedback-email-input">
-      </div>
+      ${identityFields}
       <div class="fb-row">
         <label for="content">内容</label>
         <textarea id="content" name="content" required data-testid="feedback-content-input" rows="5"></textarea>
@@ -862,16 +888,23 @@ frontendRoutes.get('/feedback', async (c) => {
 </div>`,
     script: `
 var API='/api';
+var currentUser=${currentUser ? JSON.stringify(currentUser) : 'null'};
 document.getElementById('feedback-form').addEventListener('submit',async function(e){
   e.preventDefault();
-  var name=document.getElementById('name').value;
-  var email=document.getElementById('email').value;
+  var name,email;
+  if(currentUser){
+    name=currentUser.displayName;
+    email=currentUser.email||'';
+  }else{
+    name=document.getElementById('name').value;
+    email=document.getElementById('email').value;
+  }
   var content=document.getElementById('content').value;
   if(!name||!content){showMessage('请填写姓名和内容','error');return}
   try{
     var res=await fetch(API+'/feedback/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,content:content})});
     var result=await res.json();
-    if(res.ok){showMessage('留言提交成功！','success');document.getElementById('feedback-form').reset()}
+    if(res.ok){showMessage('留言提交成功！','success');document.getElementById('content').value=''}
     else showMessage(result.message||'提交失败','error');
   }catch(e){console.error(e);showMessage('提交失败','error')}
 });
@@ -962,7 +995,17 @@ document.addEventListener('DOMContentLoaded',async function(){
     if(result&&result.id){
       document.querySelector('h1').textContent='分类: '+result.name;
       var c=document.getElementById('posts-list');
-      c.innerHTML='<p>'+escapeHtml(result.description||'暂无描述')+'</p><p style="color:var(--muted);font-size:.9rem">文章数: '+(result.post_count||0)+'</p>';
+      var desc=result.description?'<p>'+escapeHtml(result.description)+'</p>':'';
+      c.innerHTML=desc+'<p style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">共 '+(result.post_count||0)+' 篇文章</p><div id="article-list"><p style="color:var(--muted)">加载文章中...</p></div>';
+      // Fetch articles in this category
+      var postRes=await fetch(API+'/post/list?category_id='+result.id+'&status=1');
+      var postData=await postRes.json();
+      var listEl=document.getElementById('article-list');
+      if(postData.data&&postData.data.length){
+        renderArticleList(listEl,postData.data,{prefix:'cat',emptyText:'该分类下暂无文章'});
+      }else{
+        listEl.innerHTML='<p class="empty">该分类下暂无文章</p>';
+      }
     }else{
       document.getElementById('posts-list').innerHTML='<p class="empty">分类不存在</p>';
     }
@@ -1047,7 +1090,17 @@ document.addEventListener('DOMContentLoaded',async function(){
     var res=await fetch(url);var result=await res.json();
     if(result&&result.id){
       document.querySelector('h1').textContent='标签: '+result.name;
-      document.getElementById('posts-list').innerHTML='<p style="color:var(--muted);font-size:.9rem">文章数: '+(result.post_count||0)+'</p>';
+      var c=document.getElementById('posts-list');
+      c.innerHTML='<p style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">共 '+(result.post_count||0)+' 篇文章</p><div id="article-list"><p style="color:var(--muted)">加载文章中...</p></div>';
+      // Fetch articles with this tag
+      var postRes=await fetch(API+'/post/list?tag_id='+result.id+'&status=1');
+      var postData=await postRes.json();
+      var listEl=document.getElementById('article-list');
+      if(postData.data&&postData.data.length){
+        renderArticleList(listEl,postData.data,{prefix:'tag',emptyText:'该标签下暂无文章'});
+      }else{
+        listEl.innerHTML='<p class="empty">该标签下暂无文章</p>';
+      }
     }else{
       document.getElementById('posts-list').innerHTML='<p class="empty">标签不存在</p>';
     }

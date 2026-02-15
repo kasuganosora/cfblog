@@ -187,6 +187,47 @@ userRoutes.post('/create', requireAdmin, async (c) => {
   }
 });
 
+// PUT /api/user/:id/password - 修改用户密码（管理员）
+userRoutes.put('/:id/password', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const id = parseInt(c.req.param('id'));
+    const currentUser = c.get('user');
+    const { oldPassword, newPassword } = await c.req.json();
+
+    if (!newPassword || newPassword.length < 6) {
+      return c.json(errorResponse('New password must be at least 6 characters').json(), 400);
+    }
+
+    const userModel = new User(db);
+
+    if (id === currentUser.id) {
+      // Changing own password: require old password
+      if (!oldPassword) {
+        return c.json(errorResponse('Old password is required when changing your own password').json(), 400);
+      }
+      await userModel.changePassword(id, oldPassword, newPassword);
+    } else {
+      // Admin resetting another user's password: no old password needed
+      const { hashPassword } = await import('../utils/auth.js');
+      const passwordHash = await hashPassword(newPassword);
+      await userModel.update(id, {
+        password_hash: passwordHash,
+        updated_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+      });
+    }
+
+    return c.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    return c.json(errorResponse(error.message).json(), 400);
+  }
+});
+
 // PUT /api/user/:id/status - 更新用户状态（管理员）
 userRoutes.put('/:id/status', requireAdmin, async (c) => {
   try {
@@ -196,6 +237,12 @@ userRoutes.put('/:id/status', requireAdmin, async (c) => {
     }
 
     const id = parseInt(c.req.param('id'));
+    const currentUser = c.get('user');
+
+    if (id === currentUser.id) {
+      return c.json(errorResponse('Cannot change your own status').json(), 400);
+    }
+
     const { status } = await c.req.json();
 
     if (status === undefined) {
@@ -246,6 +293,12 @@ userRoutes.delete('/:id', requireAdmin, async (c) => {
     }
 
     const id = parseInt(c.req.param('id'));
+    const currentUser = c.get('user');
+
+    if (id === currentUser.id) {
+      return c.json(errorResponse('Cannot delete your own account').json(), 400);
+    }
+
     const userModel = new User(db);
     await userModel.deleteUser(id);
 

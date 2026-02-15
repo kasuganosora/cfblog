@@ -1120,14 +1120,15 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         <template #created_at="{ row }">{{ fmtDate(row.created_at) }}</template>
         <template #op="{ row }">
           <t-space size="small">
-            <t-link v-if="row.status===1" @click="toggleStatus(row.id,0)">禁用</t-link>
-            <t-link v-if="row.status!==1" theme="success" @click="toggleStatus(row.id,1)">启用</t-link>
+            <t-link theme="primary" @click="showPwdModal(row)">改密</t-link>
+            <t-link v-if="row.status===1 && row.id!==currentUserId" @click="toggleStatus(row.id,0)">禁用</t-link>
+            <t-link v-if="row.status!==1 && row.id!==currentUserId" theme="success" @click="toggleStatus(row.id,1)">启用</t-link>
             <t-select :value="row.role" size="small" style="width:90px" @change="function(v){changeRole(row.id,v)}">
               <t-option value="member" label="用户"></t-option>
               <t-option value="contributor" label="贡献者"></t-option>
               <t-option value="admin" label="管理员"></t-option>
             </t-select>
-            <t-popconfirm content="确定要删除这个用户吗？此操作不可恢复！" @confirm="del(row.id)">
+            <t-popconfirm v-if="row.id!==currentUserId" content="确定要删除这个用户吗？此操作不可恢复！" @confirm="del(row.id)">
               <t-link theme="danger">删除</t-link>
             </t-popconfirm>
           </t-space>
@@ -1160,6 +1161,19 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         </t-form-item>
       </t-form>
     </t-dialog>
+    <t-dialog v-model:visible="pwdVisible" :header="pwdIsSelf?'修改密码':'重置密码'" :confirm-btn="{content:'确定',loading:pwdSaving}" @confirm="changePwd" @close="pwdVisible=false">
+      <t-form label-width="80px">
+        <t-form-item v-if="pwdIsSelf" label="旧密码">
+          <t-input v-model="pwdForm.oldPassword" type="password" placeholder="当前密码"></t-input>
+        </t-form-item>
+        <t-form-item label="新密码">
+          <t-input v-model="pwdForm.newPassword" type="password" placeholder="至少6位"></t-input>
+        </t-form-item>
+        <t-form-item label="确认密码">
+          <t-input v-model="pwdForm.confirmPassword" type="password" placeholder="再次输入新密码"></t-input>
+        </t-form-item>
+      </t-form>
+    </t-dialog>
   `, `
     var { createApp, ref, reactive, onMounted } = Vue;
     var { MessagePlugin } = TDesign;
@@ -1167,9 +1181,15 @@ adminRoutes.get('/users', requireAdmin, (c) => {
       setup: function() {
         var list = ref([]); var loading = ref(false);
         var page = ref(1); var total = ref(0); var pageSize = 20;
+        var currentUserId = ref(null);
         var createVisible = ref(false);
         var saving = ref(false);
         var newUser = reactive({ username:'', email:'', password:'', displayName:'', role:'member' });
+        var pwdVisible = ref(false);
+        var pwdSaving = ref(false);
+        var pwdTargetId = ref(null);
+        var pwdIsSelf = ref(false);
+        var pwdForm = reactive({ oldPassword:'', newPassword:'', confirmPassword:'' });
         var columns = [
           { colKey:'username', title:'用户名', width:120 },
           { colKey:'display_name', title:'显示名', width:120 },
@@ -1222,10 +1242,38 @@ adminRoutes.get('/users', requireAdmin, (c) => {
             await apiCall('/user/'+id,{method:'DELETE'});
             MessagePlugin.success('用户已删除');
             loadData();
-          } catch(e) {}
+          } catch(e) { MessagePlugin.error(e.message||'删除失败'); }
         }
-        onMounted(loadData);
-        return { list, loading, page, total, pageSize, columns, createVisible, saving, newUser, loadData, showCreateModal, createUser, toggleStatus, changeRole, del, fmtDate };
+        function showPwdModal(row) {
+          pwdTargetId.value = row.id;
+          pwdIsSelf.value = row.id === currentUserId.value;
+          pwdForm.oldPassword = '';
+          pwdForm.newPassword = '';
+          pwdForm.confirmPassword = '';
+          pwdVisible.value = true;
+        }
+        async function changePwd() {
+          if (!pwdForm.newPassword || pwdForm.newPassword.length < 6) { MessagePlugin.warning('新密码至少6位'); return; }
+          if (pwdForm.newPassword !== pwdForm.confirmPassword) { MessagePlugin.warning('两次密码不一致'); return; }
+          if (pwdIsSelf.value && !pwdForm.oldPassword) { MessagePlugin.warning('请输入旧密码'); return; }
+          pwdSaving.value = true;
+          try {
+            var body = { newPassword: pwdForm.newPassword };
+            if (pwdIsSelf.value) body.oldPassword = pwdForm.oldPassword;
+            await apiCall('/user/'+pwdTargetId.value+'/password',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+            MessagePlugin.success('密码修改成功');
+            pwdVisible.value = false;
+          } catch(e) { MessagePlugin.error(e.message||'密码修改失败'); }
+          pwdSaving.value = false;
+        }
+        onMounted(async function() {
+          try {
+            var me = await apiCall('/user/me');
+            if (me.data && me.data.user) currentUserId.value = me.data.user.id;
+          } catch(e) {}
+          loadData();
+        });
+        return { list, loading, page, total, pageSize, columns, currentUserId, createVisible, saving, newUser, pwdVisible, pwdSaving, pwdTargetId, pwdIsSelf, pwdForm, loadData, showCreateModal, createUser, toggleStatus, changeRole, del, showPwdModal, changePwd, fmtDate };
       }
     });
     app.use(TDesign);
