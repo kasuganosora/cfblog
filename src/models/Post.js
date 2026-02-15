@@ -59,6 +59,7 @@ export class Post extends BaseModel {
       title,
       slug,
       excerpt,
+      content: content || null,
       author_id: authorId,
       status: status,
       featured: featured ? 1 : 0,
@@ -109,6 +110,7 @@ export class Post extends BaseModel {
     if (featured !== undefined) updateData.featured = featured ? 1 : 0;
     if (commentStatus !== undefined) updateData.comment_status = commentStatus ? 1 : 0;
     if (content !== undefined) {
+      updateData.content = content;
       // Use new slug if title changed, otherwise use existing post's slug
       const slugForKey = title !== undefined
         ? generateSlug(title)
