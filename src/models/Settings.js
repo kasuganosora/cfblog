@@ -213,6 +213,22 @@ export class Settings extends BaseModel {
   }
 
   /**
+   * Get sidebar widgets
+   */
+  async getSidebarWidgets() {
+    const raw = await this.getSetting('sidebar_widgets');
+    try { return JSON.parse(raw) || []; } catch { return []; }
+  }
+
+  /**
+   * Update sidebar widgets
+   */
+  async updateSidebarWidgets(widgets) {
+    await this.setSetting('sidebar_widgets', JSON.stringify(widgets), '侧栏自定义挂件');
+    return this.getSidebarWidgets();
+  }
+
+  /**
    * Update SEO settings
    */
   async updateSEOSettings({ description, keywords }) {

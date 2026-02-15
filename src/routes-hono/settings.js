@@ -216,6 +216,44 @@ settingsRoutes.put('/seo', requireAdmin, async (c) => {
   }
 });
 
+// GET /widgets - 获取侧栏挂件
+settingsRoutes.get('/widgets', async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const settingsModel = new Settings(db);
+    const widgets = await settingsModel.getSidebarWidgets();
+    return c.json(widgets);
+  } catch (error) {
+    console.error('Get widgets error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
+// PUT /widgets - 更新侧栏挂件（管理员）
+settingsRoutes.put('/widgets', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const body = await c.req.json();
+    const widgets = Array.isArray(body) ? body : (body.widgets || []);
+    const settingsModel = new Settings(db);
+    const result = await settingsModel.updateSidebarWidgets(widgets);
+
+    await refreshSettingsCache(c.env?.BUCKET, db);
+    return c.json(result);
+  } catch (error) {
+    console.error('Update widgets error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
 // POST /cache/clear - 清除R2缓存（管理员）
 settingsRoutes.post('/cache/clear', requireAdmin, async (c) => {
   try {

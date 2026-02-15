@@ -173,6 +173,12 @@ img{max-width:100%;height:auto}
 .widget-tags{display:flex;flex-wrap:wrap;gap:.3rem}
 .widget-tags a{display:inline-block;padding:.12rem .5rem;background:var(--bg2);color:var(--text2);border-radius:4px;font-size:.75rem;transition:all .12s}
 .widget-tags a:hover{background:var(--tag-bg);color:var(--tag-c)}
+.widget-custom{font-size:.875rem;color:var(--text2);line-height:1.6}
+.widget-custom a{color:var(--accent);text-decoration:none}
+.widget-custom a:hover{text-decoration:underline}
+.widget-custom ul,.widget-custom ol{padding-left:1.2em;margin:.4em 0}
+.widget-custom p{margin:.4em 0}
+.widget-custom img{max-width:100%;border-radius:4px}
 .widget-ctrl{display:flex;flex-direction:column;gap:.35rem}
 .widget-ctrl button{padding:.3rem .6rem;background:var(--bg2);border:1px solid var(--border2);color:var(--text2);border-radius:4px;font-size:.75rem;cursor:pointer;text-align:left;transition:all .12s}
 .widget-ctrl button:hover{border-color:var(--accent);color:var(--accent)}
@@ -376,13 +382,14 @@ frontendRoutes.get('/', async (c) => {
       <h3>标签</h3>
       <div class="widget-tags" id="tags"></div>
     </div>
+    <div id="custom-widgets"></div>
   </aside>
 </div>`,
     script: `
 var API='/api';
 
 document.addEventListener('DOMContentLoaded',async function(){
-  try{await Promise.all([loadPosts(),loadCategories(),loadTags()])}catch(e){console.error(e)}
+  try{await Promise.all([loadPosts(),loadCategories(),loadTags(),loadWidgets()])}catch(e){console.error(e)}
 });
 
 async function loadPosts(){
@@ -452,6 +459,22 @@ async function loadTags(){
       });
     }
   }catch(e){console.error('Load tags:',e)}
+}
+
+async function loadWidgets(){
+  try{
+    var res=await fetch(API+'/settings/widgets');var data=await res.json();
+    if(Array.isArray(data)&&data.length){
+      var c=document.getElementById('custom-widgets');
+      data.forEach(function(w){
+        var div=document.createElement('div');
+        div.className='widget';
+        div.innerHTML='<h3>'+escapeHtml(w.title||'')+'</h3>'
+          +'<div class="widget-custom">'+marked.parse(w.content||'')+'</div>';
+        c.appendChild(div);
+      });
+    }
+  }catch(e){console.error('Load widgets:',e)}
 }
 `
   }));

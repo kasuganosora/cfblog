@@ -1494,6 +1494,38 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
             </t-form>
           </div>
         </t-tab-panel>
+        <t-tab-panel value="widgets" label="侧栏挂件">
+          <div style="padding:16px 0">
+            <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:#888;font-size:13px">自定义侧栏挂件，内容支持 Markdown 和 HTML</span>
+              <t-button theme="primary" @click="addWidget">添加挂件</t-button>
+            </div>
+            <div v-if="!widgets.length" style="color:#999;text-align:center;padding:32px 0">暂无挂件，点击上方按钮添加</div>
+            <div v-for="(w, idx) in widgets" :key="idx" style="border:1px solid var(--td-border-level-2-color);border-radius:6px;padding:12px 16px;margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong>{{ w.title || '未命名挂件' }}</strong>
+                <t-space size="small">
+                  <t-button variant="text" size="small" :disabled="idx===0" @click="moveWidget(idx,-1)">上移</t-button>
+                  <t-button variant="text" size="small" :disabled="idx===widgets.length-1" @click="moveWidget(idx,1)">下移</t-button>
+                  <t-button variant="text" size="small" theme="primary" @click="editWidget(idx)">编辑</t-button>
+                  <t-button variant="text" size="small" theme="danger" @click="removeWidget(idx)">删除</t-button>
+                </t-space>
+              </div>
+              <div style="color:#888;font-size:13px;white-space:pre-wrap;max-height:60px;overflow:hidden;text-overflow:ellipsis">{{ w.content?.slice(0,120) || '(空)' }}</div>
+            </div>
+            <t-button v-if="widgets.length" theme="primary" :loading="saving.widgets" @click="saveWidgets" style="margin-top:8px">保存排序与修改</t-button>
+          </div>
+          <t-dialog v-model:visible="widgetDialog.visible" :header="widgetDialog.index===-1?'添加挂件':'编辑挂件'" width="600px" @confirm="confirmWidget">
+            <t-form label-width="80px">
+              <t-form-item label="挂件标题">
+                <t-input v-model="widgetDialog.title" placeholder="例如：友情链接"></t-input>
+              </t-form-item>
+              <t-form-item label="挂件内容">
+                <t-textarea v-model="widgetDialog.content" placeholder="支持 Markdown 和 HTML" :autosize="{minRows:5,maxRows:15}"></t-textarea>
+              </t-form-item>
+            </t-form>
+          </t-dialog>
+        </t-tab-panel>
         <t-tab-panel value="ops" label="运维">
           <div style="padding:16px 0">
             <t-form label-width="100px">
@@ -1533,7 +1565,9 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         var comments = reactive({ moderation:0, permission:'all', cooldown:120 });
         var upload = reactive({ allowedTypes:'', maxSize:5242880 });
         var seo = reactive({ description:'', keywords:'' });
-        var saving = reactive({ blog:false, display:false, comments:false, upload:false, seo:false });
+        var widgets = ref([]);
+        var widgetDialog = reactive({ visible:false, index:-1, title:'', content:'' });
+        var saving = reactive({ blog:false, display:false, comments:false, upload:false, seo:false, widgets:false });
         onMounted(async function() {
           try {
             var results = await Promise.all([
@@ -1546,6 +1580,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
             upload.allowedTypes=results[3].allowedTypes||''; upload.maxSize=results[3].maxSize||5242880;
             seo.description=results[4].description||''; seo.keywords=results[4].keywords||'';
           } catch(e) { console.error(e); }
+          try { var w=await apiCall('/settings/widgets'); widgets.value=Array.isArray(w)?w:[]; } catch(e) { console.error(e); }
         });
         async function saveSetting(key, data) {
           saving[key] = true;
@@ -1560,6 +1595,12 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         function saveComments() { saveSetting('comments', { moderation:comments.moderation, permission:comments.permission, cooldown:comments.cooldown }); }
         function saveUpload() { saveSetting('upload', { allowedTypes:upload.allowedTypes, maxSize:upload.maxSize }); }
         function saveSeo() { saveSetting('seo', { description:seo.description, keywords:seo.keywords }); }
+        function addWidget() { widgetDialog.index=-1; widgetDialog.title=''; widgetDialog.content=''; widgetDialog.visible=true; }
+        function editWidget(idx) { var w=widgets.value[idx]; widgetDialog.index=idx; widgetDialog.title=w.title||''; widgetDialog.content=w.content||''; widgetDialog.visible=true; }
+        function confirmWidget() { var item={title:widgetDialog.title,content:widgetDialog.content}; if(widgetDialog.index===-1){widgets.value.push(item)}else{widgets.value.splice(widgetDialog.index,1,item)} widgetDialog.visible=false; }
+        function removeWidget(idx) { widgets.value.splice(idx,1); }
+        function moveWidget(idx,dir) { var arr=widgets.value; var t=arr[idx]; arr.splice(idx,1); arr.splice(idx+dir,0,t); }
+        async function saveWidgets() { saving.widgets=true; try{ await apiCall('/settings/widgets',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(widgets.value)}); MessagePlugin.success('挂件已保存'); }catch(e){ MessagePlugin.error(e.message||'保存失败'); } saving.widgets=false; }
         var cacheLoading = reactive({ all:false, settings:false, posts:false, rss:false });
         var cacheStats = ref([]);
         var cacheStatsLoading = ref(false);
@@ -1587,7 +1628,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
           } catch(e) { console.error(e); }
           cacheStatsLoading.value = false;
         }
-        return { activeTab, blog, display, comments, upload, seo, saving, saveBlog, saveDisplay, saveComments, saveUpload, saveSeo, cacheLoading, cacheStats, cacheStatsLoading, cacheColumns, clearCache, loadCacheStats };
+        return { activeTab, blog, display, comments, upload, seo, saving, saveBlog, saveDisplay, saveComments, saveUpload, saveSeo, widgets, widgetDialog, addWidget, editWidget, confirmWidget, removeWidget, moveWidget, saveWidgets, cacheLoading, cacheStats, cacheStatsLoading, cacheColumns, clearCache, loadCacheStats };
       }
     });
     app.use(TDesign);
