@@ -5,11 +5,21 @@
 
 import { toPinyin } from './pinyin-data.js';
 
+const MAX_SLUG_LEN = 64;
+const TRUNCATE_AT = 48;
+
+function randomSuffix(len = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let s = '';
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
 /**
- * Generate slug from text (Chinese converted to pinyin)
+ * Generate slug from text (Chinese converted to pinyin, max 64 chars)
  */
 export const generateSlug = (text) => {
-  return toPinyin(text)
+  let slug = toPinyin(text)
     .toString()
     .toLowerCase()
     .trim()
@@ -18,6 +28,12 @@ export const generateSlug = (text) => {
     .replace(/\-\-+/g, '-')          // Replace multiple - with single -
     .replace(/^-+/, '')               // Trim - from start
     .replace(/-+$/, '');              // Trim - from end
+
+  if (slug.length > MAX_SLUG_LEN) {
+    slug = slug.slice(0, TRUNCATE_AT).replace(/-+$/, '') + '-' + randomSuffix(8);
+  }
+
+  return slug;
 };
 
 /**
