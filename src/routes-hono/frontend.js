@@ -102,16 +102,28 @@ img{max-width:100%;height:auto}
 .post-body p{margin-bottom:1em}
 .post-body ul,.post-body ol{padding-left:2em;margin-bottom:1em}
 .post-body li{margin-bottom:.25em}
+.post-body p{margin:0 0 1em}
+.post-body h1,.post-body h2,.post-body h3,.post-body h4,.post-body h5,.post-body h6{margin:1.6em 0 .6em;font-weight:600;line-height:1.3}
+.post-body h1{font-size:1.5rem;padding-bottom:.3em;border-bottom:1px solid var(--border2)}
+.post-body h2{font-size:1.3rem;padding-bottom:.3em;border-bottom:1px solid var(--border2)}
+.post-body h3{font-size:1.15rem}
+.post-body h4{font-size:1rem}
+.post-body ul,.post-body ol{margin:0 0 1em;padding-left:2em}
+.post-body li{margin-bottom:.25em}
+.post-body li>ul,.post-body li>ol{margin-top:.25em;margin-bottom:0}
 .post-body blockquote{margin:1em 0;padding:.6rem 1rem;border-left:3px solid var(--accent);background:var(--bg2);color:var(--text2);border-radius:0 6px 6px 0}
+.post-body blockquote p:last-child{margin-bottom:0}
 .post-body pre{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;overflow-x:auto;margin:1em 0;font-family:var(--mono);font-size:.85rem;line-height:1.5}
 .post-body code{font-family:var(--mono);font-size:.85em;background:var(--bg2);padding:.15em .35em;border-radius:4px}
 .post-body pre code{background:none;padding:0;font-size:inherit}
-.post-body img{border-radius:6px;margin:1em 0}
-.post-body a{text-decoration:underline;text-underline-offset:2px}
+.post-body img{max-width:100%;height:auto;border-radius:6px;margin:1em 0}
+.post-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.post-body a:hover{color:var(--accent2)}
 .post-body table{width:100%;border-collapse:collapse;margin:1em 0}
 .post-body th,.post-body td{padding:.45rem .8rem;border:1px solid var(--border2);text-align:left}
 .post-body th{background:var(--bg2);font-weight:600}
 .post-body hr{border:none;border-top:1px solid var(--border2);margin:2em 0}
+.post-body input[type="checkbox"]{margin-right:.4em}
 .post-tags{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border2);display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
 .post-tags .label{font-size:.8rem;color:var(--muted);margin-right:.25rem}
 .post-tag-link{display:inline-block;padding:.15rem .55rem;background:var(--tag-bg);color:var(--tag-c);border-radius:4px;font-size:.8rem;transition:all .12s}
@@ -226,7 +238,7 @@ img{max-width:100%;height:auto}
 
 const BASE_JS = `
 function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.textContent=t;return d.innerHTML}
-function getFirstImg(html){if(!html)return null;var m=html.match(/<img[^>]+src=["']([^"']+)["']/i);return m?m[1]:null}
+function getFirstImg(text){if(!text)return null;var m=text.match(/<img[^>]+src=["']([^"']+)["']/i);if(m)return m[1];var md=text.match(/!\[[^\]]*\]\(([^)]+)\)/);return md?md[1]:null}
 function checkThumb(el,src){
   if(!src){el.style.display='none';return}
   var img=new Image();
@@ -234,7 +246,7 @@ function checkThumb(el,src){
   img.onerror=function(){el.style.display='none'};
   img.src=src;
 }
-function readTime(html){if(!html)return'1 min';var t=html.replace(/<[^>]+>/g,'');return Math.max(1,Math.ceil(t.length/500))+' min'}
+function readTime(text){if(!text)return'1 min';var t=text.replace(/<[^>]+>/g,'').replace(/[#*_~>|\\[\\]()-]/g,'');return Math.max(1,Math.ceil(t.length/500))+' min'}
 (function(){
   var t=localStorage.getItem('userTheme')||'default';
   document.body.setAttribute('data-theme',t);
@@ -254,6 +266,7 @@ function layout({ title, blogTitle = 'CFBlog', content, script = '', activePage 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)} - ${esc(blogTitle)}</title>
 <style>${CSS}</style>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body${bodyAttrs}>
 <header class="navbar" data-testid="header">
@@ -490,8 +503,9 @@ document.addEventListener('DOMContentLoaded',async function(){
       metaHtml+='<span>阅读 '+(result.view_count||0)+'</span>';
       document.querySelector('[data-testid="post-meta"]').innerHTML=metaHtml;
 
-      // Content
-      document.querySelector('[data-testid="post-content"]').innerHTML=result.content||'<p>暂无内容</p>';
+      // Content - parse markdown to HTML
+      var contentHtml=result.content?(typeof marked!=='undefined'?marked.parse(result.content):result.content):'<p>暂无内容</p>';
+      document.querySelector('[data-testid="post-content"]').innerHTML=contentHtml;
 
       // Tags
       if(result.tags&&result.tags.length){
