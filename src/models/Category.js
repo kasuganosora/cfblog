@@ -26,10 +26,10 @@ export class Category extends BaseModel {
    * Create category
    */
   async createCategory(categoryData) {
-    const { name, description, parentId, sortOrder } = categoryData;
+    const { name, slug: customSlug, description, parentId, sortOrder } = categoryData;
 
-    // Generate unique slug
-    const slug = await generateUniqueSlug(name, async (s) => {
+    // Use custom slug or generate from name
+    const slug = await generateUniqueSlug(customSlug || name, async (s) => {
       const existing = await this.findBySlug(s);
       return !!existing;
     });
@@ -50,7 +50,7 @@ export class Category extends BaseModel {
    * Update category
    */
   async updateCategory(id, categoryData) {
-    const { name, description, parentId, sortOrder } = categoryData;
+    const { name, slug: customSlug, description, parentId, sortOrder } = categoryData;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -58,8 +58,18 @@ export class Category extends BaseModel {
     if (parentId !== undefined) updateData.parent_id = parentId;
     if (sortOrder !== undefined) updateData.sort_order = sortOrder;
 
-    if (name !== undefined) {
-      // Regenerate slug if name changed
+    if (customSlug !== undefined) {
+      // Use custom slug if provided, otherwise regenerate from name
+      const slugSource = customSlug || name;
+      if (slugSource) {
+        const slug = await generateUniqueSlug(slugSource, async (s) => {
+          const existing = await this.findBySlug(s);
+          return !!existing && existing.id !== id;
+        });
+        updateData.slug = slug;
+      }
+    } else if (name !== undefined) {
+      // Regenerate slug if name changed but no slug provided
       const slug = await generateUniqueSlug(name, async (s) => {
         const existing = await this.findBySlug(s);
         return !!existing && existing.id !== id;
@@ -102,10 +112,17 @@ export class Category extends BaseModel {
   }
 
   /**
-   * Get category tree
+   * Get category tree (with post counts)
    */
   async getCategoryTree() {
-    const allCategories = await this.all({ orderBy: 'sort_order, name' });
+    const allCategories = await this.query(`
+      SELECT c.*, COUNT(p.id) as post_count
+      FROM categories c
+      LEFT JOIN post_categories pc ON c.id = pc.category_id
+      LEFT JOIN posts p ON pc.post_id = p.id AND p.status = 1
+      GROUP BY c.id
+      ORDER BY c.sort_order, c.name
+    `);
 
     const buildTree = (parentId = null) => {
       return allCategories
@@ -120,18 +137,33 @@ export class Category extends BaseModel {
   }
 
   /**
-   * Get category list
+   * Get category list (with post counts)
    */
   async getCategoryList(options = {}) {
     const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
 
-    const result = await this.paginate({
-      orderBy: 'sort_order, name',
-      page,
-      limit
-    });
+    const total = await this.count();
 
-    return result;
+    const categories = await this.query(`
+      SELECT c.*, COUNT(p.id) as post_count
+      FROM categories c
+      LEFT JOIN post_categories pc ON c.id = pc.category_id
+      LEFT JOIN posts p ON pc.post_id = p.id AND p.status = 1
+      GROUP BY c.id
+      ORDER BY c.sort_order, c.name
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    return {
+      data: categories,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**
