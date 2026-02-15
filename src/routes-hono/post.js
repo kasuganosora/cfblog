@@ -17,7 +17,8 @@ import { validateSessionId } from '../utils/auth.js';
 import {
   getCachedPostList, refreshPostListCache,
   cachePost, getCachedPost, deleteCachedPost,
-  refreshAllPostCaches
+  refreshAllPostCaches,
+  savePostAsHexoMd, deleteHexoMd
 } from '../utils/cache.js';
 
 // Helper: optionally get current user ID from session cookie (no auth required)
@@ -236,6 +237,7 @@ postRoutes.post('/create', requireAuth, async (c) => {
     if (bucket && post.status === 1) {
       const origin = new URL(c.req.url).origin;
       cachePost(bucket, post.slug, post).catch(() => {});
+      savePostAsHexoMd(bucket, post).catch(() => {});
       refreshAllPostCaches(bucket, db, origin).catch(() => {});
     }
 
@@ -277,9 +279,11 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
       if (post.status === 1) {
         // Published: cache the post and refresh lists
         cachePost(bucket, post.slug, post).catch(() => {});
+        savePostAsHexoMd(bucket, post).catch(() => {});
       } else if (existingPost.status === 1) {
-        // Was published, now draft: remove single post cache
+        // Was published, now draft: remove caches
         deleteCachedPost(bucket, existingPost.slug).catch(() => {});
+        deleteHexoMd(bucket, existingPost.slug).catch(() => {});
       }
       refreshAllPostCaches(bucket, db, origin).catch(() => {});
     }
@@ -319,6 +323,7 @@ postRoutes.delete('/:id/delete', requireAuth, async (c) => {
     if (bucket) {
       if (existingPost.slug) {
         deleteCachedPost(bucket, existingPost.slug).catch(() => {});
+        deleteHexoMd(bucket, existingPost.slug).catch(() => {});
       }
       const origin = new URL(c.req.url).origin;
       refreshAllPostCaches(bucket, db, origin).catch(() => {});

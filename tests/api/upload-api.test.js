@@ -27,6 +27,7 @@ function createMockBucket() {
       if (!obj) return null;
       return { body: obj.data, httpMetadata: obj.options?.httpMetadata, httpEtag: '"mock-etag"' };
     },
+    head: async (key) => store.has(key) ? { key } : null,
     delete: async (key) => { store.delete(key); }
   };
 }

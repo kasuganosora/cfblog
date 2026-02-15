@@ -310,3 +310,70 @@ export const refreshAllPostCaches = async (bucket, db, siteUrl) => {
     refreshRSSCache(bucket, db, siteUrl)
   ]);
 };
+
+// ============================================================
+// Hexo-compatible markdown export
+// ============================================================
+
+const HEXO_POSTS_PREFIX = 'source/_posts/';
+
+/**
+ * Escape YAML string value (handle quotes and special chars)
+ */
+function escYaml(s) {
+  if (!s) return '';
+  return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * Convert post data to Hexo-compatible markdown with frontmatter
+ */
+function postToHexoMd(post) {
+  const fm = [
+    '---',
+    `title: "${escYaml(post.title)}"`,
+    `date: ${post.published_at || post.created_at}`,
+    `updated: ${post.updated_at || post.created_at}`,
+  ];
+  if (post.tags?.length) {
+    fm.push('tags:');
+    post.tags.forEach(t => fm.push(`  - ${t.name}`));
+  }
+  if (post.categories?.length) {
+    fm.push('categories:');
+    post.categories.forEach(c => fm.push(`  - ${c.name}`));
+  }
+  if (post.excerpt) fm.push(`excerpt: "${escYaml(post.excerpt)}"`);
+  fm.push('---', '');
+
+  // Replace API upload paths with Hexo-compatible paths
+  const content = (post.content || '')
+    .replace(/\/api\/upload\/file\/images\//g, '/images/');
+
+  return fm.join('\n') + content;
+}
+
+/**
+ * Save published post as Hexo-compatible markdown in R2
+ */
+export const savePostAsHexoMd = async (bucket, post) => {
+  if (!bucket || !post?.slug) return;
+  try {
+    const md = postToHexoMd(post);
+    await bucket.put(HEXO_POSTS_PREFIX + post.slug + '.md', md, {
+      httpMetadata: { contentType: 'text/markdown; charset=utf-8' }
+    });
+  } catch (e) {
+    console.error('Save Hexo md error:', e);
+  }
+};
+
+/**
+ * Delete Hexo markdown file from R2
+ */
+export const deleteHexoMd = async (bucket, slug) => {
+  if (!bucket || !slug) return;
+  try {
+    await bucket.delete(HEXO_POSTS_PREFIX + slug + '.md');
+  } catch {}
+};

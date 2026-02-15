@@ -42,19 +42,31 @@ uploadRoutes.post('/', requireAuth, async (c) => {
       return c.json(errorResponse('File type not allowed: ' + file.type).json(), 400);
     }
 
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 10);
-    const ext = file.name.split('.').pop() || 'bin';
-    const storageKey = `attachments/${timestamp}-${random}.${ext}`;
+    // Hexo-compatible path: images/{YYYY}/{MM}/{sanitized-filename}
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const sanitized = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-');
+    const baseName = sanitized.replace(/\.[^.]+$/, '');
+    const ext = sanitized.split('.').pop() || 'bin';
+
+    // Check for duplicate and append suffix if needed
+    let storageKey = `images/${year}/${month}/${baseName}.${ext}`;
+    let attempt = 0;
+    while (await bucket.head(storageKey)) {
+      attempt++;
+      storageKey = `images/${year}/${month}/${baseName}-${attempt}.${ext}`;
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     await bucket.put(storageKey, arrayBuffer, {
       httpMetadata: { contentType: file.type }
     });
 
+    const filename = storageKey.split('/').pop();
     const attachmentModel = new Attachment(db);
     const attachment = await attachmentModel.createAttachment({
-      filename: `${timestamp}-${random}.${ext}`,
+      filename,
       original_name: file.name,
       mime_type: file.type,
       file_size: file.size,
