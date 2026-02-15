@@ -627,30 +627,68 @@ frontendRoutes.get('/login', (c) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>登录 - CFBlog</title>
+      <link rel="stylesheet" href="/static/admin-bundle.css">
+      <style>
+        body { margin:0; background:#f0f2f5; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+        .login-card { width:400px; }
+        .login-title { text-align:center; margin-bottom:24px; font-size:24px; color:#333; }
+        .login-footer { text-align:center; margin-top:16px; font-size:13px; color:#999; }
+        .login-footer a { color:#0052d9; text-decoration:none; }
+      </style>
     </head>
     <body>
-      <header data-testid="header">
-        <nav data-testid="navigation">
-          <a href="/">返回首页</a>
-        </nav>
-      </header>
-      <main>
-        <h1>登录</h1>
-        <form data-testid="login-form" method="POST" action="/api/user/login">
-          <div>
-            <label for="username">用户名</label>
-            <input type="text" id="username" name="username" required data-testid="username-input">
-          </div>
-          <div>
-            <label for="password">密码</label>
-            <input type="password" id="password" name="password" required data-testid="password-input">
-          </div>
-          <button type="submit" data-testid="login-button">登录</button>
-        </form>
-      </main>
-      <footer data-testid="footer">
-        <p>&copy; 2024 CFBlog</p>
-      </footer>
+      <div id="app" v-cloak>
+        <t-card class="login-card" :bordered="true">
+          <div class="login-title">CFBlog 登录</div>
+          <t-form data-testid="login-form" @submit="onSubmit">
+            <t-form-item label="用户名" name="username">
+              <t-input v-model="form.username" placeholder="请输入用户名" data-testid="username-input"></t-input>
+            </t-form-item>
+            <t-form-item label="密码" name="password">
+              <t-input v-model="form.password" type="password" placeholder="请输入密码" data-testid="password-input"></t-input>
+            </t-form-item>
+            <t-form-item>
+              <t-button theme="primary" type="submit" block :loading="loading" data-testid="login-button">登录</t-button>
+            </t-form-item>
+          </t-form>
+          <div class="login-footer"><a href="/">返回首页</a></div>
+        </t-card>
+      </div>
+      <script src="/static/admin-bundle.js"></script>
+      <script>
+        var { createApp, ref, reactive } = Vue;
+        var { MessagePlugin } = TDesign;
+        var app = createApp({
+          setup: function() {
+            var form = reactive({ username:'', password:'' });
+            var loading = ref(false);
+            async function onSubmit() {
+              if (!form.username || !form.password) { MessagePlugin.warning('请输入用户名和密码'); return; }
+              loading.value = true;
+              try {
+                var res = await fetch('/api/user/login', {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body: JSON.stringify({ username: form.username, password: form.password })
+                });
+                var data = await res.json();
+                if (data.success) {
+                  MessagePlugin.success('登录成功');
+                  setTimeout(function(){ window.location.href='/admin'; }, 500);
+                } else {
+                  MessagePlugin.error(data.message || '登录失败');
+                }
+              } catch(e) {
+                MessagePlugin.error('网络错误');
+              }
+              loading.value = false;
+            }
+            return { form, loading, onSubmit };
+          }
+        });
+        app.use(TDesign);
+        app.mount('#app');
+      </script>
     </body>
     </html>
   `);
