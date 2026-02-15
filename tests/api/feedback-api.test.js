@@ -33,6 +33,8 @@ function getDB(overrides = {}) {
         return null;
       }
     },
+    { match: 'FROM settings WHERE key IN', result: [] },
+    { match: 'FROM feedback WHERE ip', result: null },
     { match: 'FROM feedback WHERE id', result: overrides.feedback ?? testFeedback },
     { match: 'SELECT COUNT', result: { count: overrides.count ?? 1 } },
     { match: 'FROM feedback', result: overrides.feedbacks ?? [testFeedback] },

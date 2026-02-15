@@ -15,11 +15,12 @@ export class Feedback extends BaseModel {
    * Create feedback
    */
   async createFeedback(feedbackData) {
-    const { name, email, content } = feedbackData;
+    const { name, email, content, ip } = feedbackData;
 
     const feedback = await this.create({
       name,
       email: email || null,
+      ip: ip || null,
       content,
       status: 1 // Default to processed
     });

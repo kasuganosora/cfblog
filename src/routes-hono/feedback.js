@@ -4,6 +4,8 @@
 
 import { Hono } from 'hono';
 import { Feedback } from '../models/Feedback.js';
+import { Settings } from '../models/Settings.js';
+import { validateSessionId } from '../utils/auth.js';
 import {
   serverErrorResponse,
   errorResponse,
@@ -37,8 +39,33 @@ feedbackRoutes.post('/create', async (c) => {
       return c.json(errorResponse('Email must be 100 characters or less').json(), 400);
     }
 
+    // IP cooldown for non-logged-in users
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0';
+    let isLoggedIn = false;
+    try {
+      const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+      if (sessionId && c.env?.SESSION_SECRET) {
+        isLoggedIn = !!(await validateSessionId(sessionId, c.env.SESSION_SECRET));
+      }
+    } catch(e) {}
+
+    if (!isLoggedIn) {
+      const settingsModel = new Settings(db);
+      const commentSettings = await settingsModel.getCommentSettings();
+      const cooldown = commentSettings.cooldown || 120;
+      if (cooldown > 0) {
+        const since = new Date(Date.now() - cooldown * 1000).toISOString().slice(0, 19).replace('T', ' ');
+        const recent = await db.prepare(
+          'SELECT id FROM feedback WHERE ip = ? AND created_at > ? LIMIT 1'
+        ).bind(ip, since).first();
+        if (recent) {
+          return c.json(errorResponse(`操作过于频繁，请 ${Math.ceil(cooldown / 60)} 分钟后再试`).json(), 429);
+        }
+      }
+    }
+
     const feedbackModel = new Feedback(db);
-    const feedback = await feedbackModel.createFeedback(body);
+    const feedback = await feedbackModel.createFeedback({ ...body, ip });
 
     return c.json(feedback, 201);
   } catch (error) {

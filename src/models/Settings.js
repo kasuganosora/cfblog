@@ -104,8 +104,8 @@ export class Settings extends BaseModel {
 
     return {
       title: settings.blog_title || 'CFBlog',
-      description: settings.blog_description || 'A modern blog platform',
-      subtitle: settings.blog_subtitle || 'Welcome to CFBlog'
+      description: settings.blog_description ?? '',
+      subtitle: settings.blog_subtitle ?? ''
     };
   }
 
@@ -126,12 +126,13 @@ export class Settings extends BaseModel {
    * Get comment settings
    */
   async getCommentSettings() {
-    const keys = ['comment_moderation', 'comment_permission'];
+    const keys = ['comment_moderation', 'comment_permission', 'comment_cooldown'];
     const settings = await this.getSettings(keys);
 
     return {
       moderation: parseInt(settings.comment_moderation || 0),
-      permission: settings.comment_permission || 'all'
+      permission: settings.comment_permission || 'all',
+      cooldown: parseInt(settings.comment_cooldown || 120)
     };
   }
 
@@ -189,10 +190,11 @@ export class Settings extends BaseModel {
   /**
    * Update comment settings
    */
-  async updateCommentSettings({ moderation, permission }) {
+  async updateCommentSettings({ moderation, permission, cooldown }) {
     const settings = {};
     if (moderation !== undefined) settings.comment_moderation = moderation.toString();
     if (permission !== undefined) settings.comment_permission = permission;
+    if (cooldown !== undefined) settings.comment_cooldown = cooldown.toString();
 
     await this.setSettings(settings);
     return this.getCommentSettings();

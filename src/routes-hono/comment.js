@@ -4,6 +4,8 @@
 
 import { Hono } from 'hono';
 import { Comment } from '../models/Comment.js';
+import { Settings } from '../models/Settings.js';
+import { validateSessionId } from '../utils/auth.js';
 import {
   serverErrorResponse,
   errorResponse,
@@ -108,11 +110,37 @@ commentRoutes.post('/create', async (c) => {
       return c.json(errorResponse('Comments are disabled for this post').json(), 403);
     }
 
+    // IP cooldown for non-logged-in users
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0';
+    let isLoggedIn = false;
+    try {
+      const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+      if (sessionId && c.env?.SESSION_SECRET) {
+        isLoggedIn = !!(await validateSessionId(sessionId, c.env.SESSION_SECRET));
+      }
+    } catch(e) {}
+
+    if (!isLoggedIn) {
+      const settingsModel = new Settings(db);
+      const commentSettings = await settingsModel.getCommentSettings();
+      const cooldown = commentSettings.cooldown || 120;
+      if (cooldown > 0) {
+        const since = new Date(Date.now() - cooldown * 1000).toISOString().slice(0, 19).replace('T', ' ');
+        const recent = await db.prepare(
+          'SELECT id FROM comments WHERE author_ip = ? AND created_at > ? LIMIT 1'
+        ).bind(ip, since).first();
+        if (recent) {
+          return c.json(errorResponse(`操作过于频繁，请 ${Math.ceil(cooldown / 60)} 分钟后再试`).json(), 429);
+        }
+      }
+    }
+
     const commentModel = new Comment(db);
     const comment = await commentModel.createComment({
       post_id: postId,
       author_name: authorName,
       author_email: authorEmail,
+      author_ip: ip,
       content: body.content,
       parent_id: parentId
     });

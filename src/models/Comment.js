@@ -23,6 +23,7 @@ export class Comment extends BaseModel {
       author_name: authorNameSnake,
       authorEmail: authorEmailCamel,
       author_email: authorEmailSnake,
+      author_ip,
       content,
       parentId: parentIdCamel,
       parent_id: parentIdSnake
@@ -37,6 +38,7 @@ export class Comment extends BaseModel {
       post_id: postId,
       author_name: authorName,
       author_email: authorEmail || null,
+      author_ip: author_ip || null,
       content,
       parent_id: parentId || null,
       status: 1 // Default to approved
