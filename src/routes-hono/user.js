@@ -187,6 +187,35 @@ userRoutes.post('/create', requireAdmin, async (c) => {
   }
 });
 
+// PUT /api/user/:id/profile - 修改用户资料（管理员）
+userRoutes.put('/:id/profile', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const id = parseInt(c.req.param('id'));
+    const body = await c.req.json();
+    const { username, email, displayName } = body;
+
+    if (username !== undefined && !username.trim()) {
+      return c.json(errorResponse('Username cannot be empty').json(), 400);
+    }
+    if (email !== undefined && !email.trim()) {
+      return c.json(errorResponse('Email cannot be empty').json(), 400);
+    }
+
+    const userModel = new User(db);
+    const updated = await userModel.updateUser(id, { username, email, displayName });
+
+    return c.json({ success: true, data: updated, message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return c.json(errorResponse(error.message).json(), 400);
+  }
+});
+
 // PUT /api/user/:id/password - 修改用户密码（管理员）
 userRoutes.put('/:id/password', requireAdmin, async (c) => {
   try {

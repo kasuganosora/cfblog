@@ -63,9 +63,26 @@ export class User extends BaseModel {
    * Update user
    */
   async updateUser(id, userData) {
-    const { displayName, bio, avatar, role, status } = userData;
+    const { username, email, displayName, bio, avatar, role, status } = userData;
 
     const updateData = {};
+
+    if (username !== undefined) {
+      const existing = await this.queryFirst(
+        'SELECT id FROM users WHERE username = ? AND id != ?', [username, id]
+      );
+      if (existing) throw new Error('Username already exists');
+      updateData.username = username;
+    }
+
+    if (email !== undefined) {
+      const existing = await this.queryFirst(
+        'SELECT id FROM users WHERE email = ? AND id != ?', [email, id]
+      );
+      if (existing) throw new Error('Email already exists');
+      updateData.email = email;
+    }
+
     if (displayName !== undefined) updateData.display_name = displayName;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar !== undefined) updateData.avatar = avatar;

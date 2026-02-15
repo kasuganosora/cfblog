@@ -1120,6 +1120,7 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         <template #created_at="{ row }">{{ fmtDate(row.created_at) }}</template>
         <template #op="{ row }">
           <t-space size="small">
+            <t-link theme="primary" @click="showEditModal(row)">编辑</t-link>
             <t-link theme="primary" @click="showPwdModal(row)">改密</t-link>
             <t-link v-if="row.status===1 && row.id!==currentUserId" @click="toggleStatus(row.id,0)">禁用</t-link>
             <t-link v-if="row.status!==1 && row.id!==currentUserId" theme="success" @click="toggleStatus(row.id,1)">启用</t-link>
@@ -1161,6 +1162,19 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         </t-form-item>
       </t-form>
     </t-dialog>
+    <t-dialog v-model:visible="editVisible" header="编辑用户资料" :confirm-btn="{content:'保存',loading:editSaving}" @confirm="saveProfile" @close="editVisible=false">
+      <t-form label-width="70px">
+        <t-form-item label="用户名">
+          <t-input v-model="editForm.username" placeholder="用户名"></t-input>
+        </t-form-item>
+        <t-form-item label="显示名">
+          <t-input v-model="editForm.displayName" placeholder="显示名称"></t-input>
+        </t-form-item>
+        <t-form-item label="邮箱">
+          <t-input v-model="editForm.email" placeholder="邮箱"></t-input>
+        </t-form-item>
+      </t-form>
+    </t-dialog>
     <t-dialog v-model:visible="pwdVisible" :header="pwdIsSelf?'修改密码':'重置密码'" :confirm-btn="{content:'确定',loading:pwdSaving}" @confirm="changePwd" @close="pwdVisible=false">
       <t-form label-width="80px">
         <t-form-item v-if="pwdIsSelf" label="旧密码">
@@ -1185,6 +1199,10 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         var createVisible = ref(false);
         var saving = ref(false);
         var newUser = reactive({ username:'', email:'', password:'', displayName:'', role:'member' });
+        var editVisible = ref(false);
+        var editSaving = ref(false);
+        var editTargetId = ref(null);
+        var editForm = reactive({ username:'', displayName:'', email:'' });
         var pwdVisible = ref(false);
         var pwdSaving = ref(false);
         var pwdTargetId = ref(null);
@@ -1244,6 +1262,25 @@ adminRoutes.get('/users', requireAdmin, (c) => {
             loadData();
           } catch(e) { MessagePlugin.error(e.message||'删除失败'); }
         }
+        function showEditModal(row) {
+          editTargetId.value = row.id;
+          editForm.username = row.username || '';
+          editForm.displayName = row.display_name || '';
+          editForm.email = row.email || '';
+          editVisible.value = true;
+        }
+        async function saveProfile() {
+          if (!editForm.username.trim()) { MessagePlugin.warning('用户名不能为空'); return; }
+          if (!editForm.email.trim()) { MessagePlugin.warning('邮箱不能为空'); return; }
+          editSaving.value = true;
+          try {
+            await apiCall('/user/'+editTargetId.value+'/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(editForm)});
+            MessagePlugin.success('用户资料已更新');
+            editVisible.value = false;
+            loadData();
+          } catch(e) { MessagePlugin.error(e.message||'更新失败'); }
+          editSaving.value = false;
+        }
         function showPwdModal(row) {
           pwdTargetId.value = row.id;
           pwdIsSelf.value = row.id === currentUserId.value;
@@ -1273,7 +1310,7 @@ adminRoutes.get('/users', requireAdmin, (c) => {
           } catch(e) {}
           loadData();
         });
-        return { list, loading, page, total, pageSize, columns, currentUserId, createVisible, saving, newUser, pwdVisible, pwdSaving, pwdTargetId, pwdIsSelf, pwdForm, loadData, showCreateModal, createUser, toggleStatus, changeRole, del, showPwdModal, changePwd, fmtDate };
+        return { list, loading, page, total, pageSize, columns, currentUserId, createVisible, saving, newUser, editVisible, editSaving, editForm, showEditModal, saveProfile, pwdVisible, pwdSaving, pwdTargetId, pwdIsSelf, pwdForm, loadData, showCreateModal, createUser, toggleStatus, changeRole, del, showPwdModal, changePwd, fmtDate };
       }
     });
     app.use(TDesign);
