@@ -41,8 +41,8 @@ function adminLayout(title, activePage, templateHtml, scriptContent, options = {
 {
   "imports": {
     "vue": "https://esm.sh/vue@3",
-    "tdesign-vue-next": "https://esm.sh/tdesign-vue-next@1",
-    "md-editor-v3": "https://esm.sh/md-editor-v3@5?external=vue"
+    "tdesign-vue-next": "https://esm.sh/tdesign-vue-next@1?bundle&external=vue",
+    "md-editor-v3": "https://esm.sh/md-editor-v3@5?bundle&external=vue"
   }
 }
 </script>
