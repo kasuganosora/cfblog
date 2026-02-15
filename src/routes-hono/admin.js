@@ -619,6 +619,9 @@ adminRoutes.get('/categories', requireAdmin, (c) => {
         <t-form-item label="名称">
           <t-input v-model="form.name" placeholder="分类名称"></t-input>
         </t-form-item>
+        <t-form-item label="Slug">
+          <t-input v-model="form.slug" placeholder="留空则自动生成"></t-input>
+        </t-form-item>
         <t-form-item label="描述">
           <t-textarea v-model="form.description" placeholder="分类描述" :autosize="{minRows:2,maxRows:4}"></t-textarea>
         </t-form-item>
@@ -640,7 +643,7 @@ adminRoutes.get('/categories', requireAdmin, (c) => {
         ];
         var dialogVisible = ref(false);
         var editId = ref(null);
-        var form = reactive({ name:'', description:'' });
+        var form = reactive({ name:'', slug:'', description:'' });
         var saving = ref(false);
         async function loadData() {
           loading.value = true;
@@ -652,15 +655,15 @@ adminRoutes.get('/categories', requireAdmin, (c) => {
           loading.value = false;
         }
         function showModal(row) {
-          if (row) { editId.value=row.id; form.name=row.name; form.description=row.description||''; }
-          else { editId.value=null; form.name=''; form.description=''; }
+          if (row) { editId.value=row.id; form.name=row.name; form.slug=row.slug||''; form.description=row.description||''; }
+          else { editId.value=null; form.name=''; form.slug=''; form.description=''; }
           dialogVisible.value = true;
         }
         async function save() {
           if (!form.name) { MessagePlugin.warning('请输入名称'); return; }
           saving.value = true;
           try {
-            var body = { name:form.name, description:form.description };
+            var body = { name:form.name, slug:form.slug||undefined, description:form.description };
             if (editId.value) {
               await apiCall('/category/'+editId.value+'/update',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
               MessagePlugin.success('分类已更新');
@@ -1491,6 +1494,32 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
             </t-form>
           </div>
         </t-tab-panel>
+        <t-tab-panel value="ops" label="运维">
+          <div style="padding:16px 0">
+            <t-form label-width="100px">
+              <t-form-item label="缓存管理">
+                <t-space direction="vertical" style="width:100%">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <t-button theme="warning" :loading="cacheLoading.all" @click="clearCache('all')">清空所有缓存</t-button>
+                    <span style="color:#888;font-size:13px">重建设置、文章列表、RSS 等全部 R2 缓存</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <t-button variant="outline" :loading="cacheLoading.settings" @click="clearCache('settings')">刷新设置缓存</t-button>
+                    <t-button variant="outline" :loading="cacheLoading.posts" @click="clearCache('posts')">刷新文章缓存</t-button>
+                    <t-button variant="outline" :loading="cacheLoading.rss" @click="clearCache('rss')">刷新 RSS 缓存</t-button>
+                  </div>
+                </t-space>
+              </t-form-item>
+              <t-form-item label="缓存列表">
+                <div style="width:100%">
+                  <t-button variant="text" theme="primary" @click="loadCacheStats" :loading="cacheStatsLoading" style="margin-bottom:8px">刷新列表</t-button>
+                  <t-table v-if="cacheStats.length" :data="cacheStats" :columns="cacheColumns" row-key="key" size="small" :hover="true" :stripe="true"></t-table>
+                  <p v-else style="color:#999">暂无缓存数据</p>
+                </div>
+              </t-form-item>
+            </t-form>
+          </div>
+        </t-tab-panel>
       </t-tabs>
     </t-card>
   `, `
@@ -1531,7 +1560,34 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         function saveComments() { saveSetting('comments', { moderation:comments.moderation, permission:comments.permission, cooldown:comments.cooldown }); }
         function saveUpload() { saveSetting('upload', { allowedTypes:upload.allowedTypes, maxSize:upload.maxSize }); }
         function saveSeo() { saveSetting('seo', { description:seo.description, keywords:seo.keywords }); }
-        return { activeTab, blog, display, comments, upload, seo, saving, saveBlog, saveDisplay, saveComments, saveUpload, saveSeo };
+        var cacheLoading = reactive({ all:false, settings:false, posts:false, rss:false });
+        var cacheStats = ref([]);
+        var cacheStatsLoading = ref(false);
+        var cacheColumns = [
+          { colKey:'key', title:'缓存键', ellipsis:true },
+          { colKey:'sizeText', title:'大小', width:100 },
+          { colKey:'uploadedText', title:'更新时间', width:180 }
+        ];
+        async function clearCache(target) {
+          cacheLoading[target] = true;
+          try {
+            await apiCall('/settings/cache/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target:target})});
+            MessagePlugin.success(target==='all'?'所有缓存已重建':'缓存已刷新');
+            loadCacheStats();
+          } catch(e) { MessagePlugin.error(e.message||'操作失败'); }
+          cacheLoading[target] = false;
+        }
+        async function loadCacheStats() {
+          cacheStatsLoading.value = true;
+          try {
+            var res = await apiCall('/settings/cache/stats');
+            cacheStats.value = (res.data||[]).map(function(item) {
+              return { key:item.key, sizeText:item.size>1024?(item.size/1024).toFixed(1)+' KB':item.size+' B', uploadedText:item.uploaded?new Date(item.uploaded).toLocaleString('zh-CN'):'-' };
+            });
+          } catch(e) { console.error(e); }
+          cacheStatsLoading.value = false;
+        }
+        return { activeTab, blog, display, comments, upload, seo, saving, saveBlog, saveDisplay, saveComments, saveUpload, saveSeo, cacheLoading, cacheStats, cacheStatsLoading, cacheColumns, clearCache, loadCacheStats };
       }
     });
     app.use(TDesign);
