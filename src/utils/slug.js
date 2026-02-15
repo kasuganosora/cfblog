@@ -1,13 +1,15 @@
 /**
  * Slug Utilities
- * Generate URL-friendly slugs
+ * Generate URL-friendly slugs with Chinese pinyin support
  */
 
+import { toPinyin } from './pinyin-data.js';
+
 /**
- * Generate slug from text
+ * Generate slug from text (Chinese converted to pinyin)
  */
 export const generateSlug = (text) => {
-  return text
+  return toPinyin(text)
     .toString()
     .toLowerCase()
     .trim()
