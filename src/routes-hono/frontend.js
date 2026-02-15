@@ -305,7 +305,11 @@ function layout({ title, blogTitle = 'CFBlog', content, script = '', activePage 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)} - ${esc(blogTitle)}</title>
 <style>${CSS}</style>
+<link rel="stylesheet" href="/static/hljs-github.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="/static/hljs-github-dark.css" media="(prefers-color-scheme: dark)">
 <script src="/static/marked.min.js"></script>
+<script src="/static/highlight.min.js"></script>
+<script>marked.setOptions({breaks:true,gfm:true});</script>
 </head>
 <body${bodyAttrs}>
 <header class="navbar" data-testid="header">
@@ -530,6 +534,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       // Content - parse markdown to HTML
       var contentEl=document.querySelector('[data-testid="post-content"]');
       contentEl.innerHTML=renderMd(result.content)||'<p>暂无内容</p>';
+      if(typeof hljs!=='undefined')hljs.highlightAll();
 
       // Hero image: if first img >= 320px, show as hero and hide it in content
       var imgSrc=getFirstImg(result.content);
