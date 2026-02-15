@@ -1,6 +1,7 @@
 -- Initialize admin user
--- Default password: admin123
--- The password is hashed using SHA-256 twice with salt
+-- Default password: Admin@2026!
+-- Hashed using PBKDF2-SHA256 (100000 iterations, 16-byte salt)
+-- Change this password immediately after first login!
 
 INSERT INTO users (
   username,
@@ -14,7 +15,7 @@ INSERT INTO users (
 ) VALUES (
   'admin',
   'admin@cfblog.local',
-  '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
+  'pbkdf2:100000:af3a94d509f65381ff3fcfa628d7ad8f:1477237ddec3d104d16ecedeeddd8633eafcdc9bab6aef2760bfce50247cbfcc',
   'Administrator',
   'admin',
   1,
