@@ -86,18 +86,33 @@ export class Tag extends BaseModel {
   }
 
   /**
-   * Get tag list
+   * Get tag list (with post counts)
    */
   async getTagList(options = {}) {
     const { page = 1, limit = 10 } = options;
+    const offset = (page - 1) * limit;
 
-    const result = await this.paginate({
-      orderBy: 'name',
-      page,
-      limit
-    });
+    const total = await this.count();
 
-    return result;
+    const tags = await this.query(`
+      SELECT t.*, COUNT(p.id) as post_count
+      FROM tags t
+      LEFT JOIN post_tags pt ON t.id = pt.tag_id
+      LEFT JOIN posts p ON pt.post_id = p.id AND p.status = 1
+      GROUP BY t.id
+      ORDER BY t.name
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    return {
+      data: tags,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**
