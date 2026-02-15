@@ -1271,4 +1271,33 @@ function escapeJs(text) {
     .replace(/>/g, '\\x3e');
 }
 
+// GET /rss and /feed - RSS 2.0 feed (served from R2 cache)
+async function handleRSS(c) {
+  const bucket = c.env?.BUCKET;
+  const db = c.env?.DB;
+
+  const { getCachedRSS, refreshRSSCache } = await import('../utils/cache.js');
+
+  let xml = await getCachedRSS(bucket);
+  if (!xml && db) {
+    const origin = new URL(c.req.url).origin;
+    await refreshRSSCache(bucket, db, origin);
+    xml = await getCachedRSS(bucket);
+  }
+
+  if (!xml) {
+    return c.text('RSS feed not available', 500);
+  }
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600'
+    }
+  });
+}
+
+frontendRoutes.get('/rss', handleRSS);
+frontendRoutes.get('/feed', handleRSS);
+
 export { frontendRoutes };

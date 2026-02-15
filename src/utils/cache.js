@@ -165,3 +165,148 @@ export const refreshSettingsCache = async (bucket, db) => {
     console.error('Refresh settings cache error:', e);
   }
 };
+
+// ============================================================
+// R2-based post caches
+// ============================================================
+
+const POSTS_DEFAULT_KEY = 'cache/posts-default.json';
+const RSS_CACHE_KEY = 'cache/rss.xml';
+const POST_CACHE_PREFIX = 'cache/post/';
+
+/**
+ * Refresh default post list cache (published, page 1, limit 10)
+ */
+export const refreshPostListCache = async (bucket, db) => {
+  if (!bucket || !db) return;
+  try {
+    const { Post } = await import('../models/Post.js');
+    const postModel = new Post(db);
+    const result = await postModel.getPostList({ page: 1, limit: 10, status: 1 });
+    await bucket.put(POSTS_DEFAULT_KEY, JSON.stringify(result), {
+      httpMetadata: { contentType: 'application/json' }
+    });
+  } catch (e) {
+    console.error('Refresh post list cache error:', e);
+  }
+};
+
+/**
+ * Get cached default post list from R2
+ */
+export const getCachedPostList = async (bucket) => {
+  if (!bucket) return null;
+  try {
+    const obj = await bucket.get(POSTS_DEFAULT_KEY);
+    if (obj) return await obj.json();
+  } catch {}
+  return null;
+};
+
+/**
+ * Cache a single published post by slug
+ */
+export const cachePost = async (bucket, slug, postData) => {
+  if (!bucket || !slug) return;
+  try {
+    await bucket.put(POST_CACHE_PREFIX + slug + '.json', JSON.stringify(postData), {
+      httpMetadata: { contentType: 'application/json' }
+    });
+  } catch (e) {
+    console.error('Cache post error:', e);
+  }
+};
+
+/**
+ * Get cached post by slug
+ */
+export const getCachedPost = async (bucket, slug) => {
+  if (!bucket || !slug) return null;
+  try {
+    const obj = await bucket.get(POST_CACHE_PREFIX + slug + '.json');
+    if (obj) return await obj.json();
+  } catch {}
+  return null;
+};
+
+/**
+ * Delete cached post by slug
+ */
+export const deleteCachedPost = async (bucket, slug) => {
+  if (!bucket || !slug) return;
+  try {
+    await bucket.delete(POST_CACHE_PREFIX + slug + '.json');
+  } catch {}
+};
+
+/**
+ * Refresh RSS feed cache
+ */
+export const refreshRSSCache = async (bucket, db, siteUrl) => {
+  if (!bucket || !db) return;
+  try {
+    const { Post } = await import('../models/Post.js');
+    const { Settings } = await import('../models/Settings.js');
+    const settingsModel = new Settings(db);
+    const postModel = new Post(db);
+
+    const settings = await settingsModel.getAllSettings();
+    const blogTitle = settings.blog_title || 'CFBlog';
+    const blogDesc = settings.blog_description || '';
+    const url = siteUrl || '';
+
+    const result = await postModel.getPostList({ page: 1, limit: 20, status: 1 });
+    const posts = result.data || [];
+
+    const escXml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const toRFC822 = (d) => new Date(d).toUTCString();
+
+    const items = posts.map(p => `    <item>
+      <title>${escXml(p.title)}</title>
+      <link>${escXml(url)}/post/${escXml(p.slug)}</link>
+      <description>${escXml(p.excerpt || '')}</description>
+      <pubDate>${toRFC822(p.published_at || p.created_at)}</pubDate>
+      <guid isPermaLink="true">${escXml(url)}/post/${escXml(p.slug)}</guid>
+    </item>`).join('\n');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escXml(blogTitle)}</title>
+    <link>${escXml(url)}</link>
+    <description>${escXml(blogDesc)}</description>
+    <language>zh-CN</language>
+    <atom:link href="${escXml(url)}/rss" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>`;
+
+    await bucket.put(RSS_CACHE_KEY, xml, {
+      httpMetadata: { contentType: 'application/xml; charset=utf-8' }
+    });
+  } catch (e) {
+    console.error('Refresh RSS cache error:', e);
+  }
+};
+
+/**
+ * Get cached RSS XML
+ */
+export const getCachedRSS = async (bucket) => {
+  if (!bucket) return null;
+  try {
+    const obj = await bucket.get(RSS_CACHE_KEY);
+    if (obj) return await obj.text();
+  } catch {}
+  return null;
+};
+
+/**
+ * Refresh both post list and RSS caches (call after publish/update/delete)
+ */
+export const refreshAllPostCaches = async (bucket, db, siteUrl) => {
+  await Promise.all([
+    refreshPostListCache(bucket, db),
+    refreshRSSCache(bucket, db, siteUrl)
+  ]);
+};

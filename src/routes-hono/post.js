@@ -14,6 +14,11 @@ import {
   requireAuth
 } from './base.js';
 import { validateSessionId } from '../utils/auth.js';
+import {
+  getCachedPostList, refreshPostListCache,
+  cachePost, getCachedPost, deleteCachedPost,
+  refreshAllPostCaches
+} from '../utils/cache.js';
 
 // Helper: optionally get current user ID from session cookie (no auth required)
 async function getCurrentUserId(c) {
@@ -31,24 +36,40 @@ async function getCurrentUserId(c) {
 
 const postRoutes = new Hono();
 
-// GET /list - 获取文章列表
+// GET /list - 获取文章列表（无参数时从 R2 缓存读取）
 postRoutes.get('/list', async (c) => {
   try {
     const db = c.env?.DB;
+    const bucket = c.env?.BUCKET;
     if (!db) {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const postModel = new Post(db);
     const url = new URL(c.req.url);
     const params = Object.fromEntries(url.searchParams);
+    const hasFilters = params.status !== undefined || params.featured !== undefined;
+    const page = params.page ? parseInt(params.page) : 1;
+    const limit = params.limit ? parseInt(params.limit) : 10;
+    const isDefault = !hasFilters && page === 1 && limit === 10;
 
+    // Default request: try R2 cache first
+    if (isDefault && bucket) {
+      const cached = await getCachedPostList(bucket);
+      if (cached) return c.json(cached);
+    }
+
+    const postModel = new Post(db);
     const result = await postModel.getPostList({
-      page: params.page ? parseInt(params.page) : undefined,
-      limit: params.limit ? parseInt(params.limit) : undefined,
+      page,
+      limit,
       status: params.status !== undefined ? parseInt(params.status) : undefined,
       featured: params.featured !== undefined ? params.featured === 'true' : undefined
     });
+
+    // Populate R2 cache on miss for default requests
+    if (isDefault && bucket) {
+      refreshPostListCache(bucket, db).catch(() => {});
+    }
 
     return c.json(result);
   } catch (error) {
@@ -115,20 +136,42 @@ postRoutes.get('/:id', async (c) => {
   }
 });
 
-// GET /slug/:slug - 根据slug获取文章
+// GET /slug/:slug - 根据slug获取文章（已发布文章从 R2 缓存读取）
 postRoutes.get('/slug/:slug', async (c) => {
   try {
     const db = c.env?.DB;
+    const bucket = c.env?.BUCKET;
     if (!db) {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const postModel = new Post(db);
     const slug = c.req.param('slug');
+
+    // Try R2 cache first
+    const cached = await getCachedPost(bucket, slug);
+    if (cached) {
+      // Increment view count asynchronously (non-blocking)
+      if (cached.status === 1) {
+        const currentUserId = await getCurrentUserId(c);
+        if (!currentUserId || currentUserId !== cached.author_id) {
+          const postModel = new Post(db);
+          postModel.incrementViewCount(cached.id).catch(() => {});
+        }
+      }
+      return c.json(cached);
+    }
+
+    // Cache miss: query D1
+    const postModel = new Post(db);
     const post = await postModel.getPostBySlug(slug);
 
     if (!post) {
       return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+
+    // Cache published posts in R2
+    if (post.status === 1 && bucket) {
+      cachePost(bucket, slug, post).catch(() => {});
     }
 
     // Increment view count only for published posts and non-author visitors
@@ -188,6 +231,14 @@ postRoutes.post('/create', requireAuth, async (c) => {
     const postModel = new Post(db);
     const post = await postModel.createPost(postData);
 
+    // Refresh caches if published
+    const bucket = c.env?.BUCKET;
+    if (bucket && post.status === 1) {
+      const origin = new URL(c.req.url).origin;
+      cachePost(bucket, post.slug, post).catch(() => {});
+      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+    }
+
     return c.json(post, 201);
   } catch (error) {
     console.error('Create post error:', error);
@@ -219,6 +270,20 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
     const body = await c.req.json();
     const post = await postModel.updatePost(id, body);
 
+    // Refresh caches
+    const bucket = c.env?.BUCKET;
+    if (bucket) {
+      const origin = new URL(c.req.url).origin;
+      if (post.status === 1) {
+        // Published: cache the post and refresh lists
+        cachePost(bucket, post.slug, post).catch(() => {});
+      } else if (existingPost.status === 1) {
+        // Was published, now draft: remove single post cache
+        deleteCachedPost(bucket, existingPost.slug).catch(() => {});
+      }
+      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+    }
+
     return c.json(post);
   } catch (error) {
     console.error('Update post error:', error);
@@ -248,6 +313,16 @@ postRoutes.delete('/:id/delete', requireAuth, async (c) => {
     }
 
     await postModel.deletePost(id);
+
+    // Refresh caches
+    const bucket = c.env?.BUCKET;
+    if (bucket) {
+      if (existingPost.slug) {
+        deleteCachedPost(bucket, existingPost.slug).catch(() => {});
+      }
+      const origin = new URL(c.req.url).origin;
+      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+    }
 
     return c.json({ success: true, message: 'Post deleted successfully' });
   } catch (error) {
