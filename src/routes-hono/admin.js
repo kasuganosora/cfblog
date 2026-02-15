@@ -36,6 +36,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent, blogTitle) 
     { key: 'feedback', label: '留言管理', icon: '&#9733;', href: '/admin/feedback' },
     { key: 'attachments', label: '附件管理', icon: '&#128206;', href: '/admin/attachments' },
     { key: 'users', label: '用户管理', icon: '&#9786;', href: '/admin/users' },
+    { key: 'login-audit', label: '登录审计', icon: '&#128274;', href: '/admin/login-audit' },
     { key: 'settings', label: '系统设置', icon: '&#9881;', href: '/admin/settings' },
   ];
   const navHtml = navItems.map(item => {
@@ -1225,6 +1226,61 @@ adminRoutes.get('/users', requireAdmin, (c) => {
         }
         onMounted(loadData);
         return { list, loading, page, total, pageSize, columns, createVisible, saving, newUser, loadData, showCreateModal, createUser, toggleStatus, changeRole, del, fmtDate };
+      }
+    });
+    app.use(TDesign);
+    app.mount('#app');
+  `, c.get('blogTitle')));
+});
+
+// ============================================================
+// Login Audit
+// ============================================================
+adminRoutes.get('/login-audit', requireAdmin, (c) => {
+  return c.html(adminLayout('登录审计', 'login-audit', `
+    <t-card :bordered="true">
+      <t-table :data="list" :columns="columns" row-key="id" :loading="loading" :hover="true" :stripe="true">
+        <template #success="{ row }">
+          <t-tag :theme="row.success===1?'success':'danger'" variant="light" size="small">{{ row.success===1?'成功':'失败' }}</t-tag>
+        </template>
+        <template #created_at="{ row }">{{ fmtDateTime(row.created_at) }}</template>
+        <template #user_agent="{ row }">
+          <span style="font-size:12px;color:#888">{{ (row.user_agent||'-').substring(0,60) }}</span>
+        </template>
+      </t-table>
+      <div style="display:flex;justify-content:flex-end;padding:16px" v-if="total>pageSize">
+        <t-pagination v-model:current="page" :total="total" :page-size="pageSize" @current-change="loadData"></t-pagination>
+      </div>
+    </t-card>
+  `, `
+    var { createApp, ref, onMounted } = Vue;
+    var app = createApp({
+      setup: function() {
+        var list = ref([]); var loading = ref(false);
+        var page = ref(1); var total = ref(0); var pageSize = 20;
+        var columns = [
+          { colKey:'ip', title:'IP 地址', width:150 },
+          { colKey:'username', title:'用户名', width:120 },
+          { colKey:'success', title:'结果', width:80 },
+          { colKey:'created_at', title:'时间', width:180 },
+          { colKey:'user_agent', title:'User Agent', ellipsis:true }
+        ];
+        function fmtDateTime(d) {
+          if (!d) return '-';
+          var dt = new Date(d);
+          return dt.toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        }
+        async function loadData() {
+          loading.value = true;
+          try {
+            var data = await apiCall('/user/login-audit?page='+page.value+'&limit='+pageSize);
+            list.value = data.data || [];
+            total.value = data.pagination?.total || 0;
+          } catch(e) { console.error(e); }
+          loading.value = false;
+        }
+        onMounted(loadData);
+        return { list, loading, page, total, pageSize, columns, loadData, fmtDateTime };
       }
     });
     app.use(TDesign);

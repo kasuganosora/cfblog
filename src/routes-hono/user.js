@@ -4,6 +4,7 @@
 
 import { Hono } from 'hono';
 import { User } from '../models/User.js';
+import { LoginAudit } from '../models/LoginAudit.js';
 import { generateSessionId, validateSessionId } from '../utils/auth.js';
 import {
   successResponse,
@@ -18,12 +19,22 @@ import {
 
 const userRoutes = new Hono();
 
-// POST /login - 用户登录
+// POST /login - 用户登录（含 IP 限流和审计日志）
 userRoutes.post('/login', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
       return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0';
+    const userAgent = c.req.header('User-Agent') || '';
+
+    // Check IP rate limit
+    const auditModel = new LoginAudit(db);
+    const { blocked, remainingMinutes } = await auditModel.isIPBlocked(ip);
+    if (blocked) {
+      return c.json(errorResponse(`Too many failed attempts. Please try again in ${remainingMinutes} minutes.`).json(), 429);
     }
 
     let username, password;
@@ -50,28 +61,59 @@ userRoutes.post('/login', async (c) => {
     }
 
     const userModel = new User(db);
-    const user = await userModel.verifyCredentials(username, password);
+    try {
+      const user = await userModel.verifyCredentials(username, password);
 
-    // Generate secure session ID using HMAC
-    const secret = c.env?.SESSION_SECRET;
-    if (!secret) {
-      console.error('SESSION_SECRET not configured');
-      return c.json(serverErrorResponse('Server configuration error').json(), 500);
+      // Login success — record and clear failed attempts
+      await auditModel.recordAttempt({ ip, username, success: true, user_agent: userAgent });
+      await auditModel.clearFailedAttempts(ip);
+
+      // Generate secure session ID using HMAC
+      const secret = c.env?.SESSION_SECRET;
+      if (!secret) {
+        console.error('SESSION_SECRET not configured');
+        return c.json(serverErrorResponse('Server configuration error').json(), 500);
+      }
+      const sessionId = await generateSessionId(user.id, secret);
+
+      // Set session cookie (with Secure flag for HTTPS)
+      c.header('Set-Cookie', `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+
+      return c.json({
+        success: true,
+        data: { user },
+        message: 'Login successful'
+      });
+    } catch (loginError) {
+      // Login failed — record failed attempt
+      await auditModel.recordAttempt({ ip, username, success: false, user_agent: userAgent });
+      return c.json(errorResponse('Invalid username or password').json(), 401);
     }
-    const sessionId = await generateSessionId(user.id, secret);
-
-    // Set session cookie (with Secure flag for HTTPS)
-    c.header('Set-Cookie', `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
-
-    return c.json({
-      success: true,
-      data: { user },
-      message: 'Login successful'
-    });
   } catch (error) {
     console.error('Login error:', error);
-    // Use generic message to prevent user enumeration
-    return c.json(errorResponse('Invalid username or password').json(), 401);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
+// GET /login-audit - 获取登录审计日志（管理员）
+userRoutes.get('/login-audit', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const url = new URL(c.req.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const auditModel = new LoginAudit(db);
+    const result = await auditModel.getAuditList({ page, limit });
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Login audit error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
