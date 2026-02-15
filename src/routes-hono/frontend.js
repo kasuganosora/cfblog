@@ -492,10 +492,6 @@ document.addEventListener('DOMContentLoaded',async function(){
       document.querySelector('[data-testid="post-title"]').textContent=result.title;
       document.title=escapeHtml(result.title)+' - ${escJs(blogTitle)}';
 
-      // Hero image
-      var imgSrc=getFirstImg(result.content);
-      if(imgSrc)checkThumb(document.getElementById('hero'),imgSrc);
-
       // Meta
       var date=result.published_at||result.created_at;
       var dateStr=date?new Date(date).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'}):'';
@@ -506,7 +502,23 @@ document.addEventListener('DOMContentLoaded',async function(){
       document.querySelector('[data-testid="post-meta"]').innerHTML=metaHtml;
 
       // Content - parse markdown to HTML
-      document.querySelector('[data-testid="post-content"]').innerHTML=renderMd(result.content)||'<p>暂无内容</p>';
+      var contentEl=document.querySelector('[data-testid="post-content"]');
+      contentEl.innerHTML=renderMd(result.content)||'<p>暂无内容</p>';
+
+      // Hero image: if first img >= 320px, show as hero and hide it in content
+      var imgSrc=getFirstImg(result.content);
+      if(imgSrc){
+        var heroEl=document.getElementById('hero');
+        var probe=new Image();
+        probe.onload=function(){
+          if(probe.naturalWidth>=320){
+            heroEl.src=imgSrc;heroEl.style.display='';
+            var firstImg=contentEl.querySelector('img');
+            if(firstImg)firstImg.style.display='none';
+          }
+        };
+        probe.src=imgSrc;
+      }
 
       // Tags
       if(result.tags&&result.tags.length){
