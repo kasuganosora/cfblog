@@ -619,14 +619,23 @@ frontendRoutes.get('/post/:slug', (c) => {
 });
 
 // GET /login - 登录页
-frontendRoutes.get('/login', (c) => {
+frontendRoutes.get('/login', async (c) => {
+  let blogTitle = 'CFBlog';
+  try {
+    const db = c.env?.DB;
+    if (db) {
+      const { Settings } = await import('../models/Settings.js');
+      const settings = new Settings(db);
+      blogTitle = await settings.getSetting('blog_title') || 'CFBlog';
+    }
+  } catch {}
   return c.html(`
     <!DOCTYPE html>
     <html lang="zh-CN">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>登录 - CFBlog</title>
+      <title>登录 - ${escapeHtml(blogTitle)}</title>
       <link rel="stylesheet" href="/static/admin-bundle.css">
       <style>
         body { margin:0; background:#f0f2f5; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
@@ -639,7 +648,7 @@ frontendRoutes.get('/login', (c) => {
     <body>
       <div id="app" v-cloak>
         <t-card class="login-card" :bordered="true">
-          <div class="login-title">CFBlog 登录</div>
+          <div class="login-title">${escapeHtml(blogTitle)} 登录</div>
           <t-form data-testid="login-form" @submit="onSubmit">
             <t-form-item label="用户名" name="username">
               <t-input v-model="form.username" placeholder="请输入用户名" data-testid="username-input"></t-input>

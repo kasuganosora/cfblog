@@ -5,15 +5,34 @@
 
 import { Hono } from 'hono';
 import { requireAdmin } from './base.js';
+import { Settings } from '../models/Settings.js';
 
 const adminRoutes = new Hono();
+
+// Middleware: fetch blog title for all admin pages
+adminRoutes.use('*', async (c, next) => {
+  try {
+    const db = c.env?.DB;
+    if (db) {
+      const settings = new Settings(db);
+      const title = await settings.getSetting('blog_title');
+      c.set('blogTitle', title || 'CFBlog');
+    } else {
+      c.set('blogTitle', 'CFBlog');
+    }
+  } catch {
+    c.set('blogTitle', 'CFBlog');
+  }
+  await next();
+});
 
 function escapeHtml(text) {
   if (!text) return '';
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function adminLayout(title, activePage, templateHtml, scriptContent) {
+function adminLayout(title, activePage, templateHtml, scriptContent, blogTitle) {
+  blogTitle = blogTitle || 'CFBlog';
   const navItems = [
     { key: 'dashboard', label: '仪表板', icon: '&#9632;', href: '/admin' },
     { key: 'posts', label: '文章管理', icon: '&#9998;', href: '/admin/posts' },
@@ -35,7 +54,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)} - CFBlog Admin</title>
+  <title>${escapeHtml(title)} - ${escapeHtml(blogTitle)} Admin</title>
   <link rel="stylesheet" href="/static/admin-bundle.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -62,7 +81,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
 <body>
   <div class="admin-layout">
     <aside class="admin-sidebar">
-      <div class="sidebar-logo"><a href="/admin">CFBlog Admin</a></div>
+      <div class="sidebar-logo"><a href="/admin">${escapeHtml(blogTitle)} Admin</a></div>
       <nav class="sidebar-nav">${navHtml}</nav>
       <div class="sidebar-footer">
         <a href="/" target="_blank">查看网站</a>
@@ -177,7 +196,7 @@ adminRoutes.get('/', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -252,7 +271,7 @@ adminRoutes.get('/posts', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -395,7 +414,7 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -552,7 +571,7 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -652,7 +671,7 @@ adminRoutes.get('/categories', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -746,7 +765,7 @@ adminRoutes.get('/tags', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -830,7 +849,7 @@ adminRoutes.get('/comments', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -933,7 +952,7 @@ adminRoutes.get('/feedback', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -1082,7 +1101,7 @@ adminRoutes.get('/attachments', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -1216,7 +1235,7 @@ adminRoutes.get('/users', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 // ============================================================
@@ -1358,7 +1377,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `));
+  `, c.get('blogTitle')));
 });
 
 export { adminRoutes };
