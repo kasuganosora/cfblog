@@ -309,6 +309,13 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
             </t-form-item>
           </t-col>
           <t-col :span="6">
+            <t-form-item label="发布日期">
+              <t-date-picker v-model="form.publishedAt" enable-time-picker allow-input clearable placeholder="留空则自动设置为当前时间" style="width:100%"></t-date-picker>
+            </t-form-item>
+          </t-col>
+        </t-row>
+        <t-row :gutter="[24,0]">
+          <t-col :span="6">
             <t-form-item label="选项">
               <t-checkbox v-model="form.featured" style="margin-right:16px">推荐文章</t-checkbox>
               <t-checkbox v-model="form.commentStatus">允许评论</t-checkbox>
@@ -329,7 +336,7 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
     var app = createApp({
       components: { MdEditor: MdEditor },
       setup: function() {
-        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true, publishedAt:'' });
         var tagInput = ref('');
         var categories = ref([]);
         var allTags = ref([]);
@@ -381,14 +388,16 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
           saving.value = true;
           try {
             var tagIds = await resolveTagIds(form.tagNames);
-            await apiCall('/post/create',{
-              method:'POST', headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({
+            var postBody = {
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
                 categoryIds:form.categoryIds, tagIds:tagIds, author_id:1
-              })
+              };
+            if (form.publishedAt) postBody.published_at = new Date(form.publishedAt).toISOString().slice(0,19).replace('T',' ');
+            await apiCall('/post/create',{
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body:JSON.stringify(postBody)
             });
             MessagePlugin.success('文章创建成功');
             setTimeout(function(){window.location.href='/admin/posts';},800);
@@ -453,6 +462,13 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
             </t-form-item>
           </t-col>
           <t-col :span="6">
+            <t-form-item label="发布日期">
+              <t-date-picker v-model="form.publishedAt" enable-time-picker allow-input clearable placeholder="留空则自动设置为当前时间" style="width:100%"></t-date-picker>
+            </t-form-item>
+          </t-col>
+        </t-row>
+        <t-row :gutter="[24,0]">
+          <t-col :span="6">
             <t-form-item label="选项">
               <t-checkbox v-model="form.featured" style="margin-right:16px">推荐文章</t-checkbox>
               <t-checkbox v-model="form.commentStatus">允许评论</t-checkbox>
@@ -474,7 +490,7 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
     var app = createApp({
       components: { MdEditor: MdEditor },
       setup: function() {
-        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true, publishedAt:'' });
         var tagInput = ref('');
         var categories = ref([]);
         var allTags = ref([]);
@@ -527,14 +543,17 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
           saving.value = true;
           try {
             var tagIds = await resolveTagIds(form.tagNames);
-            await apiCall('/post/'+postId+'/update',{
-              method:'PUT', headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({
+            var postBody = {
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
                 categoryIds:form.categoryIds, tagIds:tagIds
-              })
+              };
+            if (form.publishedAt) postBody.publishedAt = new Date(form.publishedAt).toISOString().slice(0,19).replace('T',' ');
+            else postBody.publishedAt = null;
+            await apiCall('/post/'+postId+'/update',{
+              method:'PUT', headers:{'Content-Type':'application/json'},
+              body:JSON.stringify(postBody)
             });
             MessagePlugin.success('文章更新成功');
           } catch(e) { console.error(e); }
@@ -553,6 +572,7 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
             form.status = post.status || 0;
             form.featured = !!post.featured;
             form.commentStatus = post.comment_status !== 0;
+            form.publishedAt = post.published_at || '';
             form.categoryIds = (post.categories||[]).map(function(c){return c.id;});
             form.tagNames = (post.tags||[]).map(function(t){return t.name;});
             categories.value = results[1].data || [];
@@ -1431,6 +1451,10 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
                   <t-option value="registered" label="注册用户"></t-option>
                 </t-select>
               </t-form-item>
+              <t-form-item label="发言冷却">
+                <t-input-number v-model="comments.cooldown" :min="0" :max="3600" theme="normal" suffix="秒" style="width:200px"></t-input-number>
+                <span style="margin-left:8px;color:#888;font-size:13px">未登录用户同IP发言间隔，0 表示不限制</span>
+              </t-form-item>
               <t-form-item>
                 <t-button theme="primary" :loading="saving.comments" @click="saveComments">保存</t-button>
               </t-form-item>
@@ -1477,7 +1501,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         var activeTab = ref('blog');
         var blog = reactive({ title:'', subtitle:'', description:'' });
         var display = reactive({ postsPerPage:10, paginationStyle:'numeric' });
-        var comments = reactive({ moderation:0, permission:'all' });
+        var comments = reactive({ moderation:0, permission:'all', cooldown:120 });
         var upload = reactive({ allowedTypes:'', maxSize:5242880 });
         var seo = reactive({ description:'', keywords:'' });
         var saving = reactive({ blog:false, display:false, comments:false, upload:false, seo:false });
@@ -1489,7 +1513,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
             ]);
             blog.title=results[0].title||''; blog.subtitle=results[0].subtitle||''; blog.description=results[0].description||'';
             display.postsPerPage=results[1].postsPerPage||10; display.paginationStyle=results[1].paginationStyle||'numeric';
-            comments.moderation=results[2].moderation||0; comments.permission=results[2].permission||'all';
+            comments.moderation=results[2].moderation||0; comments.permission=results[2].permission||'all'; comments.cooldown=results[2].cooldown!==undefined?results[2].cooldown:120;
             upload.allowedTypes=results[3].allowedTypes||''; upload.maxSize=results[3].maxSize||5242880;
             seo.description=results[4].description||''; seo.keywords=results[4].keywords||'';
           } catch(e) { console.error(e); }
@@ -1504,7 +1528,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         }
         function saveBlog() { saveSetting('blog', { title:blog.title, subtitle:blog.subtitle, description:blog.description }); }
         function saveDisplay() { saveSetting('display', { postsPerPage:display.postsPerPage, paginationStyle:display.paginationStyle }); }
-        function saveComments() { saveSetting('comments', { moderation:comments.moderation, permission:comments.permission }); }
+        function saveComments() { saveSetting('comments', { moderation:comments.moderation, permission:comments.permission, cooldown:comments.cooldown }); }
         function saveUpload() { saveSetting('upload', { allowedTypes:upload.allowedTypes, maxSize:upload.maxSize }); }
         function saveSeo() { saveSetting('seo', { description:seo.description, keywords:seo.keywords }); }
         return { activeTab, blog, display, comments, upload, seo, saving, saveBlog, saveDisplay, saveComments, saveUpload, saveSeo };
