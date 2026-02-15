@@ -38,14 +38,22 @@ export const generateSlug = (text) => {
 
 /**
  * Generate unique slug
+ * On collision: append -8 random chars (truncate first if over 64)
  */
 export const generateUniqueSlug = async (text, checkFn, suffix = '') => {
   let slug = generateSlug(text + suffix);
-  let counter = 1;
 
+  let tries = 0;
   while (await checkFn(slug)) {
-    slug = generateSlug(`${text}-${counter}`);
-    counter++;
+    const rand = randomSuffix(8);
+    if (slug.length + 9 <= MAX_SLUG_LEN) {
+      // Enough room: base-xxxxxxxx
+      slug = slug.replace(/-[a-z0-9]{8}$/, '') + '-' + rand;
+    } else {
+      // Too long: truncate then append
+      slug = slug.slice(0, TRUNCATE_AT).replace(/-+$/, '') + '-' + rand;
+    }
+    if (++tries > 10) break;
   }
 
   return slug;
