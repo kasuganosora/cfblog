@@ -1120,7 +1120,9 @@ async function handleRSS(c) {
   const { getCachedRSS, refreshRSSCache } = await import('../utils/cache.js');
 
   let xml = await getCachedRSS(bucket);
-  if (!xml && db) {
+
+  // If no cache or cache has no items, regenerate
+  if (db && (!xml || !xml.includes('<item>'))) {
     const origin = new URL(c.req.url).origin;
     await refreshRSSCache(bucket, db, origin);
     xml = await getCachedRSS(bucket);
