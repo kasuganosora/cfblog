@@ -335,19 +335,10 @@ frontendRoutes.get('/', async (c) => {
       <h3>标签</h3>
       <div class="widget-tags" id="tags"></div>
     </div>
-    <div class="widget">
-      <h3>设置</h3>
-      <div class="widget-ctrl">
-        <button data-testid="theme-switcher" onclick="toggleTheme()">切换主题</button>
-        <button data-testid="language-switcher" onclick="toggleLang()">切换语言</button>
-      </div>
-    </div>
   </aside>
 </div>`,
     script: `
 var API='/api';
-function toggleTheme(){var t=localStorage.getItem('userTheme')||'default';var n=t==='default'?'dark':'default';localStorage.setItem('userTheme',n);document.body.setAttribute('data-theme',n)}
-function toggleLang(){var l=localStorage.getItem('userLanguage')||'zh-cn';var n=l==='zh-cn'?'en-us':'zh-cn';localStorage.setItem('userLanguage',n);document.documentElement.lang=n}
 
 document.addEventListener('DOMContentLoaded',async function(){
   try{await Promise.all([loadPosts(),loadCategories(),loadTags()])}catch(e){console.error(e)}
