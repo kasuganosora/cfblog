@@ -36,7 +36,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)} - CFBlog Admin</title>
-  <link rel="stylesheet" href="/api/upload/file/admin/admin-bundle.css">
+  <link rel="stylesheet" href="/static/admin-bundle.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f0f2f5; }
@@ -90,7 +90,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent) {
       fetch(API+'/user/logout',{method:'POST'}).then(function(){window.location.href='/login';}).catch(function(){window.location.href='/login';});
     });
   </script>
-  <script src="/api/upload/file/admin/admin-bundle.js"></script>
+  <script src="/static/admin-bundle.js"></script>
   <script>
   ${scriptContent}
   </script>
