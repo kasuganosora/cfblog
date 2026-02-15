@@ -305,8 +305,7 @@ function layout({ title, blogTitle = 'CFBlog', content, script = '', activePage 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)} - ${esc(blogTitle)}</title>
 <style>${CSS}</style>
-<link rel="stylesheet" href="/static/hljs-github.css" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="/static/hljs-github-dark.css" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="/static/hljs-github-dark.css">
 <script src="/static/marked.min.js"></script>
 <script src="/static/highlight.min.js"></script>
 <script>marked.setOptions({breaks:true,gfm:true});</script>
