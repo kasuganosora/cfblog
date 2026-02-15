@@ -4,8 +4,8 @@
 
 import { Hono } from 'hono';
 import { Settings } from '../models/Settings.js';
-import { serverErrorResponse, requireAdmin } from './base.js';
-import { getCachedSettings, refreshSettingsCache } from '../utils/cache.js';
+import { serverErrorResponse, errorResponse, requireAdmin } from './base.js';
+import { getCachedSettings, refreshSettingsCache, refreshPostListCache, refreshRSSCache } from '../utils/cache.js';
 
 const settingsRoutes = new Hono();
 
@@ -213,6 +213,78 @@ settingsRoutes.put('/seo', requireAdmin, async (c) => {
   } catch (error) {
     console.error('Update SEO settings error:', error);
     return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
+// POST /cache/clear - 清除R2缓存（管理员）
+settingsRoutes.post('/cache/clear', requireAdmin, async (c) => {
+  try {
+    const bucket = c.env?.BUCKET;
+    if (!bucket) {
+      return c.json(errorResponse('Storage not available').json(), 500);
+    }
+
+    const db = c.env?.DB;
+    const body = await c.req.json();
+    const target = body.target || 'all';
+    const cleared = [];
+
+    if (target === 'all' || target === 'settings') {
+      if (db) {
+        await refreshSettingsCache(bucket, db);
+        cleared.push('settings');
+      }
+    }
+
+    if (target === 'all' || target === 'posts') {
+      if (db) {
+        await refreshPostListCache(bucket, db);
+        cleared.push('post_list');
+      }
+      // Clear individual post caches
+      const list = await bucket.list({ prefix: 'cache/post/' });
+      for (const obj of list.objects) {
+        await bucket.delete(obj.key);
+      }
+      cleared.push('post_detail');
+    }
+
+    if (target === 'all' || target === 'rss') {
+      if (db) {
+        const siteUrl = new URL(c.req.url).origin;
+        await refreshRSSCache(bucket, db, siteUrl);
+        cleared.push('rss');
+      }
+    }
+
+    return c.json({ success: true, message: 'Cache cleared', cleared });
+  } catch (error) {
+    console.error('Clear cache error:', error);
+    return c.json(errorResponse(error.message).json(), 500);
+  }
+});
+
+// GET /cache/stats - 获取缓存状态（管理员）
+settingsRoutes.get('/cache/stats', requireAdmin, async (c) => {
+  try {
+    const bucket = c.env?.BUCKET;
+    if (!bucket) {
+      return c.json(errorResponse('Storage not available').json(), 500);
+    }
+
+    const items = [];
+    const prefixes = ['cache/'];
+    for (const prefix of prefixes) {
+      const list = await bucket.list({ prefix });
+      for (const obj of list.objects) {
+        items.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded });
+      }
+    }
+
+    return c.json({ success: true, data: items, total: items.length });
+  } catch (error) {
+    console.error('Cache stats error:', error);
+    return c.json(errorResponse(error.message).json(), 500);
   }
 });
 
