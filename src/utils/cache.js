@@ -111,3 +111,57 @@ export const getOrSetCache = async (kv, key, fn, ttl = 3600) => {
 
   return value;
 };
+
+/**
+ * R2-based settings cache
+ * Stores all settings as a single JSON file in R2 for fast reads
+ */
+const SETTINGS_CACHE_KEY = 'cache/settings.json';
+
+/**
+ * Read settings from R2 cache, fallback to D1
+ */
+export const getCachedSettings = async (bucket, db) => {
+  // Try R2 first
+  if (bucket) {
+    try {
+      const obj = await bucket.get(SETTINGS_CACHE_KEY);
+      if (obj) {
+        return await obj.json();
+      }
+    } catch {}
+  }
+  // Fallback to D1
+  if (db) {
+    const { Settings } = await import('../models/Settings.js');
+    const settingsModel = new Settings(db);
+    const all = await settingsModel.getAllSettings();
+    // Write back to R2 for next time
+    if (bucket) {
+      try {
+        await bucket.put(SETTINGS_CACHE_KEY, JSON.stringify(all), {
+          httpMetadata: { contentType: 'application/json' }
+        });
+      } catch {}
+    }
+    return all;
+  }
+  return {};
+};
+
+/**
+ * Refresh settings cache in R2 (call after any settings update)
+ */
+export const refreshSettingsCache = async (bucket, db) => {
+  if (!bucket || !db) return;
+  try {
+    const { Settings } = await import('../models/Settings.js');
+    const settingsModel = new Settings(db);
+    const all = await settingsModel.getAllSettings();
+    await bucket.put(SETTINGS_CACHE_KEY, JSON.stringify(all), {
+      httpMetadata: { contentType: 'application/json' }
+    });
+  } catch (e) {
+    console.error('Refresh settings cache error:', e);
+  }
+};

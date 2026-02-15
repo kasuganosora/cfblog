@@ -622,12 +622,9 @@ frontendRoutes.get('/post/:slug', (c) => {
 frontendRoutes.get('/login', async (c) => {
   let blogTitle = 'CFBlog';
   try {
-    const db = c.env?.DB;
-    if (db) {
-      const { Settings } = await import('../models/Settings.js');
-      const settings = new Settings(db);
-      blogTitle = await settings.getSetting('blog_title') || 'CFBlog';
-    }
+    const { getCachedSettings } = await import('../utils/cache.js');
+    const settings = await getCachedSettings(c.env?.BUCKET, c.env?.DB);
+    blogTitle = settings.blog_title || 'CFBlog';
   } catch {}
   return c.html(`
     <!DOCTYPE html>

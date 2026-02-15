@@ -5,21 +5,15 @@
 
 import { Hono } from 'hono';
 import { requireAdmin } from './base.js';
-import { Settings } from '../models/Settings.js';
+import { getCachedSettings } from '../utils/cache.js';
 
 const adminRoutes = new Hono();
 
-// Middleware: fetch blog title for all admin pages
+// Middleware: fetch blog title from R2 cache (fallback to D1)
 adminRoutes.use('*', async (c, next) => {
   try {
-    const db = c.env?.DB;
-    if (db) {
-      const settings = new Settings(db);
-      const title = await settings.getSetting('blog_title');
-      c.set('blogTitle', title || 'CFBlog');
-    } else {
-      c.set('blogTitle', 'CFBlog');
-    }
+    const settings = await getCachedSettings(c.env?.BUCKET, c.env?.DB);
+    c.set('blogTitle', settings.blog_title || 'CFBlog');
   } catch {
     c.set('blogTitle', 'CFBlog');
   }
