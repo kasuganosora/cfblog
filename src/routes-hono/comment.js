@@ -13,6 +13,60 @@ import {
 
 const commentRoutes = new Hono();
 
+// GET /api/comment/list - 获取评论列表（管理员）
+commentRoutes.get('/list', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const url = new URL(c.req.url);
+    const params = Object.fromEntries(url.searchParams);
+
+    const commentModel = new Comment(db);
+    const result = await commentModel.getCommentList({
+      page: params.page ? parseInt(params.page) : 1,
+      limit: params.limit ? parseInt(params.limit) : 20,
+      status: params.status !== undefined ? parseInt(params.status) : undefined
+    });
+
+    return c.json(result);
+  } catch (error) {
+    console.error('Get comment list error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
+// PUT /api/comment/:id/status - 更新评论状态（管理员）
+commentRoutes.put('/:id/status', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const id = parseInt(c.req.param('id'));
+    const body = await c.req.json();
+
+    if (body.status === undefined) {
+      return c.json(errorResponse('Status is required').json(), 400);
+    }
+
+    const commentModel = new Comment(db);
+    const comment = await commentModel.updateStatus(id, body.status);
+
+    if (!comment) {
+      return c.json(notFoundResponse('Comment not found').json(), 404);
+    }
+
+    return c.json({ success: true, data: comment });
+  } catch (error) {
+    console.error('Update comment status error:', error);
+    return c.json(errorResponse(error.message).json(), 500);
+  }
+});
+
 // POST /api/comment/create - 创建评论
 commentRoutes.post('/create', async (c) => {
   try {

@@ -98,6 +98,35 @@ feedbackRoutes.get('/:id', requireAdmin, async (c) => {
   }
 });
 
+// PUT /api/feedback/:id/status - 更新反馈状态（管理员）
+feedbackRoutes.put('/:id/status', requireAdmin, async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const id = parseInt(c.req.param('id'));
+    const body = await c.req.json();
+
+    if (body.status === undefined) {
+      return c.json(errorResponse('Status is required').json(), 400);
+    }
+
+    const feedbackModel = new Feedback(db);
+    const feedback = await feedbackModel.updateStatus(id, body.status);
+
+    if (!feedback) {
+      return c.json({ success: false, message: 'Feedback not found' }, 404);
+    }
+
+    return c.json({ success: true, data: feedback });
+  } catch (error) {
+    console.error('Update feedback status error:', error);
+    return c.json(errorResponse(error.message).json(), 500);
+  }
+});
+
 // DELETE /api/feedback/:id/delete - 删除反馈（管理员）
 feedbackRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {

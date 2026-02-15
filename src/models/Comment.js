@@ -114,6 +114,49 @@ export class Comment extends BaseModel {
   }
 
   /**
+   * Get comment list (admin global view)
+   */
+  async getCommentList(options = {}) {
+    const { page = 1, limit = 20, status } = options;
+
+    let where = [];
+    let params = [];
+
+    if (status !== undefined) {
+      where.push('c.status = ?');
+      params.push(status);
+    }
+
+    const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+
+    const countResult = await this.query(`
+      SELECT COUNT(*) as count FROM comments c ${whereClause}
+    `, params);
+
+    const total = countResult[0]?.count || 0;
+
+    const offset = (page - 1) * limit;
+    const comments = await this.query(`
+      SELECT c.*, p.title as post_title
+      FROM comments c
+      LEFT JOIN posts p ON c.post_id = p.id
+      ${whereClause}
+      ORDER BY c.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [...params, limit, offset]);
+
+    return {
+      data: comments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  /**
    * Update comment status
    */
   async updateStatus(id, status) {
