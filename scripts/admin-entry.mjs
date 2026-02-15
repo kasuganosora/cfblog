@@ -3,6 +3,7 @@ import * as Vue from 'vue/dist/vue.esm-bundler.js';
 import TDesignPlugin from 'tdesign-vue-next';
 import * as TDesignExports from 'tdesign-vue-next';
 import { MdEditor } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
 
 window.Vue = Vue;
 // Merge default export (install method) with named exports (MessagePlugin etc.)
