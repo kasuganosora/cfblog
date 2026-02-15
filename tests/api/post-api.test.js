@@ -1,188 +1,322 @@
 /**
- * Post API Unit Tests
- * 测试文章相关API接口
+ * Post API Tests
+ * 测试文章 CRUD 和权限控制
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { request, getAdminSessionCookie, getUserSessionCookie, getTestPasswordHash } from '../helpers/test-app.js';
+import { createMockDB } from '../helpers/mock-db.js';
 
-// Mock dependencies
-vi.mock('../../src/models/Post.js', () => ({
-  Post: vi.fn().mockImplementation(() => ({
-    getPostList: vi.fn(),
-    getPostById: vi.fn(),
-    getPostBySlug: vi.fn(),
-    createPost: vi.fn(),
-    updatePost: vi.fn(),
-    deletePost: vi.fn()
-  }))
-}));
+let adminHash;
+let adminCookie;
+let userCookie;
 
-vi.mock('../../src/utils/response.js', () => ({
-  successResponse: vi.fn((data, message) => ({
-    status: 200,
-    headers: {},
-    body: JSON.stringify({ success: true, message, data })
-  })),
-  errorResponse: vi.fn((message, status = 400) => ({
-    status,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  notFoundResponse: vi.fn((message) => ({
-    status: 404,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  serverErrorResponse: vi.fn((message) => ({
-    status: 500,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  }))
-}));
+const testPost = {
+  id: 1, title: 'Test Post', slug: 'test-post',
+  content: 'Post content here', excerpt: 'Excerpt',
+  author_id: 1, status: 1,
+  featured: 0, comment_status: 1, view_count: 10,
+  created_at: '2025-01-01 00:00:00'
+};
 
-describe('Post API Tests', () => {
-  describe('GET /api/post/list', () => {
-    it('应该返回文章列表', async () => {
-      const mockPosts = [
-        {
-          id: 1,
-          title: 'Test Post 1',
-          slug: 'test-post-1',
-          excerpt: 'Test excerpt',
-          status: 1,
-          created_at: '2026-01-17T00:00:00Z'
-        },
-        {
-          id: 2,
-          title: 'Test Post 2',
-          slug: 'test-post-2',
-          excerpt: 'Another test',
-          status: 1,
-          created_at: '2026-01-16T00:00:00Z'
-        }
-      ];
+beforeAll(async () => {
+  adminHash = await getTestPasswordHash('admin123');
+  adminCookie = await getAdminSessionCookie();
+  userCookie = await getUserSessionCookie();
+});
 
-      expect(mockPosts).toHaveLength(2);
-      expect(mockPosts[0].status).toBe(1); // published
-    });
-
-    it('应该支持分页参数', async () => {
-      const params = { page: 1, limit: 10 };
-      
-      expect(params.page).toBe(1);
-      expect(params.limit).toBe(10);
-    });
-
-    it('应该支持筛选已发布文章', async () => {
-      const status = 1; // published
-      
-      expect(status).toBe(1);
-    });
-
-    it('应该支持筛选精选文章', async () => {
-      const featured = true;
-      
-      expect(featured).toBe(true);
-    });
-  });
-
-  describe('GET /api/post/:id', () => {
-    it('应该返回指定ID的文章', async () => {
-      const mockPost = {
-        id: 1,
-        title: 'Test Post',
-        slug: 'test-post',
-        content: 'Test content',
-        status: 1,
-        featured: 0,
-        views: 100
-      };
-
-      expect(mockPost.id).toBe(1);
-      expect(mockPost.title).toBe('Test Post');
-    });
-
-    it('文章不存在时应该返回404', async () => {
-      const postId = 999;
-      const post = null;
-
-      expect(post).toBeNull();
-      expect(postId).toBe(999);
-    });
-  });
-
-  describe('GET /api/post/slug/:slug', () => {
-    it('应该根据slug返回文章', async () => {
-      const mockPost = {
-        slug: 'test-post',
-        title: 'Test Post'
-      };
-
-      expect(mockPost.slug).toBe('test-post');
-    });
-  });
-
-  describe('POST /api/post/create', () => {
-    it('应该成功创建文章', async () => {
-      const newPost = {
-        title: 'New Post',
-        slug: 'new-post',
-        content: 'Post content',
-        excerpt: 'Post excerpt',
-        status: 1,
-        featured: 0,
-        author_id: 1
-      };
-
-      expect(newPost.title).toBeDefined();
-      expect(newPost.content).toBeDefined();
-      expect(newPost.author_id).toBe(1);
-    });
-
-    it('应该验证必填字段', async () => {
-      const incompletePost = {
-        title: 'Test'
-        // missing: content, author_id
-      };
-
-      expect(incompletePost.content).toBeUndefined();
-    });
-  });
-
-  describe('PUT /api/post/:id', () => {
-    it('应该成功更新文章', async () => {
-      const updateData = {
-        id: 1,
-        title: 'Updated Title',
-        content: 'Updated content'
-      };
-
-      expect(updateData.id).toBe(1);
-      expect(updateData.title).toContain('Updated');
-    });
-
-    it('应该验证更新权限', async () => {
-      const currentUser = { id: 1, role: 'author' };
-      const postAuthor = { id: 2 };
-
-      if (currentUser.role !== 'admin' && currentUser.id !== postAuthor.id) {
-        expect(currentUser.id).not.toBe(postAuthor.id);
+function getDB(overrides = {}) {
+  return createMockDB([
+    {
+      match: 'FROM users WHERE id',
+      result: (sql, params) => {
+        if (params[0] === 1) return { id: 1, username: 'admin', role: 'admin', status: 1, password_hash: adminHash };
+        if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
+        return null;
       }
-    });
+    },
+    { match: 'FROM posts WHERE id', result: overrides.post !== undefined ? overrides.post : testPost },
+    {
+      match: 'FROM posts WHERE slug',
+      result: (sql, params) => {
+        if (overrides.postBySlug !== undefined) return overrides.postBySlug;
+        if (params[0] === 'test-post') return testPost;
+        return null;
+      }
+    },
+    { match: 'SELECT COUNT', result: { count: overrides.postCount ?? 1 } },
+    { match: 'FROM posts p', result: overrides.posts ?? [testPost] },
+    { match: 'post_categories', result: [] },
+    { match: 'post_tags', result: [] },
+    { match: 'FROM categories c', result: [] },
+    { match: 'FROM tags t', result: [] },
+    { match: 'INSERT INTO post', result: null },
+    { match: 'INSERT INTO posts', result: null },
+    { match: 'UPDATE posts', result: null },
+    { match: 'DELETE FROM', result: null },
+  ]);
+}
+
+// ========== List ==========
+
+describe('GET /api/post/list', () => {
+  it('应该返回文章列表（公开接口）', async () => {
+    const res = await request('/api/post/list', {}, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data).toBeDefined();
+    expect(json.pagination).toBeDefined();
   });
 
-  describe('DELETE /api/post/:id', () => {
-    it('应该成功删除文章', async () => {
-      const postId = 1;
-      
-      expect(postId).toBe(1);
-    });
+  it('不需要登录即可访问', async () => {
+    const res = await request('/api/post/list', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
 
-    it('应该验证删除权限', async () => {
-      const currentUser = { role: 'user' };
-      const allowedRoles = ['admin', 'contributor'];
+  it('支持分页参数', async () => {
+    const res = await request('/api/post/list?page=1&limit=5', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
 
-      expect(allowedRoles.includes(currentUser.role)).toBe(false);
-    });
+  it('支持 status 过滤', async () => {
+    const res = await request('/api/post/list?status=1', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+
+  it('支持 featured 过滤', async () => {
+    const res = await request('/api/post/list?featured=true', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
+
+// ========== Search ==========
+
+describe('GET /api/post/search', () => {
+  it('有关键词时应该返回搜索结果', async () => {
+    const res = await request('/api/post/search?keyword=test', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+
+  it('缺少关键词应该返回 400', async () => {
+    const res = await request('/api/post/search', {}, { DB: getDB() });
+    expect(res.status).toBe(400);
+  });
+
+  it('支持分页参数', async () => {
+    const res = await request('/api/post/search?keyword=test&page=1&limit=5', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
+
+// ========== Get by ID ==========
+
+describe('GET /api/post/:id', () => {
+  it('应该返回文章详情', async () => {
+    const res = await request('/api/post/1', {}, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.title).toBe('Test Post');
+  });
+
+  it('不存在的文章应该返回 404', async () => {
+    const res = await request('/api/post/999', {}, { DB: getDB({ post: null }) });
+    expect(res.status).toBe(404);
+  });
+});
+
+// ========== Get by Slug ==========
+
+describe('GET /api/post/slug/:slug', () => {
+  it('应该根据 slug 返回文章', async () => {
+    const res = await request('/api/post/slug/test-post', {}, { DB: getDB({ postBySlug: testPost }) });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.title).toBe('Test Post');
+  });
+
+  it('不存在的 slug 应该返回 404', async () => {
+    const res = await request('/api/post/slug/nonexistent', {}, { DB: getDB({ postBySlug: null }) });
+    expect(res.status).toBe(404);
+  });
+});
+
+// ========== Create ==========
+
+describe('POST /api/post/create', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'New Post', authorId: 1 })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('登录用户应该可以创建文章', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'New Post', authorId: 1 })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('缺少标题应该返回 400', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ authorId: 1 })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('缺少作者ID应该返回 400', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'New Post' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('应该支持可选字段（content, excerpt, slug等）', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({
+        title: 'Full Post',
+        authorId: 1,
+        slug: 'full-post',
+        excerpt: 'A full post',
+        content: 'Full content here',
+        status: 1,
+        featured: true,
+        comment_status: 1
+      })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('应该支持 snake_case 的 author_id', async () => {
+    const res = await request('/api/post/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'New Post', author_id: 1 })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(201);
+  });
+});
+
+// ========== Update ==========
+
+describe('PUT /api/post/:id/update', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/post/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Updated' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('作者可以更新自己的文章', async () => {
+    const res = await request('/api/post/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'Updated Title' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('非作者普通用户不能更新别人的文章（403）', async () => {
+    const res = await request('/api/post/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ title: 'Hacked' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('管理员可以更新任何文章', async () => {
+    const userPost = { ...testPost, author_id: 2 };
+    const res = await request('/api/post/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'Admin Edit' })
+    }, { DB: getDB({ post: userPost }) });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('文章不存在应该返回 404', async () => {
+    const res = await request('/api/post/999/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'X' })
+    }, { DB: getDB({ post: null }) });
+
+    expect(res.status).toBe(404);
+  });
+});
+
+// ========== Delete ==========
+
+describe('DELETE /api/post/:id/delete', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/post/1/delete', {
+      method: 'DELETE'
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('非作者普通用户不能删除别人的文章（403）', async () => {
+    const res = await request('/api/post/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': userCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('作者可以删除自己的文章', async () => {
+    const res = await request('/api/post/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+  });
+
+  it('管理员可以删除任何文章', async () => {
+    const userPost = { ...testPost, author_id: 2 };
+    const res = await request('/api/post/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB({ post: userPost }) });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('文章不存在时应返回 404', async () => {
+    const res = await request('/api/post/999/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB({ post: null }) });
+
+    expect(res.status).toBe(404);
   });
 });

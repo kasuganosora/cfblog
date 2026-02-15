@@ -5,12 +5,26 @@
 
 export class PostCard {
   /**
+   * Escape HTML special characters to prevent XSS
+   */
+  static escapeHtml(text) {
+    if (typeof text !== 'string') return String(text ?? '');
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  /**
    * Render a single post card
    * @param {Object} post - Post data
    */
   static render(post) {
     if (!post) return '';
-    
+
+    const e = this.escapeHtml.bind(this);
     const {
       id,
       title,
@@ -34,8 +48,8 @@ export class PostCard {
 
     // Tags HTML
     const tagsHtml = tags.length > 0
-      ? tags.map(tag => 
-          `<a href="/tag/${tag.slug}" class="post-tag" rel="tag">${tag.name}</a>`
+      ? tags.map(tag =>
+          `<a href="/tag/${encodeURIComponent(tag.slug)}" class="post-tag" rel="tag">${e(tag.name)}</a>`
         ).join('')
       : '';
 
@@ -45,60 +59,60 @@ export class PostCard {
       : '';
 
     return `
-<article class="post-card" data-post-id="${id}">
+<article class="post-card" data-post-id="${e(id)}">
   <div class="post-card-inner">
     ${featuredBadge}
-    
+
     <header class="post-card-header">
-      ${category_name 
+      ${category_name
         ? `<span class="post-category">
-            <a href="/category/${category_name}" rel="category tag">${category_name}</a>
-           </span>` 
+            <a href="/category/${encodeURIComponent(category_name)}" rel="category tag">${e(category_name)}</a>
+           </span>`
         : ''}
-      
+
       <h2 class="post-card-title">
-        <a href="/post/${slug}" rel="bookmark">${title}</a>
+        <a href="/post/${encodeURIComponent(slug)}" rel="bookmark">${e(title)}</a>
       </h2>
     </header>
-    
+
     <div class="post-card-meta">
-      <time class="post-date" datetime="${published_at}">
+      <time class="post-date" datetime="${e(published_at)}">
         <span class="icon">📅</span>
-        <span>${date}</span>
+        <span>${e(date)}</span>
       </time>
-      
-      ${author_name 
+
+      ${author_name
         ? `<span class="post-author" itemprop="author" itemscope itemtype="https://schema.org/Person">
             <span class="icon">👤</span>
-            <span itemprop="name">${author_name}</span>
-           </span>` 
+            <span itemprop="name">${e(author_name)}</span>
+           </span>`
         : ''}
-      
+
       <span class="post-views" title="浏览次数">
         <span class="icon">👁</span>
-        <span>${view_count || 0}</span>
+        <span>${e(view_count || 0)}</span>
       </span>
-      
+
       <span class="post-comments" title="评论数">
         <span class="icon">💬</span>
-        <span>${comment_count}</span>
+        <span>${e(comment_count)}</span>
       </span>
     </div>
-    
+
     <div class="post-card-excerpt">
-      <p>${excerpt || ''}</p>
+      <p>${e(excerpt || '')}</p>
     </div>
-    
+
     <footer class="post-card-footer">
-      <a href="/post/${slug}" class="post-read-more" aria-label="阅读全文: ${title}">
+      <a href="/post/${encodeURIComponent(slug)}" class="post-read-more" aria-label="阅读全文: ${e(title)}">
         阅读更多 <span class="arrow">→</span>
       </a>
-      
-      ${tagsHtml 
+
+      ${tagsHtml
         ? `<div class="post-tags">
             <span class="tags-label">标签:</span>
             ${tagsHtml}
-           </div>` 
+           </div>`
         : ''}
     </footer>
   </div>

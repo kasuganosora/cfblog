@@ -87,7 +87,7 @@ searchRoutes.get('/', async (c) => {
     });
   } catch (error) {
     console.error('Search error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 

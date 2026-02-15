@@ -3,7 +3,19 @@
  * Provides the base HTML structure with semantic elements
  */
 
-export class Layout {
+  /**
+   * Escape HTML special characters to prevent XSS
+   */
+  static escapeHtml(text) {
+    if (typeof text !== 'string') return String(text ?? '');
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   constructor(theme, lang) {
     this.theme = theme;
     this.lang = lang;
@@ -14,7 +26,7 @@ export class Layout {
    * @param {Object} options - Page options
    * @param {string} options.title - Page title
    * @param {string} options.description - Meta description
-   * @param {string} options.content - Page content
+   * @param {string} options.content - Page content (trusted HTML)
    * @param {string} options.canonical - Canonical URL
    */
   render(options = {}) {
@@ -27,19 +39,21 @@ export class Layout {
       extraBody = '',
     } = options;
 
+    const e = Layout.escapeHtml;
+
     return `
 <!DOCTYPE html>
-<html lang="${this.lang}" class="theme-${this.theme}">
+<html lang="${e(this.lang)}" class="theme-${e(this.theme)}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="${description}">
+  <meta name="description" content="${e(description)}">
   <meta name="theme-color" content="#2563eb">
-  ${canonical ? `<link rel="canonical" href="${canonical}">` : ''}
-  <title>${title} | CFBlog</title>
+  ${canonical ? `<link rel="canonical" href="${e(canonical)}">` : ''}
+  <title>${e(title)} | CFBlog</title>
   ${extraHead}
 </head>
-<body class="theme-${this.theme}">
+<body class="theme-${e(this.theme)}">
   ${extraBody}
   <header role="banner">
     <div class="container">
@@ -48,20 +62,20 @@ export class Layout {
       </nav>
     </div>
   </header>
-  
+
   <main role="main" id="main-content">
     <div class="container">
       ${content}
     </div>
   </main>
-  
+
   <footer role="contentinfo">
     <div class="container">
       ${this.renderFooter()}
     </div>
   </footer>
-  
-  <div id="app-data" data-theme="${this.theme}" data-lang="${this.lang}"></div>
+
+  <div id="app-data" data-theme="${e(this.theme)}" data-lang="${e(this.lang)}"></div>
   <script type="module" src="/assets/js/app.js"></script>
 </body>
 </html>`;

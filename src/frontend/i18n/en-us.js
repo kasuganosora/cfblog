@@ -1,5 +1,5 @@
 // English (United States) language pack
-export const enUS = {
+const enUS = {
   // Common
   'site.title': 'CFBlog',
   'site.description': 'Modern blog platform based on Cloudflare',
@@ -74,3 +74,6 @@ export const enUS = {
   // Loading
   'loading': 'Loading...',
 };
+
+export { enUS };
+export default enUS;

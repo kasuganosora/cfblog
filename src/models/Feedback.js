@@ -101,8 +101,8 @@ export class Feedback extends BaseModel {
    */
   async getFeedbackStats() {
     const totalFeedback = await this.count();
-    const processedFeedback = await this.count({ where: 'status = ?' });
-    const pendingFeedback = await this.count({ where: 'status = ?' });
+    const processedFeedback = await this.count({ where: 'status = ?', params: [1] });
+    const pendingFeedback = await this.count({ where: 'status = ?', params: [0] });
 
     return {
       total: totalFeedback,

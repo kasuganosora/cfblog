@@ -1,188 +1,277 @@
 /**
  * Settings API Tests
- * 测试设置相关API接口
+ * 测试设置的公开读取和管理员更新
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { request, getAdminSessionCookie, getUserSessionCookie, getTestPasswordHash } from '../helpers/test-app.js';
+import { createMockDB } from '../helpers/mock-db.js';
 
-// Mock dependencies
-vi.mock('../../src/models/Settings.js', () => ({
-  Settings: vi.fn().mockImplementation(() => ({
-    getAllSettings: vi.fn(),
-    getBlogInfo: vi.fn(),
-    getDisplaySettings: vi.fn(),
-    getCommentSettings: vi.fn(),
-    getUploadSettings: vi.fn(),
-    getSEOSettings: vi.fn(),
-    updateBlogInfo: vi.fn(),
-    updateDisplaySettings: vi.fn(),
-    updateCommentSettings: vi.fn(),
-    updateUploadSettings: vi.fn(),
-    updateSEOSettings: vi.fn()
-  }))
-}));
+let adminHash;
+let adminCookie;
+let userCookie;
 
-vi.mock('../../src/utils/response.js', () => ({
-  successResponse: vi.fn((data, message) => ({
-    status: 200,
-    headers: {},
-    body: JSON.stringify({ success: true, message, data })
-  })),
-  errorResponse: vi.fn((message, status = 400) => ({
-    status,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  serverErrorResponse: vi.fn((message) => ({
-    status: 500,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  }))
-}));
+beforeAll(async () => {
+  adminHash = await getTestPasswordHash('admin123');
+  adminCookie = await getAdminSessionCookie();
+  userCookie = await getUserSessionCookie();
+});
 
-describe('Settings API Tests', () => {
-  describe('GET /api/settings', () => {
-    it('应该返回所有设置', async () => {
-      const mockSettings = {
-        blogInfo: { title: '我的博客', description: '博客描述' },
-        displaySettings: { postsPerPage: 10, dateFormat: 'YYYY-MM-DD' },
-        commentSettings: { enabled: true, requireApproval: false },
-        uploadSettings: { maxSize: 5242880, allowedTypes: ['jpg', 'png'] },
-        seoSettings: { metaTitle: '', metaDescription: '', keywords: '' }
-      };
+function getDB() {
+  return createMockDB([
+    {
+      match: 'FROM users WHERE id',
+      result: (sql, params) => {
+        if (params[0] === 1) return { id: 1, username: 'admin', role: 'admin', status: 1, password_hash: adminHash };
+        if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
+        return null;
+      }
+    },
+    {
+      match: 'FROM settings WHERE key IN',
+      result: (sql, params) => {
+        return params.map(k => ({ key: k, value: 'test-value' }));
+      }
+    },
+    {
+      match: 'FROM settings WHERE key',
+      result: (sql, params) => {
+        return { key: params[0], value: 'existing-value', description: 'desc' };
+      }
+    },
+    {
+      match: 'FROM settings',
+      result: [
+        { key: 'blog_title', value: 'Test Blog' },
+        { key: 'blog_description', value: 'A test blog' }
+      ]
+    },
+    { match: 'INSERT INTO settings', result: null },
+    { match: 'UPDATE settings', result: null },
+    { match: 'DELETE FROM settings', result: null },
+  ]);
+}
 
-      expect(mockSettings.blogInfo).toBeDefined();
-      expect(mockSettings.displaySettings).toBeDefined();
-      expect(mockSettings.commentSettings).toBeDefined();
-      expect(mockSettings.uploadSettings).toBeDefined();
-      expect(mockSettings.seoSettings).toBeDefined();
-    });
+// ========== GET Endpoints (Public) ==========
+
+describe('GET /api/settings', () => {
+  it('应该返回设置（公开接口）', async () => {
+    const res = await request('/api/settings', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('GET /api/settings/blog', () => {
-    it('应该返回博客信息', async () => {
-      const mockBlogInfo = {
-        title: '我的博客',
-        subtitle: '技术分享博客',
-        description: '分享技术心得',
-        author: '博主'
-      };
-
-      expect(mockBlogInfo.title).toBeDefined();
-      expect(mockBlogInfo.description).toBeDefined();
-    });
+  it('不需要登录即可访问', async () => {
+    const res = await request('/api/settings', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('GET /api/settings/display', () => {
-    it('应该返回显示设置', async () => {
-      const mockDisplaySettings = {
-        postsPerPage: 10,
-        dateFormat: 'YYYY-MM-DD',
-        theme: 'default'
-      };
+  it('无数据库时应返回 500', async () => {
+    const res = await request('/api/settings', {}, { DB: undefined });
+    expect(res.status).toBe(500);
+  });
+});
 
-      expect(mockDisplaySettings.postsPerPage).toBe(10);
-      expect(mockDisplaySettings.theme).toBe('default');
-    });
+describe('GET /api/settings/blog', () => {
+  it('应该返回博客信息（公开接口）', async () => {
+    const res = await request('/api/settings/blog', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.title).toBeDefined();
   });
 
-  describe('GET /api/settings/comments', () => {
-    it('应该返回评论设置', async () => {
-      const mockCommentSettings = {
-        enabled: true,
-        requireApproval: false,
-        guestComment: true
-      };
+  it('无数据库时应返回 500', async () => {
+    const res = await request('/api/settings/blog', {}, { DB: undefined });
+    expect(res.status).toBe(500);
+  });
+});
 
-      expect(mockCommentSettings.enabled).toBe(true);
-      expect(mockCommentSettings.guestComment).toBe(true);
-    });
+describe('GET /api/settings/display', () => {
+  it('应该返回显示设置（公开接口）', async () => {
+    const res = await request('/api/settings/display', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.postsPerPage).toBeDefined();
+  });
+});
+
+describe('GET /api/settings/comments', () => {
+  it('应该返回评论设置（公开接口）', async () => {
+    const res = await request('/api/settings/comments', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.moderation).toBeDefined();
+  });
+});
+
+describe('GET /api/settings/upload', () => {
+  it('应该返回上传设置（公开接口）', async () => {
+    const res = await request('/api/settings/upload', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.allowedTypes).toBeDefined();
+  });
+});
+
+describe('GET /api/settings/seo', () => {
+  it('应该返回 SEO 设置（公开接口）', async () => {
+    const res = await request('/api/settings/seo', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.description).toBeDefined();
+  });
+});
+
+// ========== PUT /blog ==========
+
+describe('PUT /api/settings/blog', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/settings/blog', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Hacked' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(401);
   });
 
-  describe('GET /api/settings/upload', () => {
-    it('应该返回上传设置', async () => {
-      const mockUploadSettings = {
-        maxSize: 5242880, // 5MB
-        allowedTypes: ['jpg', 'png', 'gif'],
-        uploadPath: '/uploads'
-      };
-
-      expect(mockUploadSettings.maxSize).toBe(5242880);
-      expect(mockUploadSettings.allowedTypes).toContain('jpg');
-    });
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/settings/blog', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ title: 'Hacked' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(403);
   });
 
-  describe('GET /api/settings/seo', () => {
-    it('应该返回SEO设置', async () => {
-      const mockSEOSettings = {
-        metaTitle: '博客标题',
-        metaDescription: '博客描述',
-        keywords: '关键词1,关键词2'
-      };
+  it('管理员应该可以更新博客设置', async () => {
+    const res = await request('/api/settings/blog', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ title: 'New Title', description: 'New Desc' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
 
-      expect(mockSEOSettings.metaTitle).toBeDefined();
-      expect(mockSEOSettings.metaDescription).toBeDefined();
-    });
+// ========== PUT /display ==========
+
+describe('PUT /api/settings/display', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/settings/display', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postsPerPage: 20 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(401);
   });
 
-  describe('PUT /api/settings/blog', () => {
-    it('应该成功更新博客信息', async () => {
-      const updateData = {
-        title: '更新后的标题',
-        description: '更新后的描述'
-      };
-
-      expect(updateData.title).toContain('更新');
-      expect(updateData.description).toContain('更新');
-    });
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/settings/display', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ postsPerPage: 20 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(403);
   });
 
-  describe('PUT /api/settings/display', () => {
-    it('应该成功更新显示设置', async () => {
-      const updateData = {
-        postsPerPage: 20,
-        theme: 'dark'
-      };
+  it('管理员应该可以更新显示设置', async () => {
+    const res = await request('/api/settings/display', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ postsPerPage: 20, paginationStyle: 'simple' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
 
-      expect(updateData.postsPerPage).toBe(20);
-      expect(updateData.theme).toBe('dark');
-    });
+// ========== PUT /comments ==========
+
+describe('PUT /api/settings/comments', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/settings/comments', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moderation: 1 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(401);
   });
 
-  describe('PUT /api/settings/comments', () => {
-    it('应该成功更新评论设置', async () => {
-      const updateData = {
-        enabled: false,
-        requireApproval: true
-      };
-
-      expect(updateData.enabled).toBe(false);
-      expect(updateData.requireApproval).toBe(true);
-    });
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/settings/comments', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ moderation: 1 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(403);
   });
 
-  describe('PUT /api/settings/upload', () => {
-    it('应该成功更新上传设置', async () => {
-      const updateData = {
-        maxSize: 10485760, // 10MB
-        allowedTypes: ['jpg', 'png', 'gif', 'pdf']
-      };
+  it('管理员应该可以更新评论设置', async () => {
+    const res = await request('/api/settings/comments', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ moderation: 1, permission: 'registered' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
 
-      expect(updateData.maxSize).toBe(10485760);
-      expect(updateData.allowedTypes).toContain('pdf');
-    });
+// ========== PUT /upload ==========
+
+describe('PUT /api/settings/upload', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/settings/upload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maxSize: 1048576 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(401);
   });
 
-  describe('PUT /api/settings/seo', () => {
-    it('应该成功更新SEO设置', async () => {
-      const updateData = {
-        metaTitle: '新的标题',
-        metaDescription: '新的描述',
-        keywords: '新关键词1,新关键词2'
-      };
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/settings/upload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ maxSize: 1048576 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(403);
+  });
 
-      expect(updateData.metaTitle).toContain('新');
-      expect(updateData.metaDescription).toContain('新');
-    });
+  it('管理员应该可以更新上传设置', async () => {
+    const res = await request('/api/settings/upload', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ allowedTypes: 'jpg,png', maxSize: 1048576 })
+    }, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
+
+// ========== PUT /seo ==========
+
+describe('PUT /api/settings/seo', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/settings/seo', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: 'SEO' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(401);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/settings/seo', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ description: 'SEO' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(403);
+  });
+
+  it('管理员应该可以更新 SEO 设置', async () => {
+    const res = await request('/api/settings/seo', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ description: 'New SEO', keywords: 'test,blog' })
+    }, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 });

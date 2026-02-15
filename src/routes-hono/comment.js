@@ -7,7 +7,8 @@ import { Comment } from '../models/Comment.js';
 import {
   serverErrorResponse,
   errorResponse,
-  notFoundResponse
+  notFoundResponse,
+  requireAdmin
 } from './base.js';
 
 const commentRoutes = new Hono();
@@ -30,6 +31,17 @@ commentRoutes.post('/create', async (c) => {
 
     if (!postId || !authorName || !body.content) {
       return c.json(errorResponse('Post ID, author name, and content are required').json(), 400);
+    }
+
+    // Input length validation
+    if (authorName.length > 50) {
+      return c.json(errorResponse('Author name must be 50 characters or less').json(), 400);
+    }
+    if (body.content.length > 5000) {
+      return c.json(errorResponse('Comment content must be 5000 characters or less').json(), 400);
+    }
+    if (authorEmail && authorEmail.length > 100) {
+      return c.json(errorResponse('Email must be 100 characters or less').json(), 400);
     }
 
     // Check if post allows comments
@@ -79,7 +91,7 @@ commentRoutes.get('/post/:postId', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Get comments error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -102,12 +114,12 @@ commentRoutes.get('/:id', async (c) => {
     return c.json(comment);
   } catch (error) {
     console.error('Get comment error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// DELETE /api/comment/:id/delete - 删除评论
-commentRoutes.delete('/:id/delete', async (c) => {
+// DELETE /api/comment/:id/delete - 删除评论（管理员）
+commentRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

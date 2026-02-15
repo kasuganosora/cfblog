@@ -96,13 +96,25 @@ export class Post extends BaseModel {
   async updatePost(id, postData) {
     const { title, excerpt, status, featured, commentStatus, content, categoryIds, tagIds, publishedAt } = postData;
 
+    // Fetch existing post for fallback values
+    const existingPost = await this.findById(id);
+    if (!existingPost) {
+      throw new Error('Post not found');
+    }
+
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (excerpt !== undefined) updateData.excerpt = excerpt;
     if (status !== undefined) updateData.status = status;
     if (featured !== undefined) updateData.featured = featured ? 1 : 0;
     if (commentStatus !== undefined) updateData.comment_status = commentStatus ? 1 : 0;
-    if (content !== undefined) updateData.content_key = content ? `posts/${title}.md` : null;
+    if (content !== undefined) {
+      // Use new slug if title changed, otherwise use existing post's slug
+      const slugForKey = title !== undefined
+        ? generateSlug(title)
+        : existingPost.slug;
+      updateData.content_key = content ? `posts/${slugForKey}.md` : null;
+    }
     if (publishedAt !== undefined) updateData.published_at = publishedAt;
 
     if (title !== undefined) {
@@ -112,6 +124,10 @@ export class Post extends BaseModel {
         return !!existing && existing.id !== id;
       });
       updateData.slug = slug;
+      // Also update content_key with the actual unique slug
+      if (content !== undefined && content) {
+        updateData.content_key = `posts/${slug}.md`;
+      }
     }
 
     updateData.updated_at = new Date().toISOString().slice(0, 19).replace('T', ' ');

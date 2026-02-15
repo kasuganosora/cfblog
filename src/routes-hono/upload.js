@@ -3,11 +3,12 @@
  */
 
 import { Hono } from 'hono';
+import { requireAuth } from './base.js';
 
 const uploadRoutes = new Hono();
 
-// POST / - 上传文件
-uploadRoutes.post('/', async (c) => {
+// POST / - 上传文件（需登录）
+uploadRoutes.post('/', requireAuth, async (c) => {
   try {
     const formData = await c.req.formData();
     const file = formData.get('file');
@@ -34,7 +35,7 @@ uploadRoutes.post('/', async (c) => {
     console.error('Upload error:', error);
     return c.json({
       success: false,
-      message: error.message
+      message: 'Internal server error'
     }, 500);
   }
 });

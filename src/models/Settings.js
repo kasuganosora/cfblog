@@ -56,7 +56,11 @@ export class Settings extends BaseModel {
    * Set setting value
    */
   async setSetting(key, value, description = null) {
-    const existing = await this.getSetting(key);
+    // Query full record (not just value) to preserve existing description
+    const existing = await this.queryFirst(
+      'SELECT * FROM settings WHERE key = ?',
+      [key]
+    );
 
     if (existing) {
       await this.execute(

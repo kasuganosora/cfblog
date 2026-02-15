@@ -55,7 +55,8 @@ class TemplateEngine {
     // Simple template variable replacement
     // Format: {{variableName}}
     for (const [key, value] of Object.entries(data)) {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`{{\\s*${escapedKey}\\s*}}`, 'g');
       html = html.replace(regex, this.escapeHtml(value));
     }
     
@@ -90,7 +91,8 @@ class TemplateEngine {
         let itemHtml = content;
         // Replace {{item.property}} with actual values
         for (const [key, value] of Object.entries(item)) {
-          const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+          const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`{{\\s*${escapedKey}\\s*}}`, 'g');
           itemHtml = itemHtml.replace(regex, this.escapeHtml(value));
         }
         return itemHtml;
@@ -102,11 +104,13 @@ class TemplateEngine {
    * Escape HTML to prevent XSS
    */
   escapeHtml(text) {
-    if (typeof text !== 'string') return text;
-    
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (typeof text !== 'string') return String(text ?? '');
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   /**

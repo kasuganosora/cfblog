@@ -1,5 +1,5 @@
 // Chinese (Simplified) language pack
-export const zhCN = {
+const zhCN = {
   // Common
   'site.title': 'CFBlog',
   'site.description': '基于 Cloudflare 的现代化博客平台',
@@ -74,3 +74,6 @@ export const zhCN = {
   // Loading
   'loading': '加载中...',
 };
+
+export { zhCN };
+export default zhCN;

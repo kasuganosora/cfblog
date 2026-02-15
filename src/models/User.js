@@ -40,7 +40,7 @@ export class User extends BaseModel {
     const { username, email, password, displayName, role, bio, avatar, status } = userData;
 
     // Hash password
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
 
     // Create user
     const user = await this.create({
@@ -96,12 +96,12 @@ export class User extends BaseModel {
     }
 
     // Verify old password
-    if (!verifyPassword(oldPassword, user.password_hash)) {
+    if (!(await verifyPassword(oldPassword, user.password_hash))) {
       throw new Error('Incorrect password');
     }
 
     // Update password
-    const passwordHash = hashPassword(newPassword);
+    const passwordHash = await hashPassword(newPassword);
 
     await this.update(id, {
       password_hash: passwordHash,
@@ -118,15 +118,15 @@ export class User extends BaseModel {
     const user = await this.findByUsername(username);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('Invalid username or password');
     }
 
     if (user.status !== 1) {
-      throw new Error('User account is disabled');
+      throw new Error('Invalid username or password');
     }
 
-    if (!verifyPassword(password, user.password_hash)) {
-      throw new Error('Incorrect password');
+    if (!(await verifyPassword(password, user.password_hash))) {
+      throw new Error('Invalid username or password');
     }
 
     // Remove password hash from response
@@ -217,10 +217,10 @@ export class User extends BaseModel {
    */
   async getUserStats() {
     const totalUsers = await this.count();
-    const activeUsers = await this.count({ where: 'status = ?' });
-    const adminCount = await this.count({ where: 'role = ?' });
-    const contributorCount = await this.count({ where: 'role = ?' });
-    const memberCount = await this.count({ where: 'role = ?' });
+    const activeUsers = await this.count({ where: 'status = ?', params: [1] });
+    const adminCount = await this.count({ where: 'role = ?', params: ['admin'] });
+    const contributorCount = await this.count({ where: 'role = ?', params: ['contributor'] });
+    const memberCount = await this.count({ where: 'role = ?', params: ['member'] });
 
     return {
       total: totalUsers,

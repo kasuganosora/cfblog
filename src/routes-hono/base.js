@@ -10,6 +10,7 @@ import { Tag } from '../models/Tag.js';
 import { Comment } from '../models/Comment.js';
 import { Feedback } from '../models/Feedback.js';
 import { Settings } from '../models/Settings.js';
+import { validateSessionId } from '../utils/auth.js';
 
 // 统一响应格式
 export const successResponse = (data, message = 'Success', status = 200) => ({
@@ -72,7 +73,7 @@ export const withDB = (ModelClass) => async (c, next) => {
     await next();
   } catch (error) {
     console.error('DB middleware error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 };
 
@@ -93,20 +94,41 @@ export const requireAuth = async (c, next) => {
       return c.json(unauthorizedResponse('Not logged in').json(), 401);
     }
 
-    // TODO: 验证session
-    // const sessionData = validateSessionId(sessionId, c.env.SESSION_SECRET);
-    // if (!sessionData) {
-    //   return c.json(unauthorizedResponse('Invalid session').json(), 401);
-    // }
+    const secret = c.env?.SESSION_SECRET;
+    if (!secret) {
+      console.error('SESSION_SECRET not configured');
+      return c.json(serverErrorResponse('Server configuration error').json(), 500);
+    }
+    const sessionData = await validateSessionId(sessionId, secret);
+    if (!sessionData) {
+      return c.json(unauthorizedResponse('Invalid or expired session').json(), 401);
+    }
+
+    // Fetch user from DB and attach to context
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const userModel = new User(db);
+    const user = await userModel.findById(sessionData.userId);
+    if (!user || user.status !== 1) {
+      return c.json(unauthorizedResponse('User not found or disabled').json(), 401);
+    }
+
+    // Remove password hash and attach user to context
+    const { password_hash, ...safeUser } = user;
+    c.set('user', safeUser);
+    c.set('userId', safeUser.id);
 
     await next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Authentication error').json(), 500);
   }
 };
 
-// 管理员权限中间件
+// 管理员权限中间件 (includes auth check)
 export const requireAdmin = async (c, next) => {
   try {
     const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
@@ -115,15 +137,38 @@ export const requireAdmin = async (c, next) => {
       return c.json(unauthorizedResponse('Not logged in').json(), 401);
     }
 
-    // TODO: 验证admin权限
-    // const user = await getUserBySession(sessionId);
-    // if (user.role !== 'admin') {
-    //   return c.json(forbiddenResponse('Admin access required').json(), 403);
-    // }
+    const secret = c.env?.SESSION_SECRET;
+    if (!secret) {
+      console.error('SESSION_SECRET not configured');
+      return c.json(serverErrorResponse('Server configuration error').json(), 500);
+    }
+    const sessionData = await validateSessionId(sessionId, secret);
+    if (!sessionData) {
+      return c.json(unauthorizedResponse('Invalid or expired session').json(), 401);
+    }
+
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const userModel = new User(db);
+    const user = await userModel.findById(sessionData.userId);
+    if (!user || user.status !== 1) {
+      return c.json(unauthorizedResponse('User not found or disabled').json(), 401);
+    }
+
+    if (user.role !== 'admin') {
+      return c.json(forbiddenResponse('Admin access required').json(), 403);
+    }
+
+    const { password_hash, ...safeUser } = user;
+    c.set('user', safeUser);
+    c.set('userId', safeUser.id);
 
     await next();
   } catch (error) {
     console.error('Admin middleware error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Authentication error').json(), 500);
   }
 };

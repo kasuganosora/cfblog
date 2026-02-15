@@ -8,8 +8,10 @@ import {
   successResponse,
   errorResponse,
   notFoundResponse,
+  forbiddenResponse,
   serverErrorResponse,
-  parsePagination
+  parsePagination,
+  requireAuth
 } from './base.js';
 
 const postRoutes = new Hono();
@@ -36,7 +38,7 @@ postRoutes.get('/list', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Post list error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -63,7 +65,7 @@ postRoutes.get('/search', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Search posts error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -89,7 +91,7 @@ postRoutes.get('/:id', async (c) => {
     return c.json(post);
   } catch (error) {
     console.error('Get post error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -115,12 +117,12 @@ postRoutes.get('/slug/:slug', async (c) => {
     return c.json(post);
   } catch (error) {
     console.error('Get post by slug error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// POST /create - 创建文章
-postRoutes.post('/create', async (c) => {
+// POST /create - 创建文章（需登录）
+postRoutes.post('/create', requireAuth, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -131,19 +133,17 @@ postRoutes.post('/create', async (c) => {
 
     // Support both camelCase and snake_case field names
     const authorId = body.authorId || body.author_id;
-    const categoryId = body.categoryId || body.category_id || null;
 
     if (!body.title || !authorId) {
       return c.json(errorResponse('Title and author ID are required').json(), 400);
     }
 
-    // Convert to snake_case for database, only include defined fields
+    // Build postData — createPost() handles categoryIds/tagIds internally
     const postData = {
       title: body.title,
       author_id: authorId
     };
 
-    // Only add optional fields if they exist
     if (body.slug !== undefined) postData.slug = body.slug;
     if (body.excerpt !== undefined) postData.excerpt = body.excerpt;
     if (body.content !== undefined) postData.content = body.content;
@@ -153,21 +153,15 @@ postRoutes.post('/create', async (c) => {
     if (body.comment_status !== undefined) postData.comment_status = body.comment_status;
     if (body.published_at !== undefined) postData.published_at = body.published_at;
 
+    // Pass category/tag IDs to createPost which handles them internally
+    const categoryId = body.categoryId || body.category_id;
+    const tagIds = body.tagIds || body.tag_ids;
+    if (categoryId) postData.categoryIds = [categoryId];
+    if (body.categoryIds) postData.categoryIds = body.categoryIds;
+    if (tagIds) postData.tagIds = tagIds;
+
     const postModel = new Post(db);
     const post = await postModel.createPost(postData);
-
-    // Handle categories if provided
-    if (categoryId) {
-      await postModel.addCategoryToPost(post.id, categoryId);
-    }
-
-    // Handle tags if provided
-    if (body.tagIds || body.tag_ids) {
-      const tagIds = body.tagIds || body.tag_ids;
-      for (const tagId of tagIds) {
-        await postModel.addTagToPost(post.id, tagId);
-      }
-    }
 
     return c.json(post, 201);
   } catch (error) {
@@ -176,8 +170,8 @@ postRoutes.post('/create', async (c) => {
   }
 });
 
-// PUT /:id/update - 更新文章
-postRoutes.put('/:id/update', async (c) => {
+// PUT /:id/update - 更新文章（需登录，仅作者或管理员）
+postRoutes.put('/:id/update', requireAuth, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -185,9 +179,19 @@ postRoutes.put('/:id/update', async (c) => {
     }
 
     const id = parseInt(c.req.param('id'));
-    const body = await c.req.json();
-
+    const currentUser = c.get('user');
     const postModel = new Post(db);
+
+    // Check if post exists and verify ownership
+    const existingPost = await postModel.findById(id);
+    if (!existingPost) {
+      return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+    if (existingPost.author_id !== currentUser.id && currentUser.role !== 'admin') {
+      return c.json(forbiddenResponse('You can only edit your own posts').json(), 403);
+    }
+
+    const body = await c.req.json();
     const post = await postModel.updatePost(id, body);
 
     return c.json(post);
@@ -197,8 +201,8 @@ postRoutes.put('/:id/update', async (c) => {
   }
 });
 
-// DELETE /:id/delete - 删除文章
-postRoutes.delete('/:id/delete', async (c) => {
+// DELETE /:id/delete - 删除文章（需登录，仅作者或管理员）
+postRoutes.delete('/:id/delete', requireAuth, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -206,7 +210,18 @@ postRoutes.delete('/:id/delete', async (c) => {
     }
 
     const id = parseInt(c.req.param('id'));
+    const currentUser = c.get('user');
     const postModel = new Post(db);
+
+    // Check if post exists and verify ownership
+    const existingPost = await postModel.findById(id);
+    if (!existingPost) {
+      return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+    if (existingPost.author_id !== currentUser.id && currentUser.role !== 'admin') {
+      return c.json(forbiddenResponse('You can only delete your own posts').json(), 403);
+    }
+
     await postModel.deletePost(id);
 
     return c.json({ success: true, message: 'Post deleted successfully' });

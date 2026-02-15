@@ -11,18 +11,11 @@
     "db:migrate": "npx wrangler d1 migrations apply cfblog-database --remote",
     "db:seed": "node scripts/import-test-data-final.js",
     "test": "npm run test:api && npm run test:e2e",
-    "test:api": "vitest tests/api --run",
-    "test:api:watch": "vitest tests/api",
-    "test:unit": "npx playwright test tests/unit",
-    "test:e2e": "npx playwright test tests/e2e",
-    "test:e2e:setup": "node tests/e2e/setup.js",
-    "test:e2e:run": "node tests/e2e/test-runner.js",
-    "test:e2e:ui": "npx playwright test tests/e2e --ui",
-    "test:e2e:debug": "npx playwright test tests/e2e --debug",
-    "test:e2e:report": "npx playwright show-report test-results/playwright-report",
-    "test:integration": "npx playwright test tests/integration",
-    "test:verify": "node tests/verify-server.js",
-    "test:manual": "node tests/manual-verify.js"
+    "test:api": "vitest run",
+    "test:api:watch": "vitest",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:debug": "npx playwright test --debug"
   },
   "keywords": [
     "blog",
@@ -34,6 +27,7 @@
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@vitest/coverage-v8": "^1.6.1",
     "vitest": "^1.6.1",
     "wrangler": "^4.54.0"
   },

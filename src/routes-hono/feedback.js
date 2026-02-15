@@ -6,7 +6,8 @@ import { Hono } from 'hono';
 import { Feedback } from '../models/Feedback.js';
 import {
   serverErrorResponse,
-  errorResponse
+  errorResponse,
+  requireAdmin
 } from './base.js';
 
 const feedbackRoutes = new Hono();
@@ -25,6 +26,17 @@ feedbackRoutes.post('/create', async (c) => {
       return c.json(errorResponse('Name and content are required').json(), 400);
     }
 
+    // Input length validation
+    if (body.name.length > 50) {
+      return c.json(errorResponse('Name must be 50 characters or less').json(), 400);
+    }
+    if (body.content.length > 5000) {
+      return c.json(errorResponse('Content must be 5000 characters or less').json(), 400);
+    }
+    if (body.email && body.email.length > 100) {
+      return c.json(errorResponse('Email must be 100 characters or less').json(), 400);
+    }
+
     const feedbackModel = new Feedback(db);
     const feedback = await feedbackModel.createFeedback(body);
 
@@ -35,8 +47,8 @@ feedbackRoutes.post('/create', async (c) => {
   }
 });
 
-// GET /api/feedback/list - 获取反馈列表
-feedbackRoutes.get('/list', async (c) => {
+// GET /api/feedback/list - 获取反馈列表（管理员）
+feedbackRoutes.get('/list', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -56,12 +68,12 @@ feedbackRoutes.get('/list', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Get feedback list error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /api/feedback/:id - 根据ID获取反馈
-feedbackRoutes.get('/:id', async (c) => {
+// GET /api/feedback/:id - 根据ID获取反馈（管理员）
+feedbackRoutes.get('/:id', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -82,12 +94,12 @@ feedbackRoutes.get('/:id', async (c) => {
     return c.json(feedback);
   } catch (error) {
     console.error('Get feedback error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// DELETE /api/feedback/:id/delete - 删除反馈
-feedbackRoutes.delete('/:id/delete', async (c) => {
+// DELETE /api/feedback/:id/delete - 删除反馈（管理员）
+feedbackRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

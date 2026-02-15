@@ -47,7 +47,7 @@ async function getThemeFromAPI(env) {
   }
 }
 
-// Get user's saved theme from localStorage
+// Get user's saved theme from localStorage (returns null if not set)
 function getUserTheme() {
   try {
     const saved = localStorage.getItem('cfblog_theme');
@@ -57,7 +57,7 @@ function getUserTheme() {
   } catch (e) {
     // localStorage not available
   }
-  return DEFAULT_THEME;
+  return null;
 }
 
 // Set user's preferred theme
@@ -112,17 +112,19 @@ function getAvailableThemes() {
 
 // Initialize theme
 async function initTheme(env) {
-  // First try to get theme from API (server setting)
-  const apiTheme = await getThemeFromAPI(env);
-  
-  // Then check user's override
+  // Check user's saved preference first
   const userTheme = getUserTheme();
-  
-  // User theme takes precedence over server setting
-  const finalTheme = userTheme || apiTheme;
-  
-  applyTheme(finalTheme);
-  return finalTheme;
+
+  // If user has a saved preference, use it
+  if (userTheme) {
+    applyTheme(userTheme);
+    return userTheme;
+  }
+
+  // Otherwise try to get theme from API (server setting)
+  const apiTheme = await getThemeFromAPI(env);
+  applyTheme(apiTheme);
+  return apiTheme;
 }
 
 // Export for use in frontend

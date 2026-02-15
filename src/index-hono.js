@@ -24,7 +24,30 @@ import { frontendRoutes } from './routes-hono/frontend.js';
 const app = new Hono();
 
 // Global middleware
-app.use('*', cors());
+app.use('*', async (c, next) => {
+  const origin = c.req.header('Origin') || '';
+  // Only allow same-origin or configured allowed origins
+  const allowedOrigins = c.env?.ALLOWED_ORIGINS
+    ? c.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : [];
+
+  const corsOptions = {
+    origin: (requestOrigin) => {
+      // Allow same-origin requests (no Origin header)
+      if (!requestOrigin) return null;
+      // Allow configured origins
+      if (allowedOrigins.includes(requestOrigin)) return requestOrigin;
+      // Deny all others
+      return null;
+    },
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    maxAge: 86400,
+  };
+
+  return cors(corsOptions)(c, next);
+});
 app.use('*', logger());
 
 // Health check
@@ -59,7 +82,7 @@ app.onError((err, c) => {
   console.error('Error:', err);
   return c.json({
     success: false,
-    message: err.message || 'Internal Server Error'
+    message: 'Internal Server Error'
   }, err.status || 500);
 });
 

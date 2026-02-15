@@ -55,7 +55,7 @@ frontendRoutes.get('/', (c) => {
     </head>
     <body>
       <header data-testid="header">
-        <nav data-testid="navigation" data-testid="desktop-navigation">
+        <nav data-testid="desktop-navigation">
           <ul>
             <li><a href="/">首页</a></li>
             <li><a href="/categories">分类</a></li>
@@ -408,7 +408,7 @@ frontendRoutes.get('/post/:slug', (c) => {
       </footer>
       <script>
         const API_BASE = '/api';
-        const postParam = '${slug}';
+        const postParam = '${escapeJs(slug)}';
         let currentPost = null;
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -432,7 +432,7 @@ frontendRoutes.get('/post/:slug', (c) => {
             if (result && result.id) {
               currentPost = result;
               document.querySelector('[data-testid="post-title"]').textContent = result.title;
-              document.querySelector('[data-testid="post-content"]').innerHTML = result.excerpt || '<p>暂无内容</p>';
+              document.querySelector('[data-testid="post-content"]').innerHTML = result.content || '<p>暂无内容</p>';
 
               // 显示文章元数据
               const metaHtml = '<p>作者: ' + escapeHtml(result.author_name || 'Unknown') + '</p>' +
@@ -698,7 +698,7 @@ frontendRoutes.get('/search', (c) => {
       </footer>
       <script>
         const API_BASE = '/api';
-        const initialKeyword = '${escapeHtml(keyword)}';
+        const initialKeyword = '${escapeJs(keyword)}';
 
         document.addEventListener('DOMContentLoaded', function() {
           if (initialKeyword) {
@@ -713,7 +713,7 @@ frontendRoutes.get('/search', (c) => {
           }
 
           try {
-            const response = await fetch(API_BASE + '/post/search?keyword=' + encodeURIComponent(keyword));
+            const response = await fetch(API_BASE + '/search?keyword=' + encodeURIComponent(keyword));
             const result = await response.json();
 
             console.log('Search result:', result);
@@ -819,54 +819,13 @@ frontendRoutes.get('/feedback', (c) => {
           <button type="submit" data-testid="feedback-submit-button">提交</button>
         </form>
         <h2>最新留言</h2>
-        <div id="feedback-list"><p>加载中...</p></div>
+        <div id="feedback-list"><p>留言提交后将由管理员审核</p></div>
       </main>
       <footer data-testid="footer">
         <p>&copy; 2024 CFBlog</p>
       </footer>
       <script>
         const API_BASE = '/api';
-
-        // Load feedback list on page load
-        document.addEventListener('DOMContentLoaded', loadFeedbackList);
-
-        // Load feedback list
-        async function loadFeedbackList() {
-          try {
-            const response = await fetch(API_BASE + '/feedback/list');
-            const result = await response.json();
-
-            if (result.data && Array.isArray(result.data)) {
-              renderFeedbackList(result.data);
-            } else {
-              document.getElementById('feedback-list').innerHTML = '<p>暂无留言</p>';
-            }
-          } catch (error) {
-            console.error('Load feedback error:', error);
-            document.getElementById('feedback-list').innerHTML = '<p>加载失败</p>';
-          }
-        }
-
-        // Render feedback list
-        function renderFeedbackList(feedbacks) {
-          const container = document.getElementById('feedback-list');
-
-          if (feedbacks.length === 0) {
-            container.innerHTML = '<p>暂无留言</p>';
-            return;
-          }
-
-          container.innerHTML = '';
-          feedbacks.forEach(function(fb) {
-            const div = document.createElement('div');
-            div.className = 'feedback-item';
-            div.innerHTML = '<h3>' + escapeHtml(fb.name) + '</h3>' +
-              (fb.email ? '<p class="email">' + escapeHtml(fb.email) + '</p>' : '') +
-              '<p class="content">' + escapeHtml(fb.content) + '</p>' +
-              '<p class="date">发布于: ' + new Date(fb.created_at).toLocaleString('zh-CN') + '</p>';
-            container.appendChild(div);
-          });
-        }
 
         // Submit feedback form
         document.getElementById('feedback-form').addEventListener('submit', async function(e) {
@@ -897,8 +856,6 @@ frontendRoutes.get('/feedback', (c) => {
             if (response.ok) {
               showMessage('留言提交成功！', 'success');
               document.getElementById('feedback-form').reset();
-              // Reload feedback list
-              loadFeedbackList();
             } else {
               showMessage(result.message || '提交失败，请稍后重试', 'error');
             }
@@ -995,16 +952,29 @@ frontendRoutes.get('/categories', (c) => {
             return;
           }
 
-          container.innerHTML = categories.map(cat => {
+          container.innerHTML = '';
+          categories.forEach(function(cat) {
             const linkParam = cat.slug ? cat.slug : cat.id;
-            return \`<div class="category-item">
-              <h2>
-                <a href="/category/\${linkParam}">\${escapeHtml(cat.name)}</a>
-              </h2>
-              <p>\${escapeHtml(cat.description || '暂无描述')}</p>
-              <small>文章数: \${cat.post_count || 0}</small>
-            </div>\`;
-          }).join('');
+            var div = document.createElement('div');
+            div.className = 'category-item';
+
+            var h2 = document.createElement('h2');
+            var a = document.createElement('a');
+            a.href = '/category/' + encodeURIComponent(linkParam);
+            a.textContent = cat.name;
+            h2.appendChild(a);
+            div.appendChild(h2);
+
+            var p = document.createElement('p');
+            p.textContent = cat.description || '暂无描述';
+            div.appendChild(p);
+
+            var small = document.createElement('small');
+            small.textContent = '文章数: ' + (cat.post_count || 0);
+            div.appendChild(small);
+
+            container.appendChild(div);
+          });
         }
 
         function escapeHtml(text) {
@@ -1047,7 +1017,7 @@ frontendRoutes.get('/category/:slug', (c) => {
       </footer>
       <script>
         const API_BASE = '/api';
-        const categoryParam = '${slug}';
+        const categoryParam = '${escapeJs(slug)}';
 
         document.addEventListener('DOMContentLoaded', async function() {
           try {
@@ -1066,7 +1036,14 @@ frontendRoutes.get('/category/:slug', (c) => {
 
             if (result && result.id) {
               document.querySelector('h1').textContent = '分类: ' + result.name;
-              document.getElementById('posts-list').innerHTML = '<p>分类描述: ' + (result.description || '暂无描述') + '</p><p>文章数: ' + (result.post_count || 0) + '</p>';
+              var descP = document.createElement('p');
+              descP.textContent = '分类描述: ' + (result.description || '暂无描述');
+              var countP = document.createElement('p');
+              countP.textContent = '文章数: ' + (result.post_count || 0);
+              var container = document.getElementById('posts-list');
+              container.innerHTML = '';
+              container.appendChild(descP);
+              container.appendChild(countP);
             } else {
               document.getElementById('posts-list').innerHTML = '<p>分类不存在</p>';
             }
@@ -1192,7 +1169,7 @@ frontendRoutes.get('/tag/:slug', (c) => {
       </footer>
       <script>
         const API_BASE = '/api';
-        const tagParam = '${slug}';
+        const tagParam = '${escapeJs(slug)}';
 
         document.addEventListener('DOMContentLoaded', async function() {
           try {
@@ -1235,6 +1212,19 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+// JavaScript string literal escape helper (prevents XSS when embedding in JS strings)
+function escapeJs(text) {
+  if (!text) return '';
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/</g, '\\x3c')
+    .replace(/>/g, '\\x3e');
 }
 
 export { frontendRoutes };

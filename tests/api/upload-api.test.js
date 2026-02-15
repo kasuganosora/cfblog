@@ -1,71 +1,90 @@
 /**
  * Upload API Tests
- * 测试上传相关API接口
+ * 测试文件上传权限控制
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { request, getAdminSessionCookie, getUserSessionCookie, getTestPasswordHash } from '../helpers/test-app.js';
+import { createMockDB } from '../helpers/mock-db.js';
 
-describe('Upload API Tests', () => {
-  describe('POST /api/upload', () => {
-    it('应该接收文件上传请求', async () => {
-      const mockFile = {
-        name: 'test-image.jpg',
-        size: 102400,
-        type: 'image/jpeg'
-      };
+let adminHash;
+let adminCookie;
+let userCookie;
 
-      expect(mockFile.name).toBeDefined();
-      expect(mockFile.size).toBeGreaterThan(0);
-      expect(mockFile.type).toBeDefined();
-    });
+beforeAll(async () => {
+  adminHash = await getTestPasswordHash('admin123');
+  adminCookie = await getAdminSessionCookie();
+  userCookie = await getUserSessionCookie();
+});
 
-    it('应该验证文件是否存在', async () => {
-      const file = null;
-
-      expect(file).toBeNull();
-    });
-
-    it('应该支持图片格式', async () => {
-      const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
-      for (const type of imageTypes) {
-        expect(type).toMatch(/^image\//);
+function getDB() {
+  return createMockDB([
+    {
+      match: 'FROM users WHERE id',
+      result: (sql, params) => {
+        if (params[0] === 1) return { id: 1, username: 'admin', role: 'admin', status: 1, password_hash: adminHash };
+        if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
+        return null;
       }
-    });
+    },
+  ]);
+}
 
-    it('应该限制文件大小', async () => {
-      const maxSize = 5242880; // 5MB
-      const smallFile = 1024000; // 1MB
-      const largeFile = 10485760; // 10MB
+describe('POST /api/upload', () => {
+  it('未登录应该返回 401', async () => {
+    const formData = new FormData();
+    formData.append('file', new Blob(['test'], { type: 'text/plain' }), 'test.txt');
 
-      expect(smallFile).toBeLessThan(maxSize);
-      expect(largeFile).toBeGreaterThan(maxSize);
-    });
+    const res = await request('/api/upload', {
+      method: 'POST',
+      body: formData
+    }, { DB: getDB() });
 
-    it('应该返回上传结果', async () => {
-      const mockResponse = {
-        success: true,
-        message: 'Upload endpoint - to be implemented',
-        data: {
-          filename: 'test-image.jpg',
-          size: 102400,
-          url: '/uploads/test-image.jpg'
-        }
-      };
+    expect(res.status).toBe(401);
+  });
 
-      expect(mockResponse.success).toBe(true);
-      expect(mockResponse.data.filename).toBeDefined();
-      expect(mockResponse.data.url).toBeDefined();
-    });
+  it('管理员应该可以上传', async () => {
+    const formData = new FormData();
+    formData.append('file', new Blob(['test content'], { type: 'text/plain' }), 'test.txt');
 
-    it('应该处理上传错误', async () => {
-      const errorResponse = {
-        success: false,
-        message: 'No file provided'
-      };
+    const res = await request('/api/upload', {
+      method: 'POST',
+      headers: { 'Cookie': adminCookie },
+      body: formData
+    }, { DB: getDB() });
 
-      expect(errorResponse.success).toBe(false);
-      expect(errorResponse.message).toBeDefined();
-    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.data.filename).toBe('test.txt');
+  });
+
+  it('普通用户也应该可以上传', async () => {
+    const formData = new FormData();
+    formData.append('file', new Blob(['user content'], { type: 'text/plain' }), 'user-file.txt');
+
+    const res = await request('/api/upload', {
+      method: 'POST',
+      headers: { 'Cookie': userCookie },
+      body: formData
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+  });
+
+  it('没有文件应该返回 400', async () => {
+    const formData = new FormData();
+
+    const res = await request('/api/upload', {
+      method: 'POST',
+      headers: { 'Cookie': adminCookie },
+      body: formData
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.success).toBe(false);
   });
 });

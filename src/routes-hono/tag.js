@@ -7,7 +7,8 @@ import { Tag } from '../models/Tag.js';
 import {
   serverErrorResponse,
   errorResponse,
-  notFoundResponse
+  notFoundResponse,
+  requireAdmin
 } from './base.js';
 
 const tagRoutes = new Hono();
@@ -32,7 +33,7 @@ tagRoutes.get('/list', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Get tag list error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -58,7 +59,7 @@ tagRoutes.get('/popular', async (c) => {
     return c.json(tags);
   } catch (error) {
     console.error('Get popular tags error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -81,7 +82,7 @@ tagRoutes.get('/slug/:slug', async (c) => {
     return c.json(tag);
   } catch (error) {
     console.error('Get tag by slug error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -104,12 +105,12 @@ tagRoutes.get('/:id', async (c) => {
     return c.json(tag);
   } catch (error) {
     console.error('Get tag error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// POST /api/tag/create - 创建标签
-tagRoutes.post('/create', async (c) => {
+// POST /api/tag/create - 创建标签（管理员）
+tagRoutes.post('/create', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -132,8 +133,8 @@ tagRoutes.post('/create', async (c) => {
   }
 });
 
-// PUT /api/tag/:id/update - 更新标签
-tagRoutes.put('/:id/update', async (c) => {
+// PUT /api/tag/:id/update - 更新标签（管理员）
+tagRoutes.put('/:id/update', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -153,8 +154,8 @@ tagRoutes.put('/:id/update', async (c) => {
   }
 });
 
-// DELETE /api/tag/:id/delete - 删除标签
-tagRoutes.delete('/:id/delete', async (c) => {
+// DELETE /api/tag/:id/delete - 删除标签（管理员）
+tagRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

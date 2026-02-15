@@ -4,11 +4,16 @@
 
 import { Hono } from 'hono';
 import { User } from '../models/User.js';
+import { generateSessionId, validateSessionId } from '../utils/auth.js';
 import {
   successResponse,
   errorResponse,
   serverErrorResponse,
-  parsePagination
+  unauthorizedResponse,
+  forbiddenResponse,
+  parsePagination,
+  requireAuth,
+  requireAdmin
 } from './base.js';
 
 const userRoutes = new Hono();
@@ -47,50 +52,51 @@ userRoutes.post('/login', async (c) => {
     const userModel = new User(db);
     const user = await userModel.verifyCredentials(username, password);
 
-    // Generate session ID
-    const sessionId = 'session-' + Date.now() + '-' + Math.random();
+    // Generate secure session ID using HMAC
+    const secret = c.env?.SESSION_SECRET;
+    if (!secret) {
+      console.error('SESSION_SECRET not configured');
+      return c.json(serverErrorResponse('Server configuration error').json(), 500);
+    }
+    const sessionId = await generateSessionId(user.id, secret);
+
+    // Set session cookie (with Secure flag for HTTPS)
+    c.header('Set-Cookie', `session=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
 
     return c.json({
       success: true,
-      data: { user, sessionId },
+      data: { user },
       message: 'Login successful'
     });
   } catch (error) {
     console.error('Login error:', error);
-    return c.json(errorResponse(error.message).json(), 401);
+    // Use generic message to prevent user enumeration
+    return c.json(errorResponse('Invalid username or password').json(), 401);
   }
 });
 
 // GET /me - 获取当前用户信息
-userRoutes.get('/me', async (c) => {
+userRoutes.get('/me', requireAuth, async (c) => {
   try {
-    const db = c.env?.DB;
-    if (!db) {
-      return c.json(serverErrorResponse('Database not available').json(), 500);
-    }
-
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
-
-    if (!sessionId) {
-      return c.json({
-        success: false,
-        message: 'Not logged in'
-      }, 401);
-    }
-
-    // TODO: 验证session并获取用户
+    const user = c.get('user');
     return c.json({
       success: true,
-      data: { message: 'Session validation needed' }
+      data: { user }
     });
   } catch (error) {
     console.error('Get user error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /list - 获取用户列表
-userRoutes.get('/list', async (c) => {
+// POST /logout - 用户登出
+userRoutes.post('/logout', async (c) => {
+  c.header('Set-Cookie', 'session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+  return c.json({ success: true, message: 'Logged out successfully' });
+});
+
+// GET /list - 获取用户列表（管理员）
+userRoutes.get('/list', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -111,12 +117,12 @@ userRoutes.get('/list', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Get user list error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// POST /api/user/create - 创建用户
-userRoutes.post('/create', async (c) => {
+// POST /api/user/create - 创建用户（管理员）
+userRoutes.post('/create', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -139,8 +145,8 @@ userRoutes.post('/create', async (c) => {
   }
 });
 
-// PUT /api/user/:id/status - 更新用户状态
-userRoutes.put('/user/:id/status', async (c) => {
+// PUT /api/user/:id/status - 更新用户状态（管理员）
+userRoutes.put('/:id/status', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -164,8 +170,8 @@ userRoutes.put('/user/:id/status', async (c) => {
   }
 });
 
-// PUT /api/user/:id/role - 更新用户角色
-userRoutes.put('/user/:id/role', async (c) => {
+// PUT /api/user/:id/role - 更新用户角色（管理员）
+userRoutes.put('/:id/role', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -189,8 +195,8 @@ userRoutes.put('/user/:id/role', async (c) => {
   }
 });
 
-// DELETE /api/user/:id - 删除用户
-userRoutes.delete('/:id', async (c) => {
+// DELETE /api/user/:id - 删除用户（管理员）
+userRoutes.delete('/:id', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

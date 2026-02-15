@@ -147,8 +147,8 @@ export class Comment extends BaseModel {
    */
   async getCommentStats() {
     const totalComments = await this.count();
-    const approvedComments = await this.count({ where: 'status = ?' });
-    const pendingComments = await this.count({ where: 'status = ?' });
+    const approvedComments = await this.count({ where: 'status = ?', params: [1] });
+    const pendingComments = await this.count({ where: 'status = ?', params: [0] });
 
     return {
       total: totalComments,

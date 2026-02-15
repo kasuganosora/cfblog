@@ -1,125 +1,164 @@
 /**
  * Feedback API Tests
- * 测试反馈相关API接口
+ * 测试反馈提交和管理员操作
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { request, getAdminSessionCookie, getUserSessionCookie, getTestPasswordHash } from '../helpers/test-app.js';
+import { createMockDB } from '../helpers/mock-db.js';
 
-// Mock dependencies
-vi.mock('../../src/models/Feedback.js', () => ({
-  Feedback: vi.fn().mockImplementation(() => ({
-    createFeedback: vi.fn(),
-    getFeedbackList: vi.fn(),
-    findById: vi.fn(),
-    deleteFeedback: vi.fn()
-  }))
-}));
+let adminHash;
+let adminCookie;
+let userCookie;
 
-vi.mock('../../src/utils/response.js', () => ({
-  successResponse: vi.fn((data, message) => ({
-    status: 200,
-    headers: {},
-    body: JSON.stringify({ success: true, message, data })
-  })),
-  errorResponse: vi.fn((message, status = 400) => ({
-    status,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  serverErrorResponse: vi.fn((message) => ({
-    status: 500,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  }))
-}));
+beforeAll(async () => {
+  adminHash = await getTestPasswordHash('admin123');
+  adminCookie = await getAdminSessionCookie();
+  userCookie = await getUserSessionCookie();
+});
 
-describe('Feedback API Tests', () => {
-  describe('POST /api/feedback/create', () => {
-    it('应该成功提交反馈', async () => {
-      const newFeedback = {
-        name: '访客',
-        email: 'visitor@example.com',
-        content: '这是一条反馈内容'
-      };
+const testFeedback = {
+  id: 1, name: 'Visitor', email: 'v@test.com',
+  content: 'Great blog!', status: 0,
+  created_at: '2025-01-01 00:00:00'
+};
 
-      expect(newFeedback.name).toBeDefined();
-      expect(newFeedback.content).toBeDefined();
-    });
+function getDB(overrides = {}) {
+  return createMockDB([
+    {
+      match: 'FROM users WHERE id',
+      result: (sql, params) => {
+        if (params[0] === 1) return { id: 1, username: 'admin', role: 'admin', status: 1, password_hash: adminHash };
+        if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
+        return null;
+      }
+    },
+    { match: 'FROM feedback WHERE id', result: overrides.feedback ?? testFeedback },
+    { match: 'SELECT COUNT', result: { count: overrides.count ?? 1 } },
+    { match: 'FROM feedback', result: overrides.feedbacks ?? [testFeedback] },
+    { match: 'INSERT INTO feedback', result: null },
+    { match: 'DELETE FROM feedback', result: null },
+  ]);
+}
 
-    it('应该验证必填字段', async () => {
-      const incompleteFeedback = {
-        email: 'test@example.com'
-        // missing: name, content
-      };
+describe('POST /api/feedback/create', () => {
+  it('应该成功提交反馈（公开接口）', async () => {
+    const res = await request('/api/feedback/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test', content: 'Feedback content' })
+    }, { DB: getDB() });
 
-      expect(incompleteFeedback.name).toBeUndefined();
-      expect(incompleteFeedback.content).toBeUndefined();
-    });
+    expect(res.status).toBe(201);
   });
 
-  describe('GET /api/feedback/list', () => {
-    it('应该返回反馈列表', async () => {
-      const mockFeedbacks = [
-        {
-          id: 1,
-          name: '访客A',
-          content: '反馈1',
-          status: 0,
-          created_at: '2026-01-17T00:00:00Z'
-        },
-        {
-          id: 2,
-          name: '访客B',
-          content: '反馈2',
-          status: 1,
-          created_at: '2026-01-16T00:00:00Z'
-        }
-      ];
+  it('缺少必填字段应该返回 400', async () => {
+    const res = await request('/api/feedback/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'test@test.com' })
+    }, { DB: getDB() });
 
-      expect(mockFeedbacks).toHaveLength(2);
-      expect(mockFeedbacks[0].status).toBe(0); // pending
-    });
-
-    it('应该支持分页参数', async () => {
-      const params = { page: 1, limit: 20 };
-      expect(params.page).toBe(1);
-      expect(params.limit).toBe(20);
-    });
-
-    it('应该支持按状态筛选', async () => {
-      const status = 1; // approved
-      expect(status).toBe(1);
-    });
+    expect(res.status).toBe(400);
   });
 
-  describe('GET /api/feedback/:id', () => {
-    it('应该返回指定ID的反馈', async () => {
-      const mockFeedback = {
-        id: 1,
-        name: '访客',
-        email: 'visitor@example.com',
-        content: '这是一条反馈',
-        status: 0,
-        created_at: '2026-01-17T00:00:00Z'
-      };
+  it('名字超过 50 字符应该返回 400', async () => {
+    const res = await request('/api/feedback/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'A'.repeat(51), content: 'Hello' })
+    }, { DB: getDB() });
 
-      expect(mockFeedback.id).toBe(1);
-      expect(mockFeedback.name).toBe('访客');
-    });
-
-    it('反馈不存在时应该返回404', async () => {
-      const feedbackId = 999;
-      const feedback = null;
-
-      expect(feedback).toBeNull();
-      expect(feedbackId).toBe(999);
-    });
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.message).toContain('50');
   });
 
-  describe('DELETE /api/feedback/:id/delete', () => {
-    it('应该成功删除反馈', async () => {
-      const feedbackId = 1;
-      expect(feedbackId).toBe(1);
-    });
+  it('内容超过 5000 字符应该返回 400', async () => {
+    const res = await request('/api/feedback/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Test', content: 'x'.repeat(5001) })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.message).toContain('5000');
+  });
+
+  it('邮箱超过 100 字符应该返回 400', async () => {
+    const res = await request('/api/feedback/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Test',
+        email: 'a'.repeat(92) + '@test.com',
+        content: 'Hello'
+      })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.message).toContain('100');
+  });
+});
+
+describe('GET /api/feedback/list', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/feedback/list', {}, { DB: getDB() });
+    expect(res.status).toBe(401);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/feedback/list', {
+      headers: { 'Cookie': userCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('管理员应该可以查看反馈列表', async () => {
+    const res = await request('/api/feedback/list', {
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('GET /api/feedback/:id', () => {
+  it('管理员应该可以查看反馈详情', async () => {
+    const res = await request('/api/feedback/1', {
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/feedback/1', {
+      headers: { 'Cookie': userCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('DELETE /api/feedback/:id/delete', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/feedback/1/delete', {
+      method: 'DELETE'
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('管理员应该可以删除反馈', async () => {
+    const res = await request('/api/feedback/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
   });
 });

@@ -7,7 +7,8 @@ import { Category } from '../models/Category.js';
 import {
   serverErrorResponse,
   errorResponse,
-  notFoundResponse
+  notFoundResponse,
+  requireAdmin
 } from './base.js';
 
 const categoryRoutes = new Hono();
@@ -32,7 +33,7 @@ categoryRoutes.get('/list', async (c) => {
     return c.json(result);
   } catch (error) {
     console.error('Get category list error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -55,7 +56,7 @@ categoryRoutes.get('/tree', async (c) => {
     return c.json(tree);
   } catch (error) {
     console.error('Get category tree error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -78,7 +79,7 @@ categoryRoutes.get('/slug/:slug', async (c) => {
     return c.json(category);
   } catch (error) {
     console.error('Get category by slug error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -101,12 +102,12 @@ categoryRoutes.get('/:id', async (c) => {
     return c.json(category);
   } catch (error) {
     console.error('Get category error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// POST /api/category/create - 创建分类
-categoryRoutes.post('/create', async (c) => {
+// POST /api/category/create - 创建分类（管理员）
+categoryRoutes.post('/create', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -129,8 +130,8 @@ categoryRoutes.post('/create', async (c) => {
   }
 });
 
-// PUT /api/category/:id/update - 更新分类
-categoryRoutes.put('/:id/update', async (c) => {
+// PUT /api/category/:id/update - 更新分类（管理员）
+categoryRoutes.put('/:id/update', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -150,8 +151,8 @@ categoryRoutes.put('/:id/update', async (c) => {
   }
 });
 
-// DELETE /api/category/:id/delete - 删除分类
-categoryRoutes.delete('/:id/delete', async (c) => {
+// DELETE /api/category/:id/delete - 删除分类（管理员）
+categoryRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

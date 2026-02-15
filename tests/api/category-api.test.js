@@ -1,161 +1,230 @@
 /**
  * Category API Tests
- * 测试分类相关API接口
+ * 测试分类的公开查询和管理员操作
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { request, getAdminSessionCookie, getUserSessionCookie, getTestPasswordHash } from '../helpers/test-app.js';
+import { createMockDB } from '../helpers/mock-db.js';
 
-// Mock dependencies
-vi.mock('../../src/models/Category.js', () => ({
-  Category: vi.fn().mockImplementation(() => ({
-    getCategoryList: vi.fn(),
-    getCategoryTree: vi.fn(),
-    getCategoryWithPostCount: vi.fn(),
-    createCategory: vi.fn(),
-    updateCategory: vi.fn(),
-    deleteCategory: vi.fn()
-  }))
-}));
+let adminHash;
+let adminCookie;
+let userCookie;
 
-vi.mock('../../src/utils/response.js', () => ({
-  successResponse: vi.fn((data, message) => ({
-    status: 200,
-    headers: {},
-    body: JSON.stringify({ success: true, message, data })
-  })),
-  errorResponse: vi.fn((message, status = 400) => ({
-    status,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  notFoundResponse: vi.fn((message) => ({
-    status: 404,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  })),
-  serverErrorResponse: vi.fn((message) => ({
-    status: 500,
-    headers: {},
-    body: JSON.stringify({ success: false, message })
-  }))
-}));
+beforeAll(async () => {
+  adminHash = await getTestPasswordHash('admin123');
+  adminCookie = await getAdminSessionCookie();
+  userCookie = await getUserSessionCookie();
+});
 
-describe('Category API Tests', () => {
-  describe('GET /api/category/list', () => {
-    it('应该返回分类列表', async () => {
-      const mockCategories = [
-        {
-          id: 1,
-          name: '技术',
-          slug: 'technology',
-          description: '技术相关文章',
-          post_count: 10
-        },
-        {
-          id: 2,
-          name: '生活',
-          slug: 'life',
-          description: '生活随笔',
-          post_count: 5
-        }
-      ];
+const testCategory = {
+  id: 1, name: 'Tech', slug: 'tech',
+  description: 'Technology articles', parent_id: null,
+  created_at: '2025-01-01 00:00:00'
+};
 
-      expect(mockCategories).toHaveLength(2);
-      expect(mockCategories[0].name).toBe('技术');
-    });
+const testCategory2 = {
+  id: 2, name: 'Life', slug: 'life',
+  description: 'Life articles', parent_id: null,
+  created_at: '2025-01-02 00:00:00'
+};
 
-    it('应该支持分页参数', async () => {
-      const params = { page: 1, limit: 10 };
-      expect(params.page).toBe(1);
-      expect(params.limit).toBe(10);
-    });
+function getDB(overrides = {}) {
+  return createMockDB([
+    {
+      match: 'FROM users WHERE id',
+      result: (sql, params) => {
+        if (params[0] === 1) return { id: 1, username: 'admin', role: 'admin', status: 1, password_hash: adminHash };
+        if (params[0] === 2) return { id: 2, username: 'user', role: 'member', status: 1, password_hash: adminHash };
+        return null;
+      }
+    },
+    { match: 'FROM categories WHERE id', result: 'category' in overrides ? overrides.category : testCategory },
+    {
+      match: 'FROM categories WHERE slug',
+      result: (sql, params) => {
+        if (overrides.categoryBySlug !== undefined) return overrides.categoryBySlug;
+        if (params[0] === 'tech') return testCategory;
+        return null;
+      }
+    },
+    { match: 'FROM post_categories', result: { count: 0 } },
+    { match: 'parent_id', result: { count: 0 } },
+    { match: 'SELECT COUNT', result: { count: overrides.count ?? 2 } },
+    { match: 'FROM categories', result: overrides.categories ?? [testCategory, testCategory2] },
+    { match: 'INSERT INTO categories', result: null },
+    { match: 'UPDATE categories', result: null },
+    { match: 'DELETE FROM', result: null },
+  ]);
+}
+
+// ========== List ==========
+
+describe('GET /api/category/list', () => {
+  it('应该返回分类列表（公开接口）', async () => {
+    const res = await request('/api/category/list', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('GET /api/category/tree', () => {
-    it('应该返回分类树结构', async () => {
-      const mockTree = [
-        {
-          id: 1,
-          name: '技术',
-          slug: 'technology',
-          children: [
-            {
-              id: 3,
-              name: '前端开发',
-              slug: 'frontend',
-              parent_id: 1
-            }
-          ]
-        }
-      ];
-
-      expect(mockTree[0].children).toBeDefined();
-      expect(mockTree[0].children[0].parent_id).toBe(1);
-    });
+  it('不需要登录即可访问', async () => {
+    const res = await request('/api/category/list', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('GET /api/category/:id', () => {
-    it('应该返回指定ID的分类', async () => {
-      const mockCategory = {
-        id: 1,
-        name: '技术',
-        slug: 'technology',
-        description: '技术相关文章',
-        post_count: 10
-      };
+  it('支持分页参数', async () => {
+    const res = await request('/api/category/list?page=1&limit=5', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
+  });
+});
 
-      expect(mockCategory.id).toBe(1);
-      expect(mockCategory.name).toBe('技术');
-    });
+// ========== Tree ==========
 
-    it('分类不存在时应该返回404', async () => {
-      const categoryId = 999;
-      const category = null;
-
-      expect(category).toBeNull();
-      expect(categoryId).toBe(999);
-    });
+describe('GET /api/category/tree', () => {
+  it('应该返回分类树（公开接口）', async () => {
+    const res = await request('/api/category/tree', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('POST /api/category/create', () => {
-    it('应该成功创建分类', async () => {
-      const newCategory = {
-        name: '新分类',
-        slug: 'new-category',
-        description: '分类描述',
-        parent_id: null
-      };
+  it('无分类时返回空数组', async () => {
+    const res = await request('/api/category/tree', {}, { DB: getDB({ categories: [] }) });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data).toEqual([]);
+  });
+});
 
-      expect(newCategory.name).toBeDefined();
-      expect(newCategory.slug).toBeDefined();
-    });
+// ========== Slug ==========
 
-    it('应该验证必填字段', async () => {
-      const incompleteCategory = {
-        description: '只有描述'
-      };
-
-      expect(incompleteCategory.name).toBeUndefined();
-    });
+describe('GET /api/category/slug/:slug', () => {
+  it('应该根据 slug 返回分类', async () => {
+    const res = await request('/api/category/slug/tech', {}, { DB: getDB({ categoryBySlug: testCategory }) });
+    expect(res.status).toBe(200);
   });
 
-  describe('PUT /api/category/:id/update', () => {
-    it('应该成功更新分类', async () => {
-      const updateData = {
-        id: 1,
-        name: '更新后的分类名',
-        description: '更新后的描述'
-      };
+  it('不存在的 slug 应该返回 404', async () => {
+    const res = await request('/api/category/slug/nonexistent', {}, { DB: getDB({ categoryBySlug: null }) });
+    expect(res.status).toBe(404);
+  });
+});
 
-      expect(updateData.id).toBe(1);
-      expect(updateData.name).toContain('更新');
-    });
+// ========== Get by ID ==========
+
+describe('GET /api/category/:id', () => {
+  it('应该返回分类详情', async () => {
+    const res = await request('/api/category/1', {}, { DB: getDB() });
+    expect(res.status).toBe(200);
   });
 
-  describe('DELETE /api/category/:id/delete', () => {
-    it('应该成功删除分类', async () => {
-      const categoryId = 1;
-      expect(categoryId).toBe(1);
-    });
+  it('不存在的分类应该返回 404', async () => {
+    const res = await request('/api/category/999', {}, { DB: getDB({ category: null }) });
+    expect(res.status).toBe(404);
+  });
+});
+
+// ========== Create ==========
+
+describe('POST /api/category/create', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/category/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'New Category' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/category/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ name: 'New Category' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('管理员应该可以创建分类', async () => {
+    const res = await request('/api/category/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ name: 'New Category' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('缺少名称应该返回 400', async () => {
+    const res = await request('/api/category/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ description: 'No name' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+// ========== Update ==========
+
+describe('PUT /api/category/:id/update', () => {
+  it('管理员应该可以更新分类', async () => {
+    const res = await request('/api/category/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
+      body: JSON.stringify({ name: 'Updated Tech' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/category/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Updated' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/category/1/update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': userCookie },
+      body: JSON.stringify({ name: 'Updated' })
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+});
+
+// ========== Delete ==========
+
+describe('DELETE /api/category/:id/delete', () => {
+  it('未登录应该返回 401', async () => {
+    const res = await request('/api/category/1/delete', {
+      method: 'DELETE'
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(401);
+  });
+
+  it('普通用户应该返回 403', async () => {
+    const res = await request('/api/category/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': userCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('管理员应该可以删除分类', async () => {
+    const res = await request('/api/category/1/delete', {
+      method: 'DELETE',
+      headers: { 'Cookie': adminCookie }
+    }, { DB: getDB() });
+
+    expect(res.status).toBe(200);
   });
 });

@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import { Settings } from '../models/Settings.js';
-import { serverErrorResponse } from './base.js';
+import { serverErrorResponse, requireAdmin } from './base.js';
 
 const settingsRoutes = new Hono();
 
@@ -22,7 +22,7 @@ settingsRoutes.get('/', async (c) => {
     return c.json(settings);
   } catch (error) {
     console.error('Get settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
@@ -40,12 +40,12 @@ settingsRoutes.get('/blog', async (c) => {
     return c.json(blogInfo);
   } catch (error) {
     console.error('Get blog settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /api/settings/display - 获取显示设置
-settingsRoutes.get('/settings/display', async (c) => {
+// GET /display - 获取显示设置
+settingsRoutes.get('/display', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -58,12 +58,12 @@ settingsRoutes.get('/settings/display', async (c) => {
     return c.json(displaySettings);
   } catch (error) {
     console.error('Get display settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /api/settings/comments - 获取评论设置
-settingsRoutes.get('/settings/comments', async (c) => {
+// GET /comments - 获取评论设置
+settingsRoutes.get('/comments', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -76,12 +76,12 @@ settingsRoutes.get('/settings/comments', async (c) => {
     return c.json(commentSettings);
   } catch (error) {
     console.error('Get comment settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /api/settings/upload - 获取上传设置
-settingsRoutes.get('/settings/upload', async (c) => {
+// GET /upload - 获取上传设置
+settingsRoutes.get('/upload', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -94,12 +94,12 @@ settingsRoutes.get('/settings/upload', async (c) => {
     return c.json(uploadSettings);
   } catch (error) {
     console.error('Get upload settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// GET /api/settings/seo - 获取SEO设置
-settingsRoutes.get('/settings/seo', async (c) => {
+// GET /seo - 获取SEO设置
+settingsRoutes.get('/seo', async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -112,12 +112,12 @@ settingsRoutes.get('/settings/seo', async (c) => {
     return c.json(seoSettings);
   } catch (error) {
     console.error('Get SEO settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// PUT /api/settings/blog - 更新博客信息
-settingsRoutes.put('/settings/blog', async (c) => {
+// PUT /blog - 更新博客信息（管理员）
+settingsRoutes.put('/blog', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -131,12 +131,12 @@ settingsRoutes.put('/settings/blog', async (c) => {
     return c.json(blogInfo);
   } catch (error) {
     console.error('Update blog settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// PUT /api/settings/display - 更新显示设置
-settingsRoutes.put('/settings/display', async (c) => {
+// PUT /display - 更新显示设置（管理员）
+settingsRoutes.put('/display', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -150,12 +150,12 @@ settingsRoutes.put('/settings/display', async (c) => {
     return c.json(displaySettings);
   } catch (error) {
     console.error('Update display settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// PUT /api/settings/comments - 更新评论设置
-settingsRoutes.put('/settings/comments', async (c) => {
+// PUT /comments - 更新评论设置（管理员）
+settingsRoutes.put('/comments', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -169,12 +169,12 @@ settingsRoutes.put('/settings/comments', async (c) => {
     return c.json(commentSettings);
   } catch (error) {
     console.error('Update comment settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// PUT /api/settings/upload - 更新上传设置
-settingsRoutes.put('/settings/upload', async (c) => {
+// PUT /upload - 更新上传设置（管理员）
+settingsRoutes.put('/upload', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -188,12 +188,12 @@ settingsRoutes.put('/settings/upload', async (c) => {
     return c.json(uploadSettings);
   } catch (error) {
     console.error('Update upload settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
-// PUT /api/settings/seo - 更新SEO设置
-settingsRoutes.put('/settings/seo', async (c) => {
+// PUT /seo - 更新SEO设置（管理员）
+settingsRoutes.put('/seo', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -207,7 +207,7 @@ settingsRoutes.put('/settings/seo', async (c) => {
     return c.json(seoSettings);
   } catch (error) {
     console.error('Update SEO settings error:', error);
-    return c.json(serverErrorResponse(error.message).json(), 500);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });
 
