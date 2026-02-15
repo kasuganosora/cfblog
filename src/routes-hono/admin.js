@@ -13,7 +13,7 @@ function escapeHtml(text) {
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function adminLayout(title, activePage, templateHtml, scriptContent, options = {}) {
+function adminLayout(title, activePage, templateHtml, scriptContent) {
   const navItems = [
     { key: 'dashboard', label: '仪表板', icon: '&#9632;', href: '/admin' },
     { key: 'posts', label: '文章管理', icon: '&#9998;', href: '/admin/posts' },
@@ -30,38 +30,13 @@ function adminLayout(title, activePage, templateHtml, scriptContent, options = {
     return `<a href="${item.href}" class="nav-item${cls}"><span class="nav-icon">${item.icon}</span>${item.label}</a>`;
   }).join('\n');
 
-  const isModule = options.module === true;
-
-  const moduleHeadCss = isModule
-    ? '\n  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/md-editor-v3@5/lib/style.css">'
-    : '';
-
-  const scriptsHtml = isModule
-    ? `<script type="importmap">
-{
-  "imports": {
-    "vue": "https://esm.sh/vue@3",
-    "tdesign-vue-next": "https://esm.sh/tdesign-vue-next@1?bundle&external=vue",
-    "md-editor-v3": "https://esm.sh/md-editor-v3@5?bundle&external=vue"
-  }
-}
-</script>
-<script type="module">
-${scriptContent}
-</script>`
-    : `<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.js"></script>
-<script>
-${scriptContent}
-</script>`;
-
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)} - CFBlog Admin</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tdesign-vue-next/dist/tdesign.min.css">${moduleHeadCss}
+  <link rel="stylesheet" href="/api/upload/file/admin/admin-bundle.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f0f2f5; }
@@ -115,7 +90,10 @@ ${scriptContent}
       fetch(API+'/user/logout',{method:'POST'}).then(function(){window.location.href='/login';}).catch(function(){window.location.href='/login';});
     });
   </script>
-  ${scriptsHtml}
+  <script src="/api/upload/file/admin/admin-bundle.js"></script>
+  <script>
+  ${scriptContent}
+  </script>
 </body>
 </html>`;
 }
@@ -332,52 +310,52 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
       </t-form>
     </t-card>
   `, `
-    import { createApp, ref, reactive, onMounted } from 'vue';
-    import TDesign, { MessagePlugin } from 'tdesign-vue-next';
-    import { MdEditor } from 'md-editor-v3';
-    const app = createApp({
-      components: { MdEditor },
-      setup() {
-        const form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
-        const tagInput = ref('');
-        const categories = ref([]);
-        const allTags = ref([]);
-        const selectLoading = ref(true);
-        const saving = ref(false);
+    var { createApp, ref, reactive, onMounted } = Vue;
+    var { MessagePlugin } = TDesign;
+    var app = createApp({
+      components: { MdEditor: MdEditor },
+      setup: function() {
+        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        var tagInput = ref('');
+        var categories = ref([]);
+        var allTags = ref([]);
+        var selectLoading = ref(true);
+        var saving = ref(false);
         async function onUploadImg(files, callback) {
-          const urls = [];
-          for (const file of files) {
+          var urls = [];
+          for (var i = 0; i < files.length; i++) {
             try {
-              const fd = new FormData();
-              fd.append('file', file);
-              const res = await fetch('/api/upload', { method:'POST', body:fd });
-              const data = await res.json();
-              if (data.success && data.data?.url) urls.push(data.data.url);
+              var fd = new FormData();
+              fd.append('file', files[i]);
+              var res = await fetch('/api/upload', { method:'POST', body:fd });
+              var data = await res.json();
+              if (data.success && data.data && data.data.url) urls.push(data.data.url);
             } catch(e) { console.error('Upload failed:', e); }
           }
           callback(urls);
         }
         function onTagEnter() {
-          const t = tagInput.value.trim();
+          var t = tagInput.value.trim();
           if (t && !form.tagNames.includes(t)) form.tagNames.push(t);
           tagInput.value = '';
         }
         function onTagInputChange(val) {
           if (val && val.includes(' ')) {
-            val.split(/\\s+/).filter(s => s).forEach(s => {
+            val.split(/\\s+/).filter(function(s){return s;}).forEach(function(s) {
               if (!form.tagNames.includes(s)) form.tagNames.push(s);
             });
             tagInput.value = '';
           }
         }
         async function resolveTagIds(names) {
-          const ids = [];
-          for (const name of names) {
-            const found = allTags.value.find(t => t.name === name);
+          var ids = [];
+          for (var i = 0; i < names.length; i++) {
+            var name = names[i];
+            var found = allTags.value.find(function(t){return t.name===name;});
             if (found) { ids.push(found.id); }
             else {
               try {
-                const created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+                var created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})});
                 if (created.id) { ids.push(created.id); allTags.value.push(created); }
               } catch(e) { console.error('Tag create failed:', name); }
             }
@@ -388,25 +366,25 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
           if (!form.title) { MessagePlugin.warning('请输入标题'); return; }
           saving.value = true;
           try {
-            const tagIds = await resolveTagIds(form.tagNames);
+            var tagIds = await resolveTagIds(form.tagNames);
             await apiCall('/post/create',{
               method:'POST', headers:{'Content-Type':'application/json'},
               body:JSON.stringify({
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
-                categoryIds:form.categoryIds, tagIds, author_id:1
+                categoryIds:form.categoryIds, tagIds:tagIds, author_id:1
               })
             });
             MessagePlugin.success('文章创建成功');
-            setTimeout(() => { window.location.href='/admin/posts'; }, 800);
+            setTimeout(function(){window.location.href='/admin/posts';},800);
           } catch(e) { console.error(e); }
           saving.value = false;
         }
         function goBack() { window.location.href='/admin/posts'; }
-        onMounted(async () => {
+        onMounted(async function() {
           try {
-            const results = await Promise.all([apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')]);
+            var results = await Promise.all([apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')]);
             categories.value = results[0].data || [];
             allTags.value = results[1].data || [];
           } catch(e) {}
@@ -417,7 +395,7 @@ adminRoutes.get('/posts/new', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `, { module: true }));
+  `));
 });
 
 // ============================================================
@@ -476,54 +454,54 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
       </t-form>
     </t-card>
   `, `
-    import { createApp, ref, reactive, onMounted } from 'vue';
-    import TDesign, { MessagePlugin } from 'tdesign-vue-next';
-    import { MdEditor } from 'md-editor-v3';
-    const postId = ${escapeHtml(postId)};
-    const app = createApp({
-      components: { MdEditor },
-      setup() {
-        const form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
-        const tagInput = ref('');
-        const categories = ref([]);
-        const allTags = ref([]);
-        const selectLoading = ref(true);
-        const pageLoading = ref(true);
-        const saving = ref(false);
+    var postId = ${escapeHtml(postId)};
+    var { createApp, ref, reactive, onMounted } = Vue;
+    var { MessagePlugin } = TDesign;
+    var app = createApp({
+      components: { MdEditor: MdEditor },
+      setup: function() {
+        var form = reactive({ title:'', excerpt:'', content:'', categoryIds:[], tagNames:[], status:0, featured:false, commentStatus:true });
+        var tagInput = ref('');
+        var categories = ref([]);
+        var allTags = ref([]);
+        var selectLoading = ref(true);
+        var pageLoading = ref(true);
+        var saving = ref(false);
         async function onUploadImg(files, callback) {
-          const urls = [];
-          for (const file of files) {
+          var urls = [];
+          for (var i = 0; i < files.length; i++) {
             try {
-              const fd = new FormData();
-              fd.append('file', file);
-              const res = await fetch('/api/upload', { method:'POST', body:fd });
-              const data = await res.json();
-              if (data.success && data.data?.url) urls.push(data.data.url);
+              var fd = new FormData();
+              fd.append('file', files[i]);
+              var res = await fetch('/api/upload', { method:'POST', body:fd });
+              var data = await res.json();
+              if (data.success && data.data && data.data.url) urls.push(data.data.url);
             } catch(e) { console.error('Upload failed:', e); }
           }
           callback(urls);
         }
         function onTagEnter() {
-          const t = tagInput.value.trim();
+          var t = tagInput.value.trim();
           if (t && !form.tagNames.includes(t)) form.tagNames.push(t);
           tagInput.value = '';
         }
         function onTagInputChange(val) {
           if (val && val.includes(' ')) {
-            val.split(/\\s+/).filter(s => s).forEach(s => {
+            val.split(/\\s+/).filter(function(s){return s;}).forEach(function(s) {
               if (!form.tagNames.includes(s)) form.tagNames.push(s);
             });
             tagInput.value = '';
           }
         }
         async function resolveTagIds(names) {
-          const ids = [];
-          for (const name of names) {
-            const found = allTags.value.find(t => t.name === name);
+          var ids = [];
+          for (var i = 0; i < names.length; i++) {
+            var name = names[i];
+            var found = allTags.value.find(function(t){return t.name===name;});
             if (found) { ids.push(found.id); }
             else {
               try {
-                const created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+                var created = await apiCall('/tag/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})});
                 if (created.id) { ids.push(created.id); allTags.value.push(created); }
               } catch(e) { console.error('Tag create failed:', name); }
             }
@@ -534,14 +512,14 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
           if (!form.title) { MessagePlugin.warning('请输入标题'); return; }
           saving.value = true;
           try {
-            const tagIds = await resolveTagIds(form.tagNames);
+            var tagIds = await resolveTagIds(form.tagNames);
             await apiCall('/post/'+postId+'/update',{
               method:'PUT', headers:{'Content-Type':'application/json'},
               body:JSON.stringify({
                 title:form.title, excerpt:form.excerpt, content:form.content,
                 status:form.status, featured:form.featured?1:0,
                 commentStatus:form.commentStatus?1:0,
-                categoryIds:form.categoryIds, tagIds
+                categoryIds:form.categoryIds, tagIds:tagIds
               })
             });
             MessagePlugin.success('文章更新成功');
@@ -549,20 +527,20 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
           saving.value = false;
         }
         function goBack() { window.location.href='/admin/posts'; }
-        onMounted(async () => {
+        onMounted(async function() {
           try {
-            const results = await Promise.all([
+            var results = await Promise.all([
               apiCall('/post/'+postId), apiCall('/category/list?limit=100'), apiCall('/tag/list?limit=100')
             ]);
-            const post = results[0];
+            var post = results[0];
             form.title = post.title || '';
             form.excerpt = post.excerpt || '';
             form.content = post.content || '';
             form.status = post.status || 0;
             form.featured = !!post.featured;
             form.commentStatus = post.comment_status !== 0;
-            form.categoryIds = (post.categories||[]).map(c => c.id);
-            form.tagNames = (post.tags||[]).map(t => t.name);
+            form.categoryIds = (post.categories||[]).map(function(c){return c.id;});
+            form.tagNames = (post.tags||[]).map(function(t){return t.name;});
             categories.value = results[1].data || [];
             allTags.value = results[2].data || [];
           } catch(e) { MessagePlugin.error('加载文章失败'); }
@@ -574,7 +552,7 @@ adminRoutes.get('/posts/edit/:id', requireAdmin, (c) => {
     });
     app.use(TDesign);
     app.mount('#app');
-  `, { module: true }));
+  `));
 });
 
 // ============================================================
