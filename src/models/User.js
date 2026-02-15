@@ -18,7 +18,7 @@ export class User extends BaseModel {
    */
   async findByUsername(username) {
     return this.queryFirst(
-      'SELECT * FROM users WHERE username = ?',
+      'SELECT * FROM users WHERE LOWER(username) = LOWER(?)',
       [username]
     );
   }

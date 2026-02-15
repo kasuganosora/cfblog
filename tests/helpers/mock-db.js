@@ -78,7 +78,7 @@ export function createStandardMockDB(adminPasswordHash, overrides = {}) {
   const handlers = [
     // 用户查询
     {
-      match: 'FROM users WHERE username',
+      match: 'FROM users WHERE LOWER(username)',
       result: (sql, params) => {
         if (params[0] === 'admin') return adminUser;
         if (params[0] === 'user') return normalUser;

@@ -24,7 +24,7 @@ function getDB() {
 function getDBWithHandlers(extraHandlers = []) {
   return createMockDB([
     {
-      match: 'FROM users WHERE username',
+      match: 'FROM users WHERE LOWER(username)',
       result: (sql, params) => {
         if (params[0] === 'admin') return { id: 1, username: 'admin', email: 'admin@test.com', password_hash: adminHash, display_name: 'Admin', role: 'admin', status: 1 };
         if (params[0] === 'user') return { id: 2, username: 'user', email: 'user@test.com', password_hash: adminHash, display_name: 'User', role: 'member', status: 1 };
