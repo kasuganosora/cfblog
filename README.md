@@ -1,32 +1,39 @@
 # CFBlog
 
-A serverless blog platform running entirely on [Cloudflare Workers](https://workers.cloudflare.com/), with D1 as the database and R2 for file storage. Zero servers to manage.
+A serverless blog platform running entirely on [Cloudflare Workers](https://workers.cloudflare.com/). Zero servers, zero cost for small sites.
+
+**D1** (SQLite) as the database, **R2** for file storage, **Hono** as the web framework. Everything runs at the edge.
 
 ## Features
 
-- Hono web framework with edge-side rendering
-- D1 (SQLite) database with 14 migration files
-- R2 object storage for uploads and Hexo-compatible markdown backups
-- Admin panel built with Vue 3 + TDesign
-- Markdown editor (md-editor-v3) with image upload
-- Comments, feedback/guestbook, full-text search
-- RSS feed, dark mode, responsive design
-- Session-based auth with login rate limiting and audit log
-- R2 caching layer for post lists, individual posts, settings, and RSS
+- **Hono** web framework with edge-side rendering
+- **D1** (SQLite) database with automatic migrations
+- **R2** object storage for uploads and cache
+- **Admin panel** built with Vue 3 + TDesign
+- **Markdown editor** (md-editor-v3) with image upload and live preview
+- **Comments & guestbook** with cooldown, moderation, author highlighting
+- **RSS feed** auto-generated from published posts
+- **Code highlighting** with highlight.js (github-dark theme)
+- **Image lightbox** click-to-zoom on article images
+- **Chinese slug support** auto pinyin conversion for URL-friendly slugs
+- **Sidebar widgets** customizable via admin (Markdown + HTML)
+- **Dark mode** toggle with system preference detection
+- **Full-text search** across posts
+- **Session auth** with PBKDF2 password hashing, login rate limiting, audit log
+- **R2 caching layer** for settings, post lists, RSS
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js >= 18
-- npm
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (`npm i -g wrangler`)
-- A Cloudflare account
+- A Cloudflare account (free plan works)
 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/cfblog.git
+git clone https://github.com/kasuganosora/cfblog.git
 cd cfblog
 npm install
 ```
@@ -41,31 +48,41 @@ npx wrangler d1 create cfblog-database
 npx wrangler r2 bucket create cfblog-uploads
 ```
 
-Copy the returned database ID and update `wrangler.toml`:
+### 3. Configure
+
+```bash
+cp wrangler.toml.example wrangler.toml
+```
+
+Edit `wrangler.toml` and fill in your D1 database ID (returned from step 2):
 
 ```toml
 [[d1_databases]]
 binding = "DB"
 database_name = "cfblog-database"
-database_id = "<your-database-id>"
+database_id = "<your-database-id>"    # Replace this
 migrations_dir = "migrations"
-
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "cfblog-uploads"
 ```
 
-### 3. Run database migrations
+### 4. Run database migrations
 
 ```bash
 # Local development
-npm run db:local
+npx wrangler d1 migrations apply cfblog-database --local
 
-# Remote (production)
-npm run db:migrate
+# Production
+npx wrangler d1 migrations apply cfblog-database --remote
 ```
 
-### 4. Start dev server
+### 5. Set session secret
+
+```bash
+# Generate a random secret for production
+npx wrangler secret put SESSION_SECRET
+# Enter a random string (64+ characters recommended)
+```
+
+### 6. Start dev server
 
 ```bash
 npm run dev
@@ -73,159 +90,62 @@ npm run dev
 
 Open http://localhost:8787. Admin panel at http://localhost:8787/admin.
 
-Default login: `admin` / `admin123` (change immediately after first login).
+Default login: `admin` / `admin123` (**change immediately** after first login).
 
 ## Deployment
 
-```bash
-npm run deploy
-```
-
-Or with an API token:
+### Manual deploy
 
 ```bash
-CLOUDFLARE_API_TOKEN=<your-token> npx wrangler deploy
+npx wrangler deploy
 ```
 
-### Environment variables
+### Cloudflare Workers Builds (CI/CD)
 
-Edit `wrangler.toml` `[vars]` section for production:
+Connect your GitHub repo in **Cloudflare Dashboard > Workers > Settings > Builds**, then configure:
+
+| Setting | Value |
+|---------|-------|
+| **Deploy command** | `node scripts/generate-config.js && npx wrangler deploy` |
+
+Set these **environment variables** in **Settings > Environment variables**:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `CF_D1_DATABASE_ID` | Yes | Your D1 database UUID |
+| `CF_D1_DB_NAME` | No | D1 database name (default: `cfblog-database`) |
+| `CF_R2_BUCKET_NAME` | No | R2 bucket name (default: `cfblog-uploads`) |
+| `CF_WORKER_NAME` | No | Worker name (default: `cfblog`) |
+| `CF_CUSTOM_DOMAIN` | No | Custom domain (e.g. `blog.example.com`) |
+
+The build script generates `wrangler.toml` from these variables automatically.
+
+### Custom domain (optional)
+
+To use a custom domain, either:
+
+- Set `CF_CUSTOM_DOMAIN` env var in CI/CD, or
+- Add a `[[routes]]` section to your local `wrangler.toml`:
 
 ```toml
-[vars]
-ENVIRONMENT = "production"
-SESSION_SECRET = "<random-secret-string>"
+[[routes]]
+pattern = "blog.example.com"
+custom_domain = true
 ```
 
-> Use a strong, random string for `SESSION_SECRET`. This signs session cookies.
+## Admin Panel
 
-## Settings
+Access at `/admin` after login. Features:
 
-All settings are managed in the admin panel under **Settings** (`/admin` > Settings tab).
-
-| Setting | Description |
-|---------|-------------|
-| `blog_title` | Site name shown in navbar and page titles |
-| `blog_description` | Site description for SEO meta tags |
-| `blog_subtitle` | Subtitle shown on homepage |
-| `posts_per_page` | Number of posts per page (default: 10) |
-| `comment_moderation` | `0` = auto-approve, `1` = require manual approval |
-| `comment_permission` | `all` = anyone can comment, `registered` = logged-in only |
-| `upload_allowed_types` | Comma-separated file extensions (e.g. `jpg,png,gif,pdf`) |
-| `upload_max_size` | Max upload size in bytes (default: 5242880 = 5MB) |
-| `meta_description` | SEO meta description |
-| `meta_keywords` | SEO meta keywords |
-
-## Developing Your Own Theme
-
-The frontend is rendered server-side in [src/routes-hono/frontend.js](src/routes-hono/frontend.js). The entire theme (HTML + CSS + client JS) is defined in this single file, making it straightforward to customize.
-
-### Architecture
-
-```
-src/routes-hono/frontend.js
-├── CSS        — CSS custom properties + all styles (const CSS)
-├── BASE_JS    — Shared client-side utilities (const BASE_JS)
-├── layout()   — HTML shell: <head>, navbar, footer, script tags
-└── Routes     — Each page route returns c.html(layout({ content, script }))
-```
-
-### CSS Custom Properties
-
-All colors and dimensions are defined via CSS variables in `:root`. Override them to change the look:
-
-```css
-:root {
-  --bg: #fff;              /* Page background */
-  --bg2: #f6f8fa;          /* Secondary background (cards, code blocks) */
-  --text: #24292f;         /* Primary text color */
-  --text2: #57606a;        /* Secondary text */
-  --muted: #8b949e;        /* Muted/hint text */
-  --accent: #0969da;       /* Links, buttons, active states */
-  --accent2: #0550ae;      /* Accent hover */
-  --border: #d0d7de;       /* Borders */
-  --border2: #d8dee4;      /* Subtle borders */
-  --tag-bg: #ddf4ff;       /* Tag background */
-  --tag-c: #0969da;        /* Tag text */
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "SFMono-Regular", Consolas, monospace;
-  --nav-h: 52px;           /* Navbar height */
-  --max-w: 960px;          /* Max content width */
-  --side-w: 240px;         /* Sidebar width */
-}
-```
-
-Dark mode is activated via `body[data-theme="dark"]` and overrides the same variables:
-
-```css
-body[data-theme="dark"] {
-  --bg: #0d1117;
-  --text: #e6edf3;
-  --accent: #58a6ff;
-  /* ... */
-}
-```
-
-### Key CSS Classes
-
-| Class | Used for |
-|-------|----------|
-| `.navbar` | Top navigation bar |
-| `.page` | Main content container (centered, max-width) |
-| `.page.with-sidebar` | Two-column layout |
-| `.page.narrow` | Narrow content (780px, for post detail) |
-| `.article` | Article card in list pages |
-| `.article-title` / `.article-meta` / `.article-excerpt` | Article card elements |
-| `.post-header` / `.post-body` | Post detail page |
-| `.cat-grid` / `.cat-card` | Category list grid |
-| `.tag-page` | Tag cloud |
-| `.pager` | Pagination |
-| `.cmt-*` | Comment components |
-| `.fb-*` | Feedback form |
-
-### Layout Function
-
-Every page uses the `layout()` function which generates a complete HTML document:
-
-```javascript
-return c.html(layout({
-  title: 'Page Title',          // <title> content
-  blogTitle: 'My Blog',         // Navbar brand text
-  activePage: 'home',           // Highlights active nav link
-  content: `<div>...</div>`,    // Page HTML (inserted into <main>)
-  script: `var x = 1; ...`      // Page-specific JavaScript
-}));
-```
-
-The layout automatically includes:
-- The full CSS (`const CSS`)
-- The shared JS utilities (`const BASE_JS`)
-- marked.js for client-side Markdown rendering
-- Navbar with search, navigation links, and dark mode toggle
-- Footer
-
-### Shared Client Utilities (BASE_JS)
-
-These functions are available on every page:
-
-| Function | Description |
-|----------|-------------|
-| `escapeHtml(text)` | HTML entity escaping |
-| `getFirstImg(text)` | Extract first image URL from HTML/Markdown |
-| `checkThumb(el, src)` | Load thumbnail only if image is >= 320px wide |
-| `readTime(text)` | Estimate reading time (Chinese: 500 chars/min) |
-| `renderMd(text)` | Render Markdown via marked.js |
-| `renderArticleList(container, posts, opts)` | Render article card list (shared across all list pages) |
-
-### Creating a New Theme
-
-1. Fork or copy `src/routes-hono/frontend.js`
-2. Modify the `CSS` constant to change colors, fonts, layout
-3. Modify the `layout()` function to change the HTML structure (navbar, footer)
-4. Adjust individual route handlers to change page layouts
-5. Deploy and test
-
-Since the theme is pure server-rendered HTML + CSS + vanilla JS, there's no build step for the frontend. Just edit and deploy.
+- **Dashboard** - Stats overview, recent posts and comments
+- **Posts** - Create/edit/delete articles, Markdown editor with image upload
+- **Categories** - Hierarchical categories with custom slugs
+- **Tags** - Tag management
+- **Comments** - Moderation, approve/reject/delete
+- **Feedback** - Guestbook messages
+- **Users** - User management
+- **Attachments** - Uploaded files management
+- **Settings** - Blog info, display, comments, upload, SEO, sidebar widgets, cache management
 
 ## Project Structure
 
@@ -247,24 +167,19 @@ cfblog/
 │   │   ├── settings.js         # Settings API
 │   │   └── base.js             # Auth middleware & helpers
 │   ├── models/                 # Data models (D1 ORM)
-│   │   ├── BaseModel.js
-│   │   ├── Post.js
-│   │   ├── User.js
-│   │   ├── Category.js
-│   │   ├── Tag.js
-│   │   ├── Comment.js
-│   │   ├── Feedback.js
-│   │   ├── Settings.js
-│   │   ├── Attachment.js
-│   │   └── LoginAudit.js
 │   └── utils/
 │       ├── auth.js             # Session & password hashing
-│       ├── cache.js            # R2 caching + Hexo markdown export
-│       └── slug.js             # URL slug generation
-├── migrations/                 # D1 SQL migrations (0001-0014)
-├── public/                     # Static assets (admin bundle)
-├── tests/                      # API tests (vitest) & E2E (playwright)
-├── wrangler.toml               # Cloudflare Workers config
+│       ├── cache.js            # R2 caching layer
+│       ├── slug.js             # URL slug generation (with pinyin)
+│       └── pinyin-data.js      # Chinese character to pinyin lookup
+├── migrations/                 # D1 SQL migrations
+├── public/                     # Static assets
+│   └── static/                 # highlight.js, marked.js, etc.
+├── scripts/
+│   ├── generate-config.js      # Generate wrangler.toml from env vars
+│   └── build-pinyin-dict.js    # Build pinyin lookup table
+├── tests/                      # API tests (vitest)
+├── wrangler.toml.example       # Config template
 └── package.json
 ```
 
@@ -274,15 +189,18 @@ cfblog/
 |--------|-------------|
 | `npm run dev` | Start local dev server (port 8787) |
 | `npm run deploy` | Deploy to Cloudflare Workers |
-| `npm run db:local` | Apply migrations locally |
-| `npm run db:migrate` | Apply migrations to production D1 |
-| `npm run test:api` | Run API tests (vitest) |
-| `npm run test:e2e` | Run E2E tests (playwright) |
+| `npm test` | Run API tests (vitest) |
 
-## Documentation
+## Theming
 
-- [API Reference](docs/API.md) - Complete REST API documentation
-- [LICENSE](LICENSE) - MIT License
+The frontend is server-rendered in `src/routes-hono/frontend.js`. The entire theme (HTML + CSS + JS) is in this single file. Customize by modifying:
+
+- **CSS variables** in `:root` - colors, fonts, dimensions
+- **Dark mode** via `body[data-theme="dark"]` overrides
+- **`layout()`** function - HTML shell, navbar, footer
+- **Route handlers** - individual page layouts
+
+No frontend build step required. Just edit and deploy.
 
 ## License
 
