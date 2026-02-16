@@ -1,0 +1,28 @@
+name = "cfblog"
+main = "src/index-hono.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+# SESSION_SECRET should be set via `wrangler secret put SESSION_SECRET`
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cfblog-database"
+database_id = "your-d1-database-id"
+migrations_dir = "migrations"
+
+# Static assets
+[assets]
+directory = "./public"
+
+# R2 bucket for file uploads
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "cfblog-uploads"
+
+# Optional: custom domain
+# [[routes]]
+# pattern = "your-domain.com"
+# custom_domain = true

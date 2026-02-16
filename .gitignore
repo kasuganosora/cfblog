@@ -8,6 +8,7 @@ dev.vars
 
 # Cloudflare Wrangler
 .wrangler/
+wrangler.toml
 wrangler.toml.local
 .dev.vars
 
