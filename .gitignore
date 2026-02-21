@@ -41,7 +41,7 @@ npm-debug.log*
 tmp/
 temp/
 .cache/
-
+.claude
 # Test Coverage
 coverage/
 
