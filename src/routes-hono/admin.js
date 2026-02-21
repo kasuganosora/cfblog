@@ -1539,6 +1539,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
                     <t-button variant="outline" :loading="cacheLoading.settings" @click="clearCache('settings')">刷新设置缓存</t-button>
                     <t-button variant="outline" :loading="cacheLoading.posts" @click="clearCache('posts')">刷新文章缓存</t-button>
                     <t-button variant="outline" :loading="cacheLoading.rss" @click="clearCache('rss')">刷新 RSS 缓存</t-button>
+                    <t-button variant="outline" :loading="cacheLoading.sitemap" @click="clearCache('sitemap')">重建 Sitemap</t-button>
                   </div>
                 </t-space>
               </t-form-item>
@@ -1601,7 +1602,7 @@ adminRoutes.get('/settings', requireAdmin, (c) => {
         function removeWidget(idx) { widgets.value.splice(idx,1); }
         function moveWidget(idx,dir) { var arr=widgets.value; var t=arr[idx]; arr.splice(idx,1); arr.splice(idx+dir,0,t); }
         async function saveWidgets() { saving.widgets=true; try{ await apiCall('/settings/widgets',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(widgets.value)}); MessagePlugin.success('挂件已保存'); }catch(e){ MessagePlugin.error(e.message||'保存失败'); } saving.widgets=false; }
-        var cacheLoading = reactive({ all:false, settings:false, posts:false, rss:false });
+        var cacheLoading = reactive({ all:false, settings:false, posts:false, rss:false, sitemap:false });
         var cacheStats = ref([]);
         var cacheStatsLoading = ref(false);
         var cacheColumns = [

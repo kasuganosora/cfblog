@@ -5,7 +5,7 @@
 import { Hono } from 'hono';
 import { Settings } from '../models/Settings.js';
 import { serverErrorResponse, errorResponse, requireAdmin } from './base.js';
-import { getCachedSettings, refreshSettingsCache, refreshPostListCache, refreshRSSCache } from '../utils/cache.js';
+import { getCachedSettings, refreshSettingsCache, refreshPostListCache, refreshRSSCache, refreshSitemapCache } from '../utils/cache.js';
 
 const settingsRoutes = new Hono();
 
@@ -292,6 +292,14 @@ settingsRoutes.post('/cache/clear', requireAdmin, async (c) => {
         const siteUrl = new URL(c.req.url).origin;
         await refreshRSSCache(bucket, db, siteUrl);
         cleared.push('rss');
+      }
+    }
+
+    if (target === 'all' || target === 'sitemap') {
+      if (db) {
+        const siteUrl = new URL(c.req.url).origin;
+        await refreshSitemapCache(bucket, db, siteUrl);
+        cleared.push('sitemap');
       }
     }
 

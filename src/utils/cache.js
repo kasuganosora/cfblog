@@ -172,6 +172,7 @@ export const refreshSettingsCache = async (bucket, db) => {
 
 const POSTS_DEFAULT_KEY = 'cache/posts-default.json';
 const RSS_CACHE_KEY = 'cache/rss.xml';
+const SITEMAP_CACHE_KEY = 'cache/sitemap.xml';
 const POST_CACHE_PREFIX = 'cache/post/';
 
 /**
@@ -302,12 +303,64 @@ export const getCachedRSS = async (bucket) => {
 };
 
 /**
- * Refresh both post list and RSS caches (call after publish/update/delete)
+ * Refresh sitemap cache
+ */
+export const refreshSitemapCache = async (bucket, db, siteUrl) => {
+  if (!bucket || !db) return;
+  try {
+    const { Post } = await import('../models/Post.js');
+    const postModel = new Post(db);
+
+    const url = siteUrl || '';
+    const now = new Date().toISOString().split('T')[0];
+
+    const result = await postModel.getPostList({ page: 1, limit: 5000, status: 1 });
+    const posts = result.data || [];
+
+    const escXml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    let urls = '';
+    // Static pages
+    urls += `  <url>\n    <loc>${escXml(url)}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+    urls += `  <url>\n    <loc>${escXml(url)}/categories</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    urls += `  <url>\n    <loc>${escXml(url)}/tags</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+
+    // Post pages
+    for (const p of posts) {
+      const lastmod = (p.updated_at || p.published_at || p.created_at || '').split('T')[0] || now;
+      urls += `  <url>\n    <loc>${escXml(url)}/post/${escXml(p.slug)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}</urlset>`;
+
+    await bucket.put(SITEMAP_CACHE_KEY, xml, {
+      httpMetadata: { contentType: 'application/xml; charset=utf-8' }
+    });
+  } catch (e) {
+    console.error('Refresh sitemap cache error:', e);
+  }
+};
+
+/**
+ * Get cached sitemap XML
+ */
+export const getCachedSitemap = async (bucket) => {
+  if (!bucket) return null;
+  try {
+    const obj = await bucket.get(SITEMAP_CACHE_KEY);
+    if (obj) return await obj.text();
+  } catch {}
+  return null;
+};
+
+/**
+ * Refresh post list, RSS, and sitemap caches (call after publish/update/delete)
  */
 export const refreshAllPostCaches = async (bucket, db, siteUrl) => {
   await Promise.all([
     refreshPostListCache(bucket, db),
-    refreshRSSCache(bucket, db, siteUrl)
+    refreshRSSCache(bucket, db, siteUrl),
+    refreshSitemapCache(bucket, db, siteUrl),
   ]);
 };
 

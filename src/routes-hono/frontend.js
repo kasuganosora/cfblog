@@ -280,4 +280,47 @@ ${items}
 frontendRoutes.get('/rss', handleRSS);
 frontendRoutes.get('/feed', handleRSS);
 
+// ═════════════════════════════════════════════════════════════
+// Sitemap
+// ═════════════════════════════════════════════════════════════
+
+frontendRoutes.get('/sitemap.xml', async (c) => {
+  const bucket = c.env?.BUCKET;
+  const db = c.env?.DB;
+
+  if (db) {
+    try {
+      const { refreshSitemapCache, getCachedSitemap } = await import('../utils/cache.js');
+      const siteUrl = new URL(c.req.url).origin;
+      await refreshSitemapCache(bucket, db, siteUrl);
+      const xml = await getCachedSitemap(bucket);
+      if (xml) {
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600'
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Generate sitemap error:', e);
+    }
+  }
+
+  if (bucket) {
+    const { getCachedSitemap } = await import('../utils/cache.js');
+    const xml = await getCachedSitemap(bucket);
+    if (xml) {
+      return new Response(xml, {
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600'
+        }
+      });
+    }
+  }
+
+  return c.text('Sitemap not available', 500);
+});
+
 export { frontendRoutes };
