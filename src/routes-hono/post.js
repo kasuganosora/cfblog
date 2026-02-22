@@ -129,6 +129,7 @@ postRoutes.get('/:id', async (c) => {
       const currentUserId = await getCurrentUserId(c);
       if (!currentUserId || currentUserId !== post.author_id) {
         await postModel.incrementViewCount(id);
+        post.view_count = (post.view_count || 0) + 1;
       }
     }
 
@@ -159,6 +160,7 @@ postRoutes.get('/slug/:slug', async (c) => {
         if (!currentUserId || currentUserId !== cached.author_id) {
           const postModel = new Post(db);
           postModel.incrementViewCount(cached.id).catch(() => {});
+          cached.view_count = (cached.view_count || 0) + 1;
         }
       }
       return c.json(cached);
@@ -182,6 +184,7 @@ postRoutes.get('/slug/:slug', async (c) => {
       const currentUserId = await getCurrentUserId(c);
       if (!currentUserId || currentUserId !== post.author_id) {
         await postModel.incrementViewCount(post.id);
+        post.view_count = (post.view_count || 0) + 1;
       }
     }
 

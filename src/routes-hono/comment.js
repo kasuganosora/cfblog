@@ -125,25 +125,46 @@ commentRoutes.post('/create', async (c) => {
       const commentSettings = await settingsModel.getCommentSettings();
       const cooldown = commentSettings.cooldown || 120;
       if (cooldown > 0) {
-        const since = new Date(Date.now() - cooldown * 1000).toISOString().slice(0, 19).replace('T', ' ');
-        const recent = await db.prepare(
-          'SELECT id FROM comments WHERE author_ip = ? AND created_at > ? LIMIT 1'
-        ).bind(ip, since).first();
-        if (recent) {
-          return c.json(errorResponse(`操作过于频繁，请 ${Math.ceil(cooldown / 60)} 分钟后再试`).json(), 429);
+        try {
+          const since = new Date(Date.now() - cooldown * 1000).toISOString().slice(0, 19).replace('T', ' ');
+          const recent = await db.prepare(
+            'SELECT id FROM comments WHERE author_ip = ? AND created_at > ? LIMIT 1'
+          ).bind(ip, since).first();
+          if (recent) {
+            return c.json(errorResponse(`操作过于频繁，请 ${Math.ceil(cooldown / 60)} 分钟后再试`).json(), 429);
+          }
+        } catch (e) {
+          // author_ip column may not exist yet (migration pending), skip rate limit check
+          console.warn('IP rate limit check skipped:', e.message);
         }
       }
     }
 
     const commentModel = new Comment(db);
-    const comment = await commentModel.createComment({
-      post_id: postId,
-      author_name: authorName,
-      author_email: authorEmail,
-      author_ip: ip,
-      content: body.content,
-      parent_id: parentId
-    });
+    let comment;
+    try {
+      comment = await commentModel.createComment({
+        post_id: postId,
+        author_name: authorName,
+        author_email: authorEmail,
+        author_ip: ip,
+        content: body.content,
+        parent_id: parentId
+      });
+    } catch (e) {
+      if (e.message?.includes('no such column: author_ip')) {
+        // Fallback: create comment without IP (migration not yet applied)
+        comment = await commentModel.createComment({
+          post_id: postId,
+          author_name: authorName,
+          author_email: authorEmail,
+          content: body.content,
+          parent_id: parentId
+        });
+      } else {
+        throw e;
+      }
+    }
 
     return c.json(comment, 201);
   } catch (error) {
