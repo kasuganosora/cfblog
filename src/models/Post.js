@@ -111,26 +111,10 @@ export class Post extends BaseModel {
     if (commentStatus !== undefined) updateData.comment_status = commentStatus ? 1 : 0;
     if (content !== undefined) {
       updateData.content = content;
-      // Use new slug if title changed, otherwise use existing post's slug
-      const slugForKey = title !== undefined
-        ? generateSlug(title)
-        : existingPost.slug;
-      updateData.content_key = content ? `posts/${slugForKey}.md` : null;
+      // Keep existing slug for content_key — slug should never change after creation
+      updateData.content_key = content ? `posts/${existingPost.slug}.md` : null;
     }
     if (publishedAt !== undefined) updateData.published_at = publishedAt;
-
-    if (title !== undefined) {
-      // Regenerate slug if title changed
-      const slug = await generateUniqueSlug(title, async (s) => {
-        const existing = await this.findBySlug(s);
-        return !!existing && existing.id !== id;
-      });
-      updateData.slug = slug;
-      // Also update content_key with the actual unique slug
-      if (content !== undefined && content) {
-        updateData.content_key = `posts/${slug}.md`;
-      }
-    }
 
     updateData.updated_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
