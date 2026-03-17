@@ -11,6 +11,7 @@ import {
   forbiddenResponse,
   serverErrorResponse,
   parsePagination,
+  safeParseInt,
   requireAuth
 } from './base.js';
 import { validateSessionId } from '../utils/auth.js';
@@ -49,8 +50,8 @@ postRoutes.get('/list', async (c) => {
     const url = new URL(c.req.url);
     const params = Object.fromEntries(url.searchParams);
     const hasFilters = params.status !== undefined || params.featured !== undefined || params.category_id !== undefined || params.tag_id !== undefined;
-    const page = params.page ? parseInt(params.page) : 1;
-    const limit = params.limit ? parseInt(params.limit) : 10;
+    const page = safeParseInt(params.page, 1);
+    const limit = safeParseInt(params.limit, 10);
     const isDefault = !hasFilters && page === 1 && limit === 10;
 
     // Default request: try R2 cache first
@@ -117,7 +118,10 @@ postRoutes.get('/:id', async (c) => {
     }
 
     const postModel = new Post(db);
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid post ID').json(), 400);
+    }
     const post = await postModel.getPostById(id);
 
     if (!post) {
@@ -261,7 +265,10 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid post ID').json(), 400);
+    }
     const currentUser = c.get('user');
     const postModel = new Post(db);
 
@@ -308,7 +315,10 @@ postRoutes.delete('/:id/delete', requireAuth, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid post ID').json(), 400);
+    }
     const currentUser = c.get('user');
     const postModel = new Post(db);
 

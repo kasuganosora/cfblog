@@ -13,6 +13,7 @@ import {
   unauthorizedResponse,
   forbiddenResponse,
   parsePagination,
+  safeParseInt,
   requireAuth,
   requireAdmin
 } from './base.js';
@@ -195,7 +196,10 @@ userRoutes.put('/:id/profile', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid user ID').json(), 400);
+    }
     const body = await c.req.json();
     const { username, email, displayName } = body;
 
@@ -224,7 +228,10 @@ userRoutes.put('/:id/password', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid user ID').json(), 400);
+    }
     const currentUser = c.get('user');
     const { oldPassword, newPassword } = await c.req.json();
 
@@ -265,7 +272,10 @@ userRoutes.put('/:id/status', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid user ID').json(), 400);
+    }
     const currentUser = c.get('user');
 
     if (id === currentUser.id) {
@@ -296,7 +306,10 @@ userRoutes.put('/:id/role', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid user ID').json(), 400);
+    }
     const { role } = await c.req.json();
 
     if (!role) {
@@ -321,7 +334,10 @@ userRoutes.delete('/:id', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid user ID').json(), 400);
+    }
     const currentUser = c.get('user');
 
     if (id === currentUser.id) {

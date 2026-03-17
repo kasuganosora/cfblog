@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { Attachment } from '../models/Attachment.js';
-import { requireAuth, requireAdmin, serverErrorResponse, errorResponse } from './base.js';
+import { requireAuth, requireAdmin, serverErrorResponse, errorResponse, safeParseInt } from './base.js';
 
 const uploadRoutes = new Hono();
 
@@ -119,7 +119,10 @@ uploadRoutes.delete('/:id', requireAdmin, async (c) => {
     if (!db) return c.json(serverErrorResponse('Database not available').json(), 500);
     if (!bucket) return c.json(serverErrorResponse('Storage not configured').json(), 500);
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid attachment ID').json(), 400);
+    }
     const attachmentModel = new Attachment(db);
     const attachment = await attachmentModel.deleteAttachment(id);
 

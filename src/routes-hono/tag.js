@@ -8,6 +8,7 @@ import {
   serverErrorResponse,
   errorResponse,
   notFoundResponse,
+  safeParseInt,
   requireAdmin
 } from './base.js';
 
@@ -94,7 +95,10 @@ tagRoutes.get('/:id', async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid tag ID').json(), 400);
+    }
     const tagModel = new Tag(db);
     const tag = await tagModel.getTagWithPostCount(id);
 
@@ -141,7 +145,10 @@ tagRoutes.put('/:id/update', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid tag ID').json(), 400);
+    }
     const body = await c.req.json();
 
     const tagModel = new Tag(db);
@@ -162,7 +169,10 @@ tagRoutes.delete('/:id/delete', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid tag ID').json(), 400);
+    }
     const tagModel = new Tag(db);
     await tagModel.deleteTag(id);
 

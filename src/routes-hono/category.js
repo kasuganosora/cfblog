@@ -8,6 +8,7 @@ import {
   serverErrorResponse,
   errorResponse,
   notFoundResponse,
+  safeParseInt,
   requireAdmin
 } from './base.js';
 
@@ -91,7 +92,10 @@ categoryRoutes.get('/:id', async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid category ID').json(), 400);
+    }
     const categoryModel = new Category(db);
     const category = await categoryModel.getCategoryWithPostCount(id);
 
@@ -138,7 +142,10 @@ categoryRoutes.put('/:id/update', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid category ID').json(), 400);
+    }
     const body = await c.req.json();
 
     const categoryModel = new Category(db);
@@ -159,7 +166,10 @@ categoryRoutes.delete('/:id/delete', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid category ID').json(), 400);
+    }
     const categoryModel = new Category(db);
     await categoryModel.deleteCategory(id);
 

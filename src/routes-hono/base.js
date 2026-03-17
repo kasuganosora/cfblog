@@ -77,11 +77,18 @@ export const withDB = (ModelClass) => async (c, next) => {
   }
 };
 
+// 安全解析整数，处理 NaN 情况
+export const safeParseInt = (value, defaultValue = null) => {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? defaultValue : parsed;
+};
+
 // 分页参数解析
 export const parsePagination = (c) => {
   const url = new URL(c.req.url);
-  const page = parseInt(url.searchParams.get('page') || '1');
-  const limit = parseInt(url.searchParams.get('limit') || '10');
+  const page = safeParseInt(url.searchParams.get('page'), 1);
+  const limit = safeParseInt(url.searchParams.get('limit'), 10);
   return { page, limit };
 };
 

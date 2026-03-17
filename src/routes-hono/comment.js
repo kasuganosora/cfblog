@@ -10,6 +10,7 @@ import {
   serverErrorResponse,
   errorResponse,
   notFoundResponse,
+  safeParseInt,
   requireAdmin
 } from './base.js';
 
@@ -48,7 +49,10 @@ commentRoutes.put('/:id/status', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid comment ID').json(), 400);
+    }
     const body = await c.req.json();
 
     if (body.status === undefined) {
@@ -181,7 +185,10 @@ commentRoutes.get('/post/:postId', async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const postId = parseInt(c.req.param('postId'));
+    const postId = safeParseInt(c.req.param('postId'));
+    if (postId === null) {
+      return c.json(errorResponse('Invalid post ID').json(), 400);
+    }
     const url = new URL(c.req.url);
     const params = Object.fromEntries(url.searchParams);
 
@@ -206,7 +213,10 @@ commentRoutes.get('/:id', async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid comment ID').json(), 400);
+    }
     const commentModel = new Comment(db);
     const comment = await commentModel.getCommentById(id);
 
@@ -229,7 +239,10 @@ commentRoutes.delete('/:id/delete', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid comment ID').json(), 400);
+    }
     const commentModel = new Comment(db);
     await commentModel.deleteComment(id);
 

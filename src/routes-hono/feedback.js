@@ -9,6 +9,7 @@ import { validateSessionId } from '../utils/auth.js';
 import {
   serverErrorResponse,
   errorResponse,
+  safeParseInt,
   requireAdmin
 } from './base.js';
 
@@ -107,7 +108,10 @@ feedbackRoutes.get('/:id', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid feedback ID').json(), 400);
+    }
     const feedbackModel = new Feedback(db);
     const feedback = await feedbackModel.findById(id);
 
@@ -133,7 +137,10 @@ feedbackRoutes.put('/:id/status', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid feedback ID').json(), 400);
+    }
     const body = await c.req.json();
 
     if (body.status === undefined) {
@@ -162,7 +169,10 @@ feedbackRoutes.delete('/:id/delete', requireAdmin, async (c) => {
       return c.json(serverErrorResponse('Database not available').json(), 500);
     }
 
-    const id = parseInt(c.req.param('id'));
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid feedback ID').json(), 400);
+    }
     const feedbackModel = new Feedback(db);
     await feedbackModel.deleteFeedback(id);
 
