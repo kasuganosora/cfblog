@@ -5,7 +5,6 @@
 import { Hono } from 'hono';
 import { Post } from '../models/Post.js';
 import {
-  successResponse,
   errorResponse,
   notFoundResponse,
   forbiddenResponse,
@@ -36,9 +35,25 @@ async function getCurrentUserId(c) {
   }
 }
 
+// Helper: check if current user can view a draft post (must be author or admin)
+async function canViewDraft(c, post) {
+  const currentUserId = await getCurrentUserId(c);
+  if (!currentUserId) return false;
+  if (post.author_id === currentUserId) return true;
+  const db = c.env?.DB;
+  if (db) {
+    const user = await db.prepare('SELECT role FROM users WHERE id = ?').bind(currentUserId).first();
+    return user?.role === 'admin';
+  }
+  return false;
+}
+
 const postRoutes = new Hono();
 
 // GET /list - 获取文章列表（无参数时从 R2 缓存读取）
+// SECURITY: Non-admin users must never see draft posts. The `status` query
+// parameter is intentionally ignored here; the model defaults to published-only
+// when `isAdmin` is not explicitly set to true.
 postRoutes.get('/list', async (c) => {
   try {
     const db = c.env?.DB;
@@ -49,7 +64,9 @@ postRoutes.get('/list', async (c) => {
 
     const url = new URL(c.req.url);
     const params = Object.fromEntries(url.searchParams);
-    const hasFilters = params.status !== undefined || params.featured !== undefined || params.category_id !== undefined || params.tag_id !== undefined;
+    // Note: status is deliberately excluded from hasFilters — public users
+    // must not be able to bypass the published-only default via query params.
+    const hasFilters = params.featured !== undefined || params.category_id !== undefined || params.tag_id !== undefined;
     const page = safeParseInt(params.page, 1);
     const limit = safeParseInt(params.limit, 10);
     const isDefault = !hasFilters && page === 1 && limit === 10;
@@ -64,7 +81,8 @@ postRoutes.get('/list', async (c) => {
     const result = await postModel.getPostList({
       page,
       limit,
-      status: params.status !== undefined ? parseInt(params.status) : undefined,
+      // SECURITY: Do NOT pass status from query params for public access.
+      // The model defaults to p.status = 1 when isAdmin is false/undefined.
       featured: params.featured !== undefined ? params.featured === 'true' : undefined,
       categoryId: params.category_id !== undefined ? parseInt(params.category_id) : undefined,
       tagId: params.tag_id !== undefined ? parseInt(params.tag_id) : undefined
@@ -100,6 +118,7 @@ postRoutes.get('/search', async (c) => {
     const { page, limit } = parsePagination(c);
     const postModel = new Post(db);
 
+    // searchPosts defaults to status=1 (published only) — safe for public access
     const result = await postModel.searchPosts(keyword, { page, limit });
 
     return c.json(result);
@@ -110,6 +129,7 @@ postRoutes.get('/search', async (c) => {
 });
 
 // GET /:id - 根据ID获取文章
+// SECURITY: Draft posts are only returned to the post author or an admin.
 postRoutes.get('/:id', async (c) => {
   try {
     const db = c.env?.DB;
@@ -126,6 +146,13 @@ postRoutes.get('/:id', async (c) => {
 
     if (!post) {
       return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+
+    // SECURITY: Block draft posts for non-author/non-admin users
+    if (post.status !== 1) {
+      if (!await canViewDraft(c, post)) {
+        return c.json(notFoundResponse('Post not found').json(), 404);
+      }
     }
 
     // Increment view count only for published posts and non-author visitors
@@ -145,6 +172,7 @@ postRoutes.get('/:id', async (c) => {
 });
 
 // GET /slug/:slug - 根据slug获取文章（已发布文章从 R2 缓存读取）
+// SECURITY: Draft posts are only returned to the post author or an admin.
 postRoutes.get('/slug/:slug', async (c) => {
   try {
     const db = c.env?.DB;
@@ -155,7 +183,7 @@ postRoutes.get('/slug/:slug', async (c) => {
 
     const slug = c.req.param('slug');
 
-    // Try R2 cache first
+    // Try R2 cache first (only published posts are ever cached)
     const cached = await getCachedPost(bucket, slug);
     if (cached) {
       // Increment view count asynchronously (non-blocking)
@@ -176,6 +204,13 @@ postRoutes.get('/slug/:slug', async (c) => {
 
     if (!post) {
       return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+
+    // SECURITY: Block draft posts for non-author/non-admin users
+    if (post.status !== 1) {
+      if (!await canViewDraft(c, post)) {
+        return c.json(notFoundResponse('Post not found').json(), 404);
+      }
     }
 
     // Cache published posts in R2
@@ -200,6 +235,8 @@ postRoutes.get('/slug/:slug', async (c) => {
 });
 
 // POST /create - 创建文章（需登录）
+// SECURITY: author_id is taken from the authenticated session, never from the
+// request body, preventing author spoofing.
 postRoutes.post('/create', requireAuth, async (c) => {
   try {
     const db = c.env?.DB;
@@ -208,18 +245,19 @@ postRoutes.post('/create', requireAuth, async (c) => {
     }
 
     const body = await c.req.json();
+    const currentUser = c.get('user');
 
-    // Support both camelCase and snake_case field names
-    const authorId = body.authorId || body.author_id;
-
-    if (!body.title || !authorId) {
-      return c.json(errorResponse('Title and author ID are required').json(), 400);
+    if (!body.title) {
+      return c.json(errorResponse('Title is required').json(), 400);
     }
 
-    // Build postData — createPost() handles categoryIds/tagIds internally
+    // SECURITY: Always use the authenticated user's ID — ignore any
+    // author_id / authorId supplied in the request body.
+    const authorId = currentUser.id;
+
+    // Build postData — author_id is passed via createPost's second parameter
     const postData = {
-      title: body.title,
-      author_id: authorId
+      title: body.title
     };
 
     if (body.slug !== undefined) postData.slug = body.slug;
@@ -239,7 +277,7 @@ postRoutes.post('/create', requireAuth, async (c) => {
     if (tagIds) postData.tagIds = tagIds;
 
     const postModel = new Post(db);
-    const post = await postModel.createPost(postData);
+    const post = await postModel.createPost(postData, authorId);
 
     // Refresh caches if published
     const bucket = c.env?.BUCKET;
@@ -282,7 +320,26 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
     }
 
     const body = await c.req.json();
-    const post = await postModel.updatePost(id, body);
+
+    // SECURITY: Whitelist updatable fields to prevent mass assignment.
+    // (The model's updatePost also destructures only known fields, but
+    // whitelisting here provides defense-in-depth and normalises naming.)
+    const postData = {};
+    if (body.title !== undefined) postData.title = body.title;
+    if (body.excerpt !== undefined) postData.excerpt = body.excerpt;
+    if (body.content !== undefined) postData.content = body.content;
+    if (body.status !== undefined) postData.status = body.status;
+    if (body.featured !== undefined) postData.featured = body.featured;
+    // Support both camelCase and snake_case for comment_status
+    if (body.commentStatus !== undefined) postData.commentStatus = body.commentStatus;
+    else if (body.comment_status !== undefined) postData.commentStatus = body.comment_status;
+    // Support both camelCase and snake_case for published_at
+    if (body.publishedAt !== undefined) postData.publishedAt = body.publishedAt;
+    else if (body.published_at !== undefined) postData.publishedAt = body.published_at;
+    if (body.categoryIds !== undefined) postData.categoryIds = body.categoryIds;
+    if (body.tagIds !== undefined) postData.tagIds = body.tagIds;
+
+    const post = await postModel.updatePost(id, postData);
 
     // Refresh caches
     const bucket = c.env?.BUCKET;
@@ -308,6 +365,8 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
 });
 
 // DELETE /:id/delete - 删除文章（需登录，仅作者或管理员）
+// FIX: Clean up post_tags and post_categories junction table entries before
+// deleting the post to prevent orphaned rows.
 postRoutes.delete('/:id/delete', requireAuth, async (c) => {
   try {
     const db = c.env?.DB;
@@ -330,6 +389,10 @@ postRoutes.delete('/:id/delete', requireAuth, async (c) => {
     if (existingPost.author_id !== currentUser.id && currentUser.role !== 'admin') {
       return c.json(forbiddenResponse('You can only delete your own posts').json(), 403);
     }
+
+    // Clean up junction table entries before deleting the post itself
+    await db.prepare('DELETE FROM post_tags WHERE post_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM post_categories WHERE post_id = ?').bind(id).run();
 
     await postModel.deletePost(id);
 

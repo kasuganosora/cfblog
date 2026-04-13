@@ -40,7 +40,7 @@ function getUserLanguage() {
     if (saved && SUPPORTED_LANGUAGES[saved]) {
       return saved;
     }
-  } catch (e) {
+  } catch (_e) {
     // localStorage not available
   }
   return getBrowserLanguage();
@@ -51,7 +51,7 @@ function setUserLanguage(lang) {
   if (SUPPORTED_LANGUAGES[lang]) {
     try {
       localStorage.setItem('cfblog_language', lang);
-    } catch (e) {
+    } catch (_e) {
       // localStorage not available
     }
     return true;
@@ -64,8 +64,8 @@ async function loadLanguagePack(lang) {
   try {
     const module = await import(`../i18n/${lang}.js`);
     return module.default || module;
-  } catch (e) {
-    console.error(`Failed to load language pack: ${lang}`, e);
+  } catch (_e) {
+    console.error(`Failed to load language pack: ${lang}`, _e);
     // Fallback to default
     const defaultModule = await import(`../i18n/${DEFAULT_LANGUAGE}.js`);
     return defaultModule.default || defaultModule;

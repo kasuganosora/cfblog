@@ -4,9 +4,10 @@
  */
 
 export const corsMiddleware = async (request) => {
-  // Get origin from request or environment
-  const origin = request.headers.get('Origin') || '*';
   const corsOrigin = globalThis.CORS_ORIGIN || '*';
+
+  // Determine if we're using a specific (non-wildcard) origin
+  const isSpecificOrigin = corsOrigin !== '*';
 
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
@@ -16,11 +17,16 @@ export const corsMiddleware = async (request) => {
         'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-        'Access-Control-Max-Age': '86400'
+        'Access-Control-Max-Age': '86400',
+        ...(isSpecificOrigin && { 'Vary': 'Origin' })
       }
     });
   }
 
-  // Continue to next middleware
+  // Continue to next middleware (attach Vary: Origin for non-preflight too)
+  if (isSpecificOrigin) {
+    request._corsVary = true;
+  }
+
   return null;
 };

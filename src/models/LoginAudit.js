@@ -30,12 +30,17 @@ export class LoginAudit extends BaseModel {
     await this.cleanup();
   }
 
+  /** SQLite datetime format helper: YYYY-MM-DD HH:MM:SS */
+  _sqliteNow(offsetMs = 0) {
+    return new Date(Date.now() + offsetMs).toISOString().slice(0, 19).replace('T', ' ');
+  }
+
   /**
    * Check if an IP is blocked (5+ failed attempts within 1 hour)
    * Returns { blocked, remainingMinutes }
    */
   async isIPBlocked(ip) {
-    const since = new Date(Date.now() - BLOCK_DURATION_HOURS * 60 * 60 * 1000).toISOString();
+    const since = this._sqliteNow(-BLOCK_DURATION_HOURS * 60 * 60 * 1000);
     const result = await this.queryFirst(
       `SELECT COUNT(*) as fail_count FROM login_audit
        WHERE ip = ? AND success = 0 AND created_at > ?`,
@@ -50,9 +55,10 @@ export class LoginAudit extends BaseModel {
          ORDER BY created_at ASC LIMIT 1`,
         [ip, since]
       );
-      const unblockTime = new Date(new Date(earliest.created_at).getTime() + BLOCK_DURATION_HOURS * 60 * 60 * 1000);
-      const remainingMinutes = Math.ceil((unblockTime.getTime() - Date.now()) / 60000);
-      return { blocked: true, remainingMinutes: Math.max(1, remainingMinutes) };
+      if (!earliest) return { blocked: true, remainingMinutes: BLOCK_DURATION_HOURS * 60 };
+      const unblockTime = new Date(new Date(earliest.created_at + 'Z').getTime() + BLOCK_DURATION_HOURS * 60 * 60 * 1000);
+      const remainingMinutes = Math.max(0, Math.ceil((unblockTime.getTime() - Date.now()) / 60000));
+      return { blocked: true, remainingMinutes: remainingMinutes };
     }
     return { blocked: false, remainingMinutes: 0 };
   }

@@ -5,14 +5,10 @@
 import { Hono } from 'hono';
 import { User } from '../models/User.js';
 import { LoginAudit } from '../models/LoginAudit.js';
-import { generateSessionId, validateSessionId } from '../utils/auth.js';
+import { generateSessionId } from '../utils/auth.js';
 import {
-  successResponse,
   errorResponse,
   serverErrorResponse,
-  unauthorizedResponse,
-  forbiddenResponse,
-  parsePagination,
   safeParseInt,
   requireAuth,
   requireAdmin
@@ -52,7 +48,7 @@ userRoutes.post('/login', async (c) => {
         const body = await c.req.parseBody();
         username = body.username;
         password = body.password;
-      } catch (e) {
+      } catch (_e) {
         return c.json(errorResponse('Invalid request format').json(), 400);
       }
     }
@@ -85,7 +81,7 @@ userRoutes.post('/login', async (c) => {
         data: { user },
         message: 'Login successful'
       });
-    } catch (loginError) {
+    } catch (_loginError) {
       // Login failed — record failed attempt
       await auditModel.recordAttempt({ ip, username, success: false, user_agent: userAgent });
       return c.json(errorResponse('Invalid username or password').json(), 401);

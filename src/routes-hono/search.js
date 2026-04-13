@@ -31,7 +31,9 @@ searchRoutes.get('/', async (c) => {
       return c.json(errorResponse('Keyword is required').json(), 400);
     }
 
-    const searchPattern = `%${keyword}%`;
+    // Escape SQL LIKE wildcards in user input to prevent injection
+    const escapedKeyword = keyword.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    const searchPattern = `%${escapedKeyword}%`;
     let results = [];
     let totalCount = 0;
 
@@ -82,7 +84,7 @@ searchRoutes.get('/', async (c) => {
         page,
         limit,
         total: totalCount,
-        totalPages: Math.ceil(totalCount / limit)
+        totalPages: Math.ceil(totalCount / Math.max(1, limit))
       }
     });
   } catch (error) {

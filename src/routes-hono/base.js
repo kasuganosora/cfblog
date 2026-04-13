@@ -3,13 +3,7 @@
  * 提供通用工具函数
  */
 
-import { Post } from '../models/Post.js';
 import { User } from '../models/User.js';
-import { Category } from '../models/Category.js';
-import { Tag } from '../models/Tag.js';
-import { Comment } from '../models/Comment.js';
-import { Feedback } from '../models/Feedback.js';
-import { Settings } from '../models/Settings.js';
 import { validateSessionId } from '../utils/auth.js';
 
 // 统一响应格式
@@ -124,7 +118,7 @@ export const requireAuth = async (c, next) => {
     }
 
     // Remove password hash and attach user to context
-    const { password_hash, ...safeUser } = user;
+    const { password_hash: _password_hash, ...safeUser } = user;
     c.set('user', safeUser);
     c.set('userId', safeUser.id);
 
@@ -169,7 +163,7 @@ export const requireAdmin = async (c, next) => {
       return c.json(forbiddenResponse('Admin access required').json(), 403);
     }
 
-    const { password_hash, ...safeUser } = user;
+    const { password_hash: _password_hash, ...safeUser } = user;
     c.set('user', safeUser);
     c.set('userId', safeUser.id);
 

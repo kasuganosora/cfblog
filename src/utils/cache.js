@@ -63,12 +63,16 @@ export const deleteCache = async (kv, key) => {
  */
 export const clearAllCache = async (kv) => {
   try {
-    const list = await kv.list();
-    const keys = list.keys.map(k => k.name);
-
-    for (const key of keys) {
-      await kv.delete(key);
-    }
+    let cursor;
+    let list;
+    do {
+      list = await kv.list({ cursor });
+      const keys = list.keys.map(k => k.name);
+      for (const key of keys) {
+        await kv.delete(key);
+      }
+      cursor = list.cursor;
+    } while (!list.list_complete);
 
     return true;
   } catch (error) {
@@ -82,12 +86,16 @@ export const clearAllCache = async (kv) => {
  */
 export const clearCacheByPrefix = async (kv, prefix) => {
   try {
-    const list = await kv.list({ prefix });
-    const keys = list.keys.map(k => k.name);
-
-    for (const key of keys) {
-      await kv.delete(key);
-    }
+    let cursor;
+    let list;
+    do {
+      list = await kv.list({ prefix, cursor });
+      const keys = list.keys.map(k => k.name);
+      for (const key of keys) {
+        await kv.delete(key);
+      }
+      cursor = list.cursor;
+    } while (!list.list_complete);
 
     return true;
   } catch (error) {
@@ -129,7 +137,7 @@ export const getCachedSettings = async (bucket, db) => {
       if (obj) {
         return await obj.json();
       }
-    } catch {}
+    } catch { /* empty */ }
   }
   // Fallback to D1
   if (db) {
@@ -142,7 +150,7 @@ export const getCachedSettings = async (bucket, db) => {
         await bucket.put(SETTINGS_CACHE_KEY, JSON.stringify(all), {
           httpMetadata: { contentType: 'application/json' }
         });
-      } catch {}
+      } catch { /* empty */ }
     }
     return all;
   }
@@ -200,7 +208,7 @@ export const getCachedPostList = async (bucket) => {
   try {
     const obj = await bucket.get(POSTS_DEFAULT_KEY);
     if (obj) return await obj.json();
-  } catch {}
+  } catch { /* empty */ }
   return null;
 };
 
@@ -226,7 +234,7 @@ export const getCachedPost = async (bucket, slug) => {
   try {
     const obj = await bucket.get(POST_CACHE_PREFIX + slug + '.json');
     if (obj) return await obj.json();
-  } catch {}
+  } catch { /* empty */ }
   return null;
 };
 
@@ -237,7 +245,7 @@ export const deleteCachedPost = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(POST_CACHE_PREFIX + slug + '.json');
-  } catch {}
+  } catch { /* empty */ }
 };
 
 /**
@@ -298,7 +306,7 @@ export const getCachedRSS = async (bucket) => {
   try {
     const obj = await bucket.get(RSS_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch {}
+  } catch { /* empty */ }
   return null;
 };
 
@@ -349,7 +357,7 @@ export const getCachedSitemap = async (bucket) => {
   try {
     const obj = await bucket.get(SITEMAP_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch {}
+  } catch { /* empty */ }
   return null;
 };
 
@@ -371,11 +379,26 @@ export const refreshAllPostCaches = async (bucket, db, siteUrl) => {
 const HEXO_POSTS_PREFIX = 'source/_posts/';
 
 /**
- * Escape YAML string value (handle quotes and special chars)
+ * Escape and quote a YAML scalar value for safe inclusion in frontmatter.
+ * Values containing newlines, colons, hashes, brackets, or other special YAML
+ * characters are wrapped in double quotes with proper escaping.
  */
 function escYaml(s) {
-  if (!s) return '';
-  return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  if (!s) return '""';
+  const str = String(s);
+  // Escape characters that need escaping inside double-quoted YAML strings
+  const escaped = str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+  // Wrap in double quotes if value contains special YAML characters,
+  // is empty, matches a reserved word, or starts with a digit/minus
+  if (/[:#{}[\],&*?|>!%@`'"\n\r]/.test(str) || str === '' || str === 'true' || str === 'false' || /^-?\d/.test(str)) {
+    return '"' + escaped + '"';
+  }
+  return escaped;
 }
 
 /**
@@ -384,19 +407,19 @@ function escYaml(s) {
 function postToHexoMd(post) {
   const fm = [
     '---',
-    `title: "${escYaml(post.title)}"`,
+    `title: ${escYaml(post.title)}`,
     `date: ${post.published_at || post.created_at}`,
     `updated: ${post.updated_at || post.created_at}`,
   ];
   if (post.tags?.length) {
     fm.push('tags:');
-    post.tags.forEach(t => fm.push(`  - ${t.name}`));
+    post.tags.forEach(t => fm.push("  - " + escYaml(t.name)));
   }
   if (post.categories?.length) {
     fm.push('categories:');
-    post.categories.forEach(c => fm.push(`  - ${c.name}`));
+    post.categories.forEach(c => fm.push("  - " + escYaml(c.name)));
   }
-  if (post.excerpt) fm.push(`excerpt: "${escYaml(post.excerpt)}"`);
+  if (post.excerpt) fm.push(`excerpt: ${escYaml(post.excerpt)}`);
   fm.push('---', '');
 
   // Replace API upload paths with Hexo-compatible paths
@@ -428,5 +451,5 @@ export const deleteHexoMd = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(HEXO_POSTS_PREFIX + slug + '.md');
-  } catch {}
+  } catch { /* empty */ }
 };

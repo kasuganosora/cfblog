@@ -4,7 +4,7 @@
  */
 
 import { BaseModel } from './BaseModel.js';
-import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
+import { generateUniqueSlug } from '../utils/slug.js';
 
 export class Category extends BaseModel {
   constructor(db) {

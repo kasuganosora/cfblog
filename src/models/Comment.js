@@ -26,13 +26,14 @@ export class Comment extends BaseModel {
       author_ip,
       content,
       parentId: parentIdCamel,
-      parent_id: parentIdSnake
+      parent_id: parentIdSnake,
+      status
     } = commentData;
 
-    const postId = postIdCamel || postIdSnake;
-    const authorName = authorNameCamel || authorNameSnake;
-    const authorEmail = authorEmailCamel || authorEmailSnake;
-    const parentId = parentIdCamel || parentIdSnake;
+    const postId = postIdCamel ?? postIdSnake;
+    const authorName = authorNameCamel ?? authorNameSnake;
+    const authorEmail = authorEmailCamel ?? authorEmailSnake;
+    const parentId = parentIdCamel ?? parentIdSnake;
 
     const comment = await this.create({
       post_id: postId,
@@ -41,7 +42,7 @@ export class Comment extends BaseModel {
       author_ip: author_ip || null,
       content,
       parent_id: parentId || null,
-      status: 1 // Default to approved
+      status: status !== undefined ? status : 1 // Default to approved unless caller specifies
     });
 
     return this.getCommentById(comment.id);
@@ -90,19 +91,25 @@ export class Comment extends BaseModel {
       LIMIT ? OFFSET ?
     `, [postId, limit, offset]);
 
-    // Get replies for each comment
-    const commentsWithReplies = await Promise.all(
-      comments.map(async comment => {
-        const replies = await this.query(`
-          SELECT * FROM comments WHERE parent_id = ? ORDER BY created_at ASC
-        `, [comment.id]);
+    // Batch-fetch all replies for the fetched comments (avoids N+1 queries)
+    const commentIds = comments.map(c => c.id);
+    let repliesMap = {};
+    if (commentIds.length > 0) {
+      const allReplies = await this.query(`
+        SELECT * FROM comments WHERE parent_id IN (${commentIds.map(() => '?').join(',')}) ORDER BY created_at ASC
+      `, commentIds);
+      for (const reply of allReplies) {
+        if (!repliesMap[reply.parent_id]) {
+          repliesMap[reply.parent_id] = [];
+        }
+        repliesMap[reply.parent_id].push(reply);
+      }
+    }
 
-        return {
-          ...comment,
-          replies
-        };
-      })
-    );
+    const commentsWithReplies = comments.map(comment => ({
+      ...comment,
+      replies: repliesMap[comment.id] || []
+    }));
 
     return {
       data: commentsWithReplies,

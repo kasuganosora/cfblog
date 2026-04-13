@@ -5,7 +5,6 @@
 
 import { BaseModel } from './BaseModel.js';
 import { hashPassword, verifyPassword } from '../utils/auth.js';
-import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
 
 export class User extends BaseModel {
   constructor(db) {
@@ -55,7 +54,7 @@ export class User extends BaseModel {
     });
 
     // Remove password hash from response
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password_hash: _password_hash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -98,7 +97,7 @@ export class User extends BaseModel {
     const user = await this.update(id, updateData);
 
     // Remove password hash from response
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password_hash: _ph2, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -147,7 +146,7 @@ export class User extends BaseModel {
     }
 
     // Remove password hash from response
-    const { password_hash, ...userWithoutPassword } = user;
+    const { password_hash: _ph3, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
@@ -182,7 +181,7 @@ export class User extends BaseModel {
 
     // Remove password hashes from results
     const dataWithoutPasswords = result.data.map(user => {
-      const { password_hash, ...userWithoutPassword } = user;
+      const { password_hash: _password_hash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
 

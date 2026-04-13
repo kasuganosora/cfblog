@@ -1,10 +1,15 @@
 /**
  * Post Model
  * Handles post data operations
+ *
+ * SECURITY NOTE (XSS): Post content stored in the DB may contain raw HTML.
+ * It MUST be sanitized (e.g., via DOMPurify / sanitize-html) at the
+ * controller/rendering layer before being sent to the client or rendered
+ * as HTML.  The model layer intentionally does not sanitize content.
  */
 
 import { BaseModel } from './BaseModel.js';
-import { generateSlug, generateUniqueSlug } from '../utils/slug.js';
+import { generateUniqueSlug } from '../utils/slug.js';
 
 export class Post extends BaseModel {
   constructor(db) {
@@ -25,13 +30,16 @@ export class Post extends BaseModel {
   /**
    * Create post
    */
-  async createPost(postData) {
+  async createPost(postData, authorId) {
+    // authorId must be provided explicitly from the authenticated session
+    if (!authorId) {
+      throw new Error('authorId is required');
+    }
+
     // Support both camelCase and snake_case field names
     const {
       title,
       excerpt,
-      author_id: authorIdSnake,
-      authorId: authorIdCamel,
       status = 0,
       featured = 0,
       comment_status: commentStatusSnake,
@@ -44,7 +52,6 @@ export class Post extends BaseModel {
       tagIds
     } = postData;
 
-    const authorId = authorIdCamel || authorIdSnake;
     const commentStatus = commentStatusCamel !== undefined ? commentStatusCamel : (commentStatusSnake !== undefined ? commentStatusSnake : 1);
     const publishedAt = publishedAtCamel || publishedAtSnake;
 
@@ -147,8 +154,15 @@ export class Post extends BaseModel {
 
   /**
    * Delete post
+   *
+   * Explicitly removes join-table rows (post_categories, post_tags) before
+   * deleting the post record.  The schema defines ON DELETE CASCADE on these
+   * foreign keys, but we perform explicit cleanup here for defense-in-depth
+   * so the model remains self-contained regardless of CASCADE behaviour.
    */
   async deletePost(id) {
+    await this.execute('DELETE FROM post_tags WHERE post_id = ?', [id]);
+    await this.execute('DELETE FROM post_categories WHERE post_id = ?', [id]);
     await this.delete(id);
     return true;
   }
@@ -156,10 +170,17 @@ export class Post extends BaseModel {
   /**
    * Get post by ID with full details
    */
-  async getPostById(id) {
+  async getPostById(id, options = {}) {
+    const { publishedOnly = false } = options;
+
     const post = await this.findById(id);
 
     if (!post) {
+      return null;
+    }
+
+    // Filter out drafts for public access
+    if (publishedOnly && post.status !== 1) {
       return null;
     }
 
@@ -195,29 +216,37 @@ export class Post extends BaseModel {
   /**
    * Get post by slug with full details
    */
-  async getPostBySlug(slug) {
+  async getPostBySlug(slug, options = {}) {
     const post = await this.findBySlug(slug);
 
     if (!post) {
       return null;
     }
 
-    return this.getPostById(post.id);
+    return this.getPostById(post.id, options);
   }
 
   /**
    * Get post list
    */
   async getPostList(options = {}) {
-    const { page = 1, limit = 10, status, featured, categoryId, tagId } = options;
+    const { page = 1, limit = 10, status, featured, categoryId, tagId, isAdmin = false } = options;
 
     let where = [];
     let params = [];
     let joins = '';
 
-    if (status !== undefined) {
-      where.push('p.status = ?');
-      params.push(status);
+    // SECURITY: Enforce published-only for non-admin users.
+    // Even if status is explicitly passed, it is ignored unless isAdmin is true.
+    if (isAdmin) {
+      if (status !== undefined) {
+        where.push('p.status = ?');
+        params.push(status);
+      }
+      // When isAdmin is true and status is undefined, no status filter is applied
+      // (admins can see all statuses).
+    } else {
+      where.push('p.status = 1');
     }
 
     if (featured !== undefined) {
@@ -232,7 +261,7 @@ export class Post extends BaseModel {
     }
 
     if (tagId !== undefined) {
-      joins += ' JOIN post_tags pt ON p.id = pt.tag_id';
+      joins += ' JOIN post_tags pt ON p.id = pt.post_id';
       where.push('pt.tag_id = ?');
       params.push(tagId);
     }
@@ -279,24 +308,45 @@ export class Post extends BaseModel {
     );
 
     const post = await this.findById(id);
-    return post ? post.view_count + 1 : 0;
+    return post ? post.view_count : 0;
+  }
+
+  /**
+   * Escape SQL LIKE wildcards (% and _) in user input so they are treated
+   * as literal characters rather than pattern metacharacters.
+   */
+  static escapeLikePattern(str) {
+    return str.replace(/%/g, '\\%').replace(/_/g, '\\_');
   }
 
   /**
    * Search posts
    */
   async searchPosts(keyword, options = {}) {
-    const { page = 1, limit = 10, status = 1 } = options;
+    const { page = 1, limit = 10, isAdmin = false, status } = options;
+
+    // SECURITY: Enforce published-only for non-admin users.
+    // The status option is only honoured when isAdmin is explicitly true.
+    const effectiveStatus = isAdmin ? status : 1;
 
     const offset = (page - 1) * limit;
-    const searchPattern = `%${keyword}%`;
+    // SECURITY: Escape LIKE metacharacters from user input to prevent
+    // wildcard injection (e.g. searching for "%" would otherwise match all
+    // rows).  D1/SQLite uses ESCAPE '\\' by default.
+    const escaped = Post.escapeLikePattern(keyword);
+    const searchPattern = `%${escaped}%`;
+
+    // Build conditional status clause — omit entirely when admin requests
+    // all statuses (effectiveStatus === undefined).
+    const statusClause = effectiveStatus !== undefined ? 'status = ? AND ' : '';
+    const statusParams = effectiveStatus !== undefined ? [effectiveStatus] : [];
 
     // Count total
     const countResult = await this.query(`
       SELECT COUNT(*) as count
       FROM posts
-      WHERE status = ? AND (title LIKE ? OR excerpt LIKE ?)
-    `, [status, searchPattern, searchPattern]);
+      WHERE ${statusClause}(title LIKE ? ESCAPE '\\' OR excerpt LIKE ? ESCAPE '\\')
+    `, [...statusParams, searchPattern, searchPattern]);
 
     const total = countResult[0]?.count || 0;
 
@@ -305,10 +355,10 @@ export class Post extends BaseModel {
       SELECT p.*, u.username, u.display_name as author_name
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
-      WHERE p.status = ? AND (p.title LIKE ? OR p.excerpt LIKE ?)
+      WHERE ${statusClause}(p.title LIKE ? ESCAPE '\\' OR p.excerpt LIKE ? ESCAPE '\\')
       ORDER BY p.published_at DESC
       LIMIT ? OFFSET ?
-    `, [status, searchPattern, searchPattern, limit, offset]);
+    `, [...statusParams, searchPattern, searchPattern, limit, offset]);
 
     return {
       keyword,

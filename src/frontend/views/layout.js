@@ -4,9 +4,17 @@
 
 import { esc } from '../utils/helpers.js';
 
+/**
+ * Escape a string for safe insertion inside a <script> block.
+ * Prevents </script> breakout by encoding < and > as Unicode escapes.
+ */
+function escapeJsString(json) {
+  return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+}
+
 export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, pageScript, activePage = '', bodyAttrs = '' }) {
   const y = new Date().getFullYear();
-  const pageDataScript = pageData ? `<script>window.__PAGE_DATA__=${JSON.stringify(pageData)};</script>\n` : '';
+  const pageDataScript = pageData ? `<script>window.__PAGE_DATA__=${escapeJsString(pageData)};</script>\n` : '';
   const pageJsTag = pageScript ? `<script src="/static/js/${pageScript}"></script>\n` : '';
 
   return `<!DOCTYPE html>

@@ -53,7 +53,7 @@ frontendRoutes.get('/login', async (c) => {
       const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
       if (session?.userId) return c.redirect('/admin');
     }
-  } catch {}
+  } catch { /* empty */ }
 
   const settings = await getSettings(c);
   const blogTitle = settings.blog_title || 'CFBlog';

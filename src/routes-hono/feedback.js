@@ -39,6 +39,9 @@ feedbackRoutes.post('/create', async (c) => {
     if (body.email && body.email.length > 100) {
       return c.json(errorResponse('Email must be 100 characters or less').json(), 400);
     }
+    if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+      return c.json(errorResponse('Invalid email format').json(), 400);
+    }
 
     // IP cooldown for non-logged-in users
     const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0';
@@ -48,7 +51,7 @@ feedbackRoutes.post('/create', async (c) => {
       if (sessionId && c.env?.SESSION_SECRET) {
         isLoggedIn = !!(await validateSessionId(sessionId, c.env.SESSION_SECRET));
       }
-    } catch(e) {}
+    } catch(_e) { /* empty */ }
 
     if (!isLoggedIn) {
       const settingsModel = new Settings(db);
@@ -66,7 +69,9 @@ feedbackRoutes.post('/create', async (c) => {
     }
 
     const feedbackModel = new Feedback(db);
-    const feedback = await feedbackModel.createFeedback({ ...body, ip });
+    // Whitelist only allowed fields to prevent mass assignment
+    const { name, email, content, website } = body;
+    const feedback = await feedbackModel.createFeedback({ name, email, content, website, ip });
 
     return c.json(feedback, 201);
   } catch (error) {

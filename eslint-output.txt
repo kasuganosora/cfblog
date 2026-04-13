@@ -1,0 +1,85 @@
+
+/data/cfblog/src/frontend/utils/helpers.js
+  39:11  error  Empty block statement  no-empty
+
+/data/cfblog/src/frontend/utils/i18n.js
+   43:12  warning  'e' is defined but never used  no-unused-vars
+   54:14  warning  'e' is defined but never used  no-unused-vars
+  111:3   error    'window' is not defined        no-undef
+
+/data/cfblog/src/index-hono.js
+  28:9  warning  'origin' is assigned a value but never used  no-unused-vars
+
+/data/cfblog/src/middleware/cors.js
+  8:9  warning  'origin' is assigned a value but never used  no-unused-vars
+
+/data/cfblog/src/models/BaseModel.js
+  104:17  warning  'key' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+/data/cfblog/src/models/Category.js
+  7:10  warning  'generateSlug' is defined but never used  no-unused-vars
+
+/data/cfblog/src/models/Post.js
+  7:10  warning  'generateSlug' is defined but never used  no-unused-vars
+
+/data/cfblog/src/models/Tag.js
+  7:10  warning  'generateSlug' is defined but never used  no-unused-vars
+
+/data/cfblog/src/models/User.js
+    8:10  warning  'generateSlug' is defined but never used            no-unused-vars
+    8:24  warning  'generateUniqueSlug' is defined but never used      no-unused-vars
+   58:13  warning  'password_hash' is assigned a value but never used  no-unused-vars
+  101:13  warning  'password_hash' is assigned a value but never used  no-unused-vars
+  150:13  warning  'password_hash' is assigned a value but never used  no-unused-vars
+  185:15  warning  'password_hash' is assigned a value but never used  no-unused-vars
+
+/data/cfblog/src/routes-hono/base.js
+    6:10  warning  'Post' is defined but never used                    no-unused-vars
+    8:10  warning  'Category' is defined but never used                no-unused-vars
+    9:10  warning  'Tag' is defined but never used                     no-unused-vars
+   10:10  warning  'Comment' is defined but never used                 no-unused-vars
+   11:10  warning  'Feedback' is defined but never used                no-unused-vars
+   12:10  warning  'Settings' is defined but never used                no-unused-vars
+  127:13  warning  'password_hash' is assigned a value but never used  no-unused-vars
+  172:13  warning  'password_hash' is assigned a value but never used  no-unused-vars
+
+/data/cfblog/src/routes-hono/comment.js
+  125:13  warning  'e' is defined but never used  no-unused-vars
+  125:16  error    Empty block statement          no-empty
+
+/data/cfblog/src/routes-hono/feedback.js
+  51:13  warning  'e' is defined but never used  no-unused-vars
+  51:16  error    Empty block statement          no-empty
+
+/data/cfblog/src/routes-hono/frontend.js
+  56:11  error  Empty block statement  no-empty
+
+/data/cfblog/src/routes-hono/post.js
+  8:3  warning  'successResponse' is defined but never used  no-unused-vars
+
+/data/cfblog/src/routes-hono/user.js
+   8:29  warning  'validateSessionId' is defined but never used     no-unused-vars
+  10:3   warning  'successResponse' is defined but never used       no-unused-vars
+  13:3   warning  'unauthorizedResponse' is defined but never used  no-unused-vars
+  14:3   warning  'forbiddenResponse' is defined but never used     no-unused-vars
+  15:3   warning  'parsePagination' is defined but never used       no-unused-vars
+  55:16  warning  'e' is defined but never used                     no-unused-vars
+  88:14  warning  'loginError' is defined but never used            no-unused-vars
+
+/data/cfblog/src/utils/cache.js
+  132:13  error  Empty block statement  no-empty
+  145:15  error  Empty block statement  no-empty
+  203:11  error  Empty block statement  no-empty
+  229:11  error  Empty block statement  no-empty
+  240:11  error  Empty block statement  no-empty
+  301:11  error  Empty block statement  no-empty
+  352:11  error  Empty block statement  no-empty
+  431:11  error  Empty block statement  no-empty
+
+/data/cfblog/src/utils/slug.js
+  27:19  error  Unnecessary escape character: \-  no-useless-escape
+  28:15  error  Unnecessary escape character: \-  no-useless-escape
+  28:17  error  Unnecessary escape character: \-  no-useless-escape
+
+✖ 48 problems (16 errors, 32 warnings)
+

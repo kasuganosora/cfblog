@@ -36,6 +36,6 @@ export async function getCurrentUser(c) {
         }
       }
     }
-  } catch {}
+  } catch { /* empty */ }
   return null;
 }

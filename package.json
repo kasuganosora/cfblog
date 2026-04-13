@@ -2,6 +2,7 @@
   "name": "cfblog",
   "version": "1.0.0",
   "description": "A modern blog platform built on Cloudflare full stack",
+  "type": "module",
   "main": "src/index-hono.js",
   "scripts": {
     "dev": "npx wrangler dev --local --port 8787",
@@ -15,7 +16,8 @@
     "test:api:watch": "vitest",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
-    "test:e2e:debug": "npx playwright test --debug"
+    "test:e2e:debug": "npx playwright test --debug",
+    "lint": "eslint src/"
   },
   "keywords": [
     "blog",
@@ -26,8 +28,11 @@
   "author": "CFBlog Team",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.30.0",
     "@playwright/test": "^1.57.0",
     "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^9.30.0",
+    "globals": "^16.3.0",
     "vitest": "^1.6.1",
     "wrangler": "^4.54.0"
   },
