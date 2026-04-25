@@ -3,37 +3,32 @@
  * R2-based caching for settings, posts, RSS, sitemap, and Hexo markdown export
  */
 
-/**
- * R2-based settings cache
- * Stores all settings as a single JSON file in R2 for fast reads
- */
+// ============================================================
+// R2-based settings cache
+// ============================================================
+
 const SETTINGS_CACHE_KEY = 'cache/settings.json';
 
 /**
  * Read settings from R2 cache, fallback to D1
  */
 export const getCachedSettings = async (bucket, db) => {
-  // Try R2 first
   if (bucket) {
     try {
       const obj = await bucket.get(SETTINGS_CACHE_KEY);
-      if (obj) {
-        return await obj.json();
-      }
-    } catch { /* cache miss — fall through */ }
+      if (obj) return await obj.json();
+    } catch (_e) { /* cache miss — fall through */ }
   }
-  // Fallback to D1
   if (db) {
     const { Settings } = await import('../models/Settings.js');
     const settingsModel = new Settings(db);
     const all = await settingsModel.getAllSettings();
-    // Write back to R2 for next time
     if (bucket) {
       try {
         await bucket.put(SETTINGS_CACHE_KEY, JSON.stringify(all), {
           httpMetadata: { contentType: 'application/json' }
         });
-      } catch { /* write-back failed — harmless */ }
+      } catch (_e) { /* write-back failed — harmless */ }
     }
     return all;
   }
@@ -91,7 +86,7 @@ export const getCachedPostList = async (bucket) => {
   try {
     const obj = await bucket.get(POSTS_DEFAULT_KEY);
     if (obj) return await obj.json();
-  } catch { /* cache miss */ }
+  } catch (_e) { /* cache miss */ }
   return null;
 };
 
@@ -117,7 +112,7 @@ export const getCachedPost = async (bucket, slug) => {
   try {
     const obj = await bucket.get(POST_CACHE_PREFIX + slug + '.json');
     if (obj) return await obj.json();
-  } catch { /* cache miss */ }
+  } catch (_e) { /* cache miss */ }
   return null;
 };
 
@@ -128,7 +123,7 @@ export const deleteCachedPost = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(POST_CACHE_PREFIX + slug + '.json');
-  } catch { /* delete failed — harmless */ }
+  } catch (_e) { /* delete failed — harmless */ }
 };
 
 /**
@@ -150,7 +145,11 @@ export const refreshRSSCache = async (bucket, db, siteUrl) => {
     const result = await postModel.getPostList({ page: 1, limit: 20, status: 1 });
     const posts = result.data || [];
 
-    const escXml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escXml = (s) => String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
     const toRFC822 = (d) => new Date(d).toUTCString();
 
     const items = posts.map(p => `    <item>
@@ -189,7 +188,7 @@ export const getCachedRSS = async (bucket) => {
   try {
     const obj = await bucket.get(RSS_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch { /* cache miss */ }
+  } catch (_e) { /* cache miss */ }
   return null;
 };
 
@@ -208,21 +207,23 @@ export const refreshSitemapCache = async (bucket, db, siteUrl) => {
     const result = await postModel.getPostList({ page: 1, limit: 5000, status: 1 });
     const posts = result.data || [];
 
-    const escXml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escXml = (s) => String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 
     let urls = '';
-    // Static pages
-    urls += `  <url>\n    <loc>${escXml(url)}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
-    urls += `  <url>\n    <loc>${escXml(url)}/categories</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
-    urls += `  <url>\n    <loc>${escXml(url)}/tags</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    urls += '  <url>\n    <loc>' + escXml(url) + '/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n';
+    urls += '  <url>\n    <loc>' + escXml(url) + '/categories</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n';
+    urls += '  <url>\n    <loc>' + escXml(url) + '/tags</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n';
 
-    // Post pages
     for (const p of posts) {
       const lastmod = (p.updated_at || p.published_at || p.created_at || '').split('T')[0] || now;
-      urls += `  <url>\n    <loc>${escXml(url)}/post/${escXml(p.slug)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+      urls += '  <url>\n    <loc>' + escXml(url) + '/post/' + escXml(p.slug) + '</loc>\n    <lastmod>' + lastmod + '</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n';
     }
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}</urlset>`;
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + '</urlset>';
 
     await bucket.put(SITEMAP_CACHE_KEY, xml, {
       httpMetadata: { contentType: 'application/xml; charset=utf-8' }
@@ -240,7 +241,7 @@ export const getCachedSitemap = async (bucket) => {
   try {
     const obj = await bucket.get(SITEMAP_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch { /* cache miss */ }
+  } catch (_e) { /* cache miss */ }
   return null;
 };
 
@@ -261,51 +262,39 @@ export const refreshAllPostCaches = async (bucket, db, siteUrl) => {
 
 const HEXO_POSTS_PREFIX = 'source/_posts/';
 
-/**
- * Escape and quote a YAML scalar value for safe inclusion in frontmatter.
- * Values containing newlines, colons, hashes, brackets, or other special YAML
- * characters are wrapped in double quotes with proper escaping.
- */
 function escYaml(s) {
   if (!s) return '""';
   const str = String(s);
-  // Escape characters that need escaping inside double-quoted YAML strings
   const escaped = str
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
     .replace(/\t/g, '\\t');
-  // Wrap in double quotes if value contains special YAML characters,
-  // is empty, matches a reserved word, or starts with a digit/minus
   if (/[:#{}[\],&*?|>!%@`'"\n\r]/.test(str) || str === '' || str === 'true' || str === 'false' || /^-?\d/.test(str)) {
     return '"' + escaped + '"';
   }
   return escaped;
 }
 
-/**
- * Convert post data to Hexo-compatible markdown with frontmatter
- */
 function postToHexoMd(post) {
   const fm = [
     '---',
-    `title: ${escYaml(post.title)}`,
-    `date: ${post.published_at || post.created_at}`,
-    `updated: ${post.updated_at || post.created_at}`,
+    'title: ' + escYaml(post.title),
+    'date: ' + (post.published_at || post.created_at),
+    'updated: ' + (post.updated_at || post.created_at),
   ];
-  if (post.tags?.length) {
+  if (post.tags && post.tags.length) {
     fm.push('tags:');
-    post.tags.forEach(t => fm.push("  - " + escYaml(t.name)));
+    post.tags.forEach(function(t) { fm.push('  - ' + escYaml(t.name)); });
   }
-  if (post.categories?.length) {
+  if (post.categories && post.categories.length) {
     fm.push('categories:');
-    post.categories.forEach(c => fm.push("  - " + escYaml(c.name)));
+    post.categories.forEach(function(c) { fm.push('  - ' + escYaml(c.name)); });
   }
-  if (post.excerpt) fm.push(`excerpt: ${escYaml(post.excerpt)}`);
+  if (post.excerpt) fm.push('excerpt: ' + escYaml(post.excerpt));
   fm.push('---', '');
 
-  // Replace API upload paths with Hexo-compatible paths
   const content = (post.content || '')
     .replace(/\/api\/upload\/file\/images\//g, '/images/');
 
@@ -316,7 +305,7 @@ function postToHexoMd(post) {
  * Save published post as Hexo-compatible markdown in R2
  */
 export const savePostAsHexoMd = async (bucket, post) => {
-  if (!bucket || !post?.slug) return;
+  if (!bucket || !(post && post.slug)) return;
   try {
     const md = postToHexoMd(post);
     await bucket.put(HEXO_POSTS_PREFIX + post.slug + '.md', md, {
@@ -334,5 +323,5 @@ export const deleteHexoMd = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(HEXO_POSTS_PREFIX + slug + '.md');
-  } catch { /* delete failed — harmless */ }
+  } catch (_e) { /* delete failed — harmless */ }
 };
