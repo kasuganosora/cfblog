@@ -246,7 +246,7 @@ adminRoutes.get('/posts', requireAdmin, (c) => {
         async function loadData() {
           loading.value = true;
           try {
-            var data = await apiCall('/post/list?page='+page.value+'&limit='+pageSize);
+            var data = await apiCall('/post/list?page='+page.value+'&limit='+pageSize+'&all=1');
             list.value = data.data || [];
             total.value = data.pagination?.total || 0;
           } catch(e) { console.error(e); }

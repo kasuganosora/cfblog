@@ -54,6 +54,8 @@ const postRoutes = new Hono();
 // SECURITY: Non-admin users must never see draft posts. The `status` query
 // parameter is intentionally ignored here; the model defaults to published-only
 // when `isAdmin` is not explicitly set to true.
+// The `all=1` parameter is only honoured when the user has a valid session
+// (authenticated). Public/anonymous requests always see published posts only.
 postRoutes.get('/list', async (c) => {
   try {
     const db = c.env?.DB;
@@ -71,8 +73,16 @@ postRoutes.get('/list', async (c) => {
     const limit = safeParseInt(params.limit, 10);
     const isDefault = !hasFilters && page === 1 && limit === 10;
 
-    // Default request: try R2 cache first
-    if (isDefault && bucket) {
+    // SECURITY: `all=1` only works for authenticated users — shows all statuses
+    // including drafts. Anonymous users always see published only.
+    let isAdmin = false;
+    if (params.all === '1') {
+      const currentUserId = await getCurrentUserId(c);
+      isAdmin = !!currentUserId;
+    }
+
+    // Default request: try R2 cache first (only for public/default requests)
+    if (isDefault && !isAdmin && bucket) {
       const cached = await getCachedPostList(bucket);
       if (cached) return c.json(cached);
     }
@@ -81,6 +91,7 @@ postRoutes.get('/list', async (c) => {
     const result = await postModel.getPostList({
       page,
       limit,
+      isAdmin,
       // SECURITY: Do NOT pass status from query params for public access.
       // The model defaults to p.status = 1 when isAdmin is false/undefined.
       featured: params.featured !== undefined ? params.featured === 'true' : undefined,
@@ -88,8 +99,8 @@ postRoutes.get('/list', async (c) => {
       tagId: params.tag_id !== undefined ? parseInt(params.tag_id) : undefined
     });
 
-    // Populate R2 cache on miss for default requests
-    if (isDefault && bucket) {
+    // Populate R2 cache on miss for default requests (public only)
+    if (isDefault && !isAdmin && bucket) {
       refreshPostListCache(bucket, db).catch(() => {});
     }
 
