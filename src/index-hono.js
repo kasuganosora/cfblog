@@ -25,7 +25,6 @@ const app = new Hono();
 
 // Global middleware
 app.use('*', async (c, next) => {
-  const _origin = c.req.header('Origin') || '';
   // Only allow same-origin or configured allowed origins
   const allowedOrigins = c.env?.ALLOWED_ORIGINS
     ? c.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())

@@ -25,9 +25,9 @@ export const generateSlug = (text) => {
     .trim()
     .replace(/\s+/g, '-')           // Replace spaces with -
     .replace(/[^\w-]+/g, '')       // Remove all non-word chars
-    .replace(/--+/g, '-')          // Replace multiple - with single -
-    .replace(/^-+/, '')               // Trim - from start
-    .replace(/-+$/, '');              // Trim - from end
+    .replace(/-{2,}/g, '-')        // Replace multiple - with single -
+    .replace(/^-+/, '')            // Trim - from start
+    .replace(/-+$/, '');           // Trim - from end
 
   if (slug.length > MAX_SLUG_LEN) {
     slug = slug.slice(0, TRUNCATE_AT).replace(/-+$/, '') + '-' + randomSuffix(8);

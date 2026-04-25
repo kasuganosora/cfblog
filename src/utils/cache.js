@@ -1,124 +1,7 @@
 /**
  * Cache Utilities
- * KV cache operations
+ * R2-based caching for settings, posts, RSS, sitemap, and Hexo markdown export
  */
-
-/**
- * Cache keys
- */
-export const CACHE_KEYS = {
-  POST: 'post',
-  POST_LIST: 'post_list',
-  CATEGORY: 'category',
-  CATEGORY_TREE: 'category_tree',
-  TAG: 'tag',
-  TAG_LIST: 'tag_list',
-  SETTINGS: 'settings',
-  HTML: 'html'
-};
-
-/**
- * Get cache value
- */
-export const getCache = async (kv, key) => {
-  try {
-    const value = await kv.get(key, 'json');
-    return value;
-  } catch (error) {
-    console.error('Cache get error:', error);
-    return null;
-  }
-};
-
-/**
- * Set cache value
- */
-export const setCache = async (kv, key, value, ttl = 3600) => {
-  try {
-    await kv.put(key, JSON.stringify(value), {
-      expirationTtl: ttl
-    });
-    return true;
-  } catch (error) {
-    console.error('Cache set error:', error);
-    return false;
-  }
-};
-
-/**
- * Delete cache value
- */
-export const deleteCache = async (kv, key) => {
-  try {
-    await kv.delete(key);
-    return true;
-  } catch (error) {
-    console.error('Cache delete error:', error);
-    return false;
-  }
-};
-
-/**
- * Clear all cache
- */
-export const clearAllCache = async (kv) => {
-  try {
-    let cursor;
-    let list;
-    do {
-      list = await kv.list({ cursor });
-      const keys = list.keys.map(k => k.name);
-      for (const key of keys) {
-        await kv.delete(key);
-      }
-      cursor = list.cursor;
-    } while (!list.list_complete);
-
-    return true;
-  } catch (error) {
-    console.error('Clear cache error:', error);
-    return false;
-  }
-};
-
-/**
- * Clear cache by prefix
- */
-export const clearCacheByPrefix = async (kv, prefix) => {
-  try {
-    let cursor;
-    let list;
-    do {
-      list = await kv.list({ prefix, cursor });
-      const keys = list.keys.map(k => k.name);
-      for (const key of keys) {
-        await kv.delete(key);
-      }
-      cursor = list.cursor;
-    } while (!list.list_complete);
-
-    return true;
-  } catch (error) {
-    console.error('Clear cache by prefix error:', error);
-    return false;
-  }
-};
-
-/**
- * Get or set cache (cache-aside pattern)
- */
-export const getOrSetCache = async (kv, key, fn, ttl = 3600) => {
-  const cached = await getCache(kv, key);
-
-  if (cached !== null) {
-    return cached;
-  }
-
-  const value = await fn();
-  await setCache(kv, key, value, ttl);
-
-  return value;
-};
 
 /**
  * R2-based settings cache
@@ -137,7 +20,7 @@ export const getCachedSettings = async (bucket, db) => {
       if (obj) {
         return await obj.json();
       }
-    } catch { /* empty */ }
+    } catch { /* cache miss — fall through */ }
   }
   // Fallback to D1
   if (db) {
@@ -150,7 +33,7 @@ export const getCachedSettings = async (bucket, db) => {
         await bucket.put(SETTINGS_CACHE_KEY, JSON.stringify(all), {
           httpMetadata: { contentType: 'application/json' }
         });
-      } catch { /* empty */ }
+      } catch { /* write-back failed — harmless */ }
     }
     return all;
   }
@@ -208,7 +91,7 @@ export const getCachedPostList = async (bucket) => {
   try {
     const obj = await bucket.get(POSTS_DEFAULT_KEY);
     if (obj) return await obj.json();
-  } catch { /* empty */ }
+  } catch { /* cache miss */ }
   return null;
 };
 
@@ -234,7 +117,7 @@ export const getCachedPost = async (bucket, slug) => {
   try {
     const obj = await bucket.get(POST_CACHE_PREFIX + slug + '.json');
     if (obj) return await obj.json();
-  } catch { /* empty */ }
+  } catch { /* cache miss */ }
   return null;
 };
 
@@ -245,7 +128,7 @@ export const deleteCachedPost = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(POST_CACHE_PREFIX + slug + '.json');
-  } catch { /* empty */ }
+  } catch { /* delete failed — harmless */ }
 };
 
 /**
@@ -306,7 +189,7 @@ export const getCachedRSS = async (bucket) => {
   try {
     const obj = await bucket.get(RSS_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch { /* empty */ }
+  } catch { /* cache miss */ }
   return null;
 };
 
@@ -357,7 +240,7 @@ export const getCachedSitemap = async (bucket) => {
   try {
     const obj = await bucket.get(SITEMAP_CACHE_KEY);
     if (obj) return await obj.text();
-  } catch { /* empty */ }
+  } catch { /* cache miss */ }
   return null;
 };
 
@@ -451,5 +334,4 @@ export const deleteHexoMd = async (bucket, slug) => {
   if (!bucket || !slug) return;
   try {
     await bucket.delete(HEXO_POSTS_PREFIX + slug + '.md');
-  } catch { /* empty */ }
-};
+  } catch { /* delete failed — harmless */ }

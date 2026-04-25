@@ -56,21 +56,6 @@ export const serverErrorResponse = (message = 'Internal Server Error') => ({
   })
 });
 
-// DB中间件
-export const withDB = (ModelClass) => async (c, next) => {
-  try {
-    const db = c.env?.DB;
-    if (!db) {
-      return c.json(serverErrorResponse('Database not available').json(), 500);
-    }
-    c.model = new ModelClass(db);
-    await next();
-  } catch (error) {
-    console.error('DB middleware error:', error);
-    return c.json(serverErrorResponse('Internal server error').json(), 500);
-  }
-};
-
 // 安全解析整数，处理 NaN 情况
 export const safeParseInt = (value, defaultValue = null) => {
   if (value === undefined || value === null || value === '') return defaultValue;

@@ -51,7 +51,7 @@ feedbackRoutes.post('/create', async (c) => {
       if (sessionId && c.env?.SESSION_SECRET) {
         isLoggedIn = !!(await validateSessionId(sessionId, c.env.SESSION_SECRET));
       }
-    } catch(_e) { /* empty */ }
+    } catch { /* not logged in — proceed */ }
 
     if (!isLoggedIn) {
       const settingsModel = new Settings(db);

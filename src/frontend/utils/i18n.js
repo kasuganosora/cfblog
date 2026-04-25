@@ -40,7 +40,7 @@ function getUserLanguage() {
     if (saved && SUPPORTED_LANGUAGES[saved]) {
       return saved;
     }
-  } catch (_e) {
+  } catch {
     // localStorage not available
   }
   return getBrowserLanguage();
@@ -51,7 +51,7 @@ function setUserLanguage(lang) {
   if (SUPPORTED_LANGUAGES[lang]) {
     try {
       localStorage.setItem('cfblog_language', lang);
-    } catch (_e) {
+    } catch {
       // localStorage not available
     }
     return true;
@@ -107,6 +107,7 @@ function getSupportedLanguages() {
 }
 
 // Export for use in frontend
+/* global window */
 if (typeof window !== 'undefined') {
   window.CFBlogI18n = {
     init: initI18n,

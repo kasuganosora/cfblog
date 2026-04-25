@@ -276,37 +276,4 @@ export class BaseModel {
       }
     };
   }
-
-  /**
-   * Clear all keys from a Cloudflare KV namespace.
-   * Uses cursor-based pagination to handle more than 1000 keys.
-   * @param {import('@cloudflare/workers-types').KVNamespace} kv
-   */
-  async clearAllCache(kv) {
-    let cursor = undefined;
-    do {
-      const result = await kv.list({ cursor });
-      if (result.keys.length > 0) {
-        await Promise.all(result.keys.map(key => kv.delete(key.name)));
-      }
-      cursor = result.list_complete ? undefined : result.cursor;
-    } while (cursor);
-  }
-
-  /**
-   * Clear all keys matching a prefix from a Cloudflare KV namespace.
-   * Uses cursor-based pagination to handle more than 1000 keys.
-   * @param {import('@cloudflare/workers-types').KVNamespace} kv
-   * @param {string} prefix
-   */
-  async clearCacheByPrefix(kv, prefix) {
-    let cursor = undefined;
-    do {
-      const result = await kv.list({ prefix, cursor });
-      if (result.keys.length > 0) {
-        await Promise.all(result.keys.map(key => kv.delete(key.name)));
-      }
-      cursor = result.list_complete ? undefined : result.cursor;
-    } while (cursor);
-  }
 }
