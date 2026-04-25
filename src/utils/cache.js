@@ -335,3 +335,4 @@ export const deleteHexoMd = async (bucket, slug) => {
   try {
     await bucket.delete(HEXO_POSTS_PREFIX + slug + '.md');
   } catch { /* delete failed — harmless */ }
+};
