@@ -56,6 +56,9 @@ export const serverErrorResponse = (message = 'Internal Server Error') => ({
   })
 });
 
+// Clear session cookie header value
+const CLEAR_SESSION_COOKIE = 'session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0';
+
 // 安全解析整数，处理 NaN 情况
 export const safeParseInt = (value, defaultValue = null) => {
   if (value === undefined || value === null || value === '') return defaultValue;
@@ -77,6 +80,7 @@ export const requireAuth = async (c, next) => {
     const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
 
     if (!sessionId) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('Not logged in').json(), 401);
     }
 
@@ -87,6 +91,7 @@ export const requireAuth = async (c, next) => {
     }
     const sessionData = await validateSessionId(sessionId, secret);
     if (!sessionData) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('Invalid or expired session').json(), 401);
     }
 
@@ -99,6 +104,7 @@ export const requireAuth = async (c, next) => {
     const userModel = new User(db);
     const user = await userModel.findById(sessionData.userId);
     if (!user || user.status !== 1) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('User not found or disabled').json(), 401);
     }
 
@@ -120,6 +126,7 @@ export const requireAdmin = async (c, next) => {
     const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
 
     if (!sessionId) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('Not logged in').json(), 401);
     }
 
@@ -130,6 +137,7 @@ export const requireAdmin = async (c, next) => {
     }
     const sessionData = await validateSessionId(sessionId, secret);
     if (!sessionData) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('Invalid or expired session').json(), 401);
     }
 
@@ -141,6 +149,7 @@ export const requireAdmin = async (c, next) => {
     const userModel = new User(db);
     const user = await userModel.findById(sessionData.userId);
     if (!user || user.status !== 1) {
+      c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
       return c.json(unauthorizedResponse('User not found or disabled').json(), 401);
     }
 
