@@ -290,13 +290,15 @@ postRoutes.post('/create', requireAuth, async (c) => {
     const postModel = new Post(db);
     const post = await postModel.createPost(postData, authorId);
 
-    // Refresh caches if published
+    // Refresh caches (published only for public lists)
     const bucket = c.env?.BUCKET;
-    if (bucket && post.status === 1) {
+    if (bucket) {
       const origin = new URL(c.req.url).origin;
-      cachePost(bucket, post.slug, post).catch(() => {});
-      savePostAsHexoMd(bucket, post).catch(() => {});
-      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+      if (post.status === 1) {
+        cachePost(bucket, post.slug, post).catch(e => console.error('cachePost error:', e));
+        savePostAsHexoMd(bucket, post).catch(e => console.error('savePostAsHexoMd error:', e));
+      }
+      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
     }
 
     return c.json(post, 201);
@@ -358,14 +360,14 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
       const origin = new URL(c.req.url).origin;
       if (post.status === 1) {
         // Published: cache the post and refresh lists
-        cachePost(bucket, post.slug, post).catch(() => {});
-        savePostAsHexoMd(bucket, post).catch(() => {});
+        cachePost(bucket, post.slug, post).catch(e => console.error('cachePost error:', e));
+        savePostAsHexoMd(bucket, post).catch(e => console.error('savePostAsHexoMd error:', e));
       } else if (existingPost.status === 1) {
         // Was published, now draft: remove caches
-        deleteCachedPost(bucket, existingPost.slug).catch(() => {});
-        deleteHexoMd(bucket, existingPost.slug).catch(() => {});
+        deleteCachedPost(bucket, existingPost.slug).catch(e => console.error('deleteCachedPost error:', e));
+        deleteHexoMd(bucket, existingPost.slug).catch(e => console.error('deleteHexoMd error:', e));
       }
-      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
     }
 
     return c.json(post);
