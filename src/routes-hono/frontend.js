@@ -247,7 +247,7 @@ ${items}
       if (bucket) {
         bucket.put('cache/rss.xml', xml, {
           httpMetadata: { contentType: 'application/xml; charset=utf-8' }
-        }).catch(() => {});
+        }).catch(e => console.error('RSS cache put error:', e));
       }
 
       return new Response(xml, {

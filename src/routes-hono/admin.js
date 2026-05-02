@@ -93,7 +93,7 @@ function adminLayout(title, activePage, templateHtml, scriptContent, blogTitle) 
     async function apiCall(url,opts){
       opts=opts||{};
       var res=await fetch(API+url,opts);
-      if(res.status===401){ window.location.href='/login'; return; }
+      if(res.status===401){ window.location.href='/login'; throw new Error('Session expired, redirecting to login'); }
       var data=await res.json();
       if(!res.ok) throw new Error(data.message||'Request failed');
       return data;

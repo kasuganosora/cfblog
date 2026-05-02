@@ -101,7 +101,7 @@ postRoutes.get('/list', async (c) => {
 
     // Populate R2 cache on miss for default requests (public only)
     if (isDefault && !isAdmin && bucket) {
-      refreshPostListCache(bucket, db).catch(() => {});
+      refreshPostListCache(bucket, db).catch(e => console.error('refreshPostListCache error:', e));
     }
 
     return c.json(result);
@@ -226,7 +226,7 @@ postRoutes.get('/slug/:slug', async (c) => {
 
     // Cache published posts in R2
     if (post.status === 1 && bucket) {
-      cachePost(bucket, slug, post).catch(() => {});
+      cachePost(bucket, slug, post).catch(e => console.error('cachePost error:', e));
     }
 
     // Increment view count only for published posts and non-author visitors
@@ -413,11 +413,11 @@ postRoutes.delete('/:id/delete', requireAuth, async (c) => {
     const bucket = c.env?.BUCKET;
     if (bucket) {
       if (existingPost.slug) {
-        deleteCachedPost(bucket, existingPost.slug).catch(() => {});
-        deleteHexoMd(bucket, existingPost.slug).catch(() => {});
+        deleteCachedPost(bucket, existingPost.slug).catch(e => console.error('deleteCachedPost error:', e));
+        deleteHexoMd(bucket, existingPost.slug).catch(e => console.error('deleteHexoMd error:', e));
       }
       const origin = new URL(c.req.url).origin;
-      refreshAllPostCaches(bucket, db, origin).catch(() => {});
+      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
     }
 
     return c.json({ success: true, message: 'Post deleted successfully' });
