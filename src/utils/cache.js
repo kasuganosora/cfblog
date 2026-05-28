@@ -145,20 +145,39 @@ export const refreshRSSCache = async (bucket, db, siteUrl) => {
     const result = await postModel.getPostList({ page: 1, limit: 20, status: 1 });
     const posts = result.data || [];
 
+    // Escape special XML characters (full XML 1.0 set)
     const escXml = (s) => String(s || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-    const toRFC822 = (d) => new Date(d).toUTCString();
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
 
-    const items = posts.map(p => `    <item>
+    // Convert date to RFC 822 format with graceful fallback
+    const toRFC822 = (d) => {
+      if (!d) return new Date().toUTCString();
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return new Date().toUTCString();
+      return date.toUTCString();
+    };
+
+    // Encode URL path segments properly (preserve slashes)
+    const encodePath = (path) => {
+      return String(path || '').split('/').map(s => encodeURIComponent(s)).join('/');
+    };
+
+    const lastBuildDate = toRFC822(posts[0]?.updated_at || posts[0]?.published_at || new Date().toISOString());
+
+    const items = posts.map(p => {
+      const postUrl = `${url}/post/${encodePath(p.slug)}`;
+      return `    <item>
       <title>${escXml(p.title)}</title>
-      <link>${escXml(url)}/post/${escXml(p.slug)}</link>
+      <link>${escXml(postUrl)}</link>
       <description>${escXml(p.excerpt || '')}</description>
       <pubDate>${toRFC822(p.published_at || p.created_at)}</pubDate>
-      <guid isPermaLink="true">${escXml(url)}/post/${escXml(p.slug)}</guid>
-    </item>`).join('\n');
+      <guid isPermaLink="true">${escXml(postUrl)}</guid>
+    </item>`;
+    }).join('\n');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -167,6 +186,7 @@ export const refreshRSSCache = async (bucket, db, siteUrl) => {
     <link>${escXml(url)}</link>
     <description>${escXml(blogDesc)}</description>
     <language>zh-CN</language>
+    <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <atom:link href="${escXml(url)}/rss" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>
