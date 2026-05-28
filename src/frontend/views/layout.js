@@ -12,10 +12,51 @@ function escapeJsString(json) {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 }
 
-export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, pageScript, activePage = '', bodyAttrs = '' }) {
+export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, pageScript, activePage = '', bodyAttrs = '', seo = {} }) {
   const y = new Date().getFullYear();
   const pageDataScript = pageData ? `<script>window.__PAGE_DATA__=${escapeJsString(pageData)};</script>\n` : '';
   const pageJsTag = pageScript ? `<script src="/static/js/${pageScript}"></script>\n` : '';
+
+  // SEO meta tags
+  const { description, canonicalUrl, ogType, ogImage, publishedTime, modifiedTime, author, noindex, jsonLd, siteUrl } = seo;
+  let metaTags = '';
+  if (noindex) {
+    metaTags += '<meta name="robots" content="noindex, nofollow">\n';
+  }
+  if (description) {
+    metaTags += `<meta name="description" content="${esc(description)}">\n`;
+    metaTags += `<meta property="og:description" content="${esc(description)}">\n`;
+    metaTags += `<meta name="twitter:description" content="${esc(description)}">\n`;
+  }
+  metaTags += `<meta property="og:title" content="${esc(title)} - ${esc(blogTitle)}">\n`;
+  metaTags += `<meta property="og:type" content="${ogType || 'website'}">\n`;
+  metaTags += '<meta name="twitter:card" content="summary_large_image">\n';
+  metaTags += `<meta name="twitter:title" content="${esc(title)} - ${esc(blogTitle)}">\n`;
+  if (ogImage) {
+    metaTags += `<meta property="og:image" content="${esc(ogImage)}">\n`;
+    metaTags += `<meta name="twitter:image" content="${esc(ogImage)}">\n`;
+  }
+  if (publishedTime) {
+    metaTags += `<meta property="article:published_time" content="${esc(publishedTime)}">\n`;
+  }
+  if (modifiedTime) {
+    metaTags += `<meta property="article:modified_time" content="${esc(modifiedTime)}">\n`;
+  }
+  if (author) {
+    metaTags += `<meta property="article:author" content="${esc(author)}">\n`;
+  }
+  let linkTags = '';
+  if (canonicalUrl) {
+    linkTags += `<link rel="canonical" href="${esc(canonicalUrl)}">\n`;
+    metaTags += `<meta property="og:url" content="${esc(canonicalUrl)}">\n`;
+  }
+  // RSS auto-discovery
+  const rssBase = siteUrl || canonicalUrl?.replace(/\/[^/]*$/, '') || '';
+  if (rssBase) {
+    linkTags += `<link rel="alternate" type="application/rss+xml" title="${esc(blogTitle)} RSS" href="${esc(rssBase)}/rss">\n`;
+  }
+  // JSON-LD structured data
+  const jsonLdScript = jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n` : '';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -23,7 +64,7 @@ export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, p
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)} - ${esc(blogTitle)}</title>
-<link rel="stylesheet" href="/static/css/blog.css">
+${metaTags}${linkTags}${jsonLdScript}<link rel="stylesheet" href="/static/css/blog.css">
 <link rel="stylesheet" href="/static/hljs-github-dark.css">
 <script src="/static/marked.min.js"></script>
 <script src="/static/highlight.min.js"></script>

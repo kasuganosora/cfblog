@@ -17,12 +17,25 @@ import { renderTag } from '../frontend/views/tag.js';
 const frontendRoutes = new Hono();
 
 // ═════════════════════════════════════════════════════════════
+// robots.txt
+// ═════════════════════════════════════════════════════════════
+
+frontendRoutes.get('/robots.txt', (c) => {
+  const siteUrl = new URL(c.req.url).origin;
+  const body = `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
+  return new Response(body, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' }
+  });
+});
+
+// ═════════════════════════════════════════════════════════════
 // Homepage
 // ═════════════════════════════════════════════════════════════
 
 frontendRoutes.get('/', async (c) => {
   const settings = await getSettings(c);
-  return c.html(renderHome({ blogTitle: settings.blog_title || 'CFBlog' }));
+  const siteUrl = new URL(c.req.url).origin;
+  return c.html(renderHome({ blogTitle: settings.blog_title || 'CFBlog', siteUrl }));
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -33,10 +46,31 @@ frontendRoutes.get('/post/:slug', async (c) => {
   const slug = c.req.param('slug');
   const settings = await getSettings(c);
   const currentUser = await getCurrentUser(c);
+  const siteUrl = new URL(c.req.url).origin;
+  const blogTitle = settings.blog_title || 'CFBlog';
+
+  // SSR: pre-fetch post data for SEO meta tags
+  let post = null;
+  try {
+    const bucket = c.env?.BUCKET;
+    const db = c.env?.DB;
+    const { getCachedPost } = await import('../utils/cache.js');
+    post = await getCachedPost(bucket, slug);
+    if (!post && db) {
+      const { Post } = await import('../models/Post.js');
+      const postModel = new Post(db);
+      post = await postModel.getPostBySlug(slug);
+      // Only expose published posts for SEO
+      if (post && post.status !== 1) post = null;
+    }
+  } catch (_e) { /* non-critical: fallback to client-render */ }
+
   return c.html(renderPost({
-    blogTitle: settings.blog_title || 'CFBlog',
+    blogTitle,
     slug,
     currentUser,
+    post,
+    siteUrl,
   }));
 });
 
@@ -63,6 +97,7 @@ frontendRoutes.get('/login', async (c) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>登录 - ${esc(blogTitle)}</title>
 <link rel="stylesheet" href="/static/admin-bundle.css">
 <style>

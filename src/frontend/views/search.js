@@ -11,6 +11,7 @@ export function renderSearch({ blogTitle, keyword }) {
     blogTitle,
     pageData: { keyword },
     pageScript: 'search.js',
+    seo: { noindex: true },
     content: `
 <div class="page narrow">
   <div class="content">

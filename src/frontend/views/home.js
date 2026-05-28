@@ -4,12 +4,17 @@
 
 import { renderLayout } from './layout.js';
 
-export function renderHome({ blogTitle }) {
+export function renderHome({ blogTitle, siteUrl }) {
   return renderLayout({
     title: '首页',
     blogTitle,
     activePage: 'home',
     pageScript: 'home.js',
+    seo: {
+      canonicalUrl: siteUrl ? `${siteUrl}/` : undefined,
+      siteUrl,
+      description: blogTitle,
+    },
     content: `
 <div class="page with-sidebar">
   <div class="content">
