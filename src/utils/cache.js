@@ -202,28 +202,55 @@ export const refreshSitemapCache = async (bucket, db, siteUrl) => {
     const postModel = new Post(db);
 
     const url = siteUrl || '';
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
 
     const result = await postModel.getPostList({ page: 1, limit: 5000, status: 1 });
     const posts = result.data || [];
 
+    // Escape special XML characters in text content
     const escXml = (s) => String(s || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+    // Convert database datetime to W3C Datetime format (ISO 8601)
+    // Handles: "2024-01-15 10:30:00", "2024-01-15T10:30:00Z", "2024-01-15"
+    const toW3CDate = (dateStr) => {
+      if (!dateStr) return now;
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return now;
+        return d.toISOString();
+      } catch {
+        return now;
+      }
+    };
+
+    // Encode URL path segments properly (preserve slashes, encode special chars)
+    const encodePath = (path) => {
+      return path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+    };
 
     let urls = '';
-    urls += '  <url>\n    <loc>' + escXml(url) + '/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n';
-    urls += '  <url>\n    <loc>' + escXml(url) + '/categories</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n';
-    urls += '  <url>\n    <loc>' + escXml(url) + '/tags</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n';
+
+    // Homepage
+    urls += `  <url>\n    <loc>${escXml(url)}/</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+    // Category page
+    urls += `  <url>\n    <loc>${escXml(url)}/categories</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+
+    // Tags page
+    urls += `  <url>\n    <loc>${escXml(url)}/tags</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
 
     for (const p of posts) {
-      const lastmod = (p.updated_at || p.published_at || p.created_at || '').split('T')[0] || now;
-      urls += '  <url>\n    <loc>' + escXml(url) + '/post/' + escXml(p.slug) + '</loc>\n    <lastmod>' + lastmod + '</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n';
+      const lastmod = toW3CDate(p.updated_at || p.published_at || p.created_at);
+      const postPath = encodePath(p.slug);
+      urls += `  <url>\n    <loc>${escXml(url)}/post/${postPath}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     }
 
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + '</urlset>';
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}</urlset>`;
 
     await bucket.put(SITEMAP_CACHE_KEY, xml, {
       httpMetadata: { contentType: 'application/xml; charset=utf-8' }
