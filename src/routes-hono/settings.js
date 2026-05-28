@@ -279,10 +279,16 @@ settingsRoutes.post('/cache/clear', requireAdmin, async (c) => {
         await refreshPostListCache(bucket, db);
         cleared.push('post_list');
       }
-      // Clear individual post caches
-      const list = await bucket.list({ prefix: 'cache/post/' });
-      for (const obj of list.objects) {
-        await bucket.delete(obj.key);
+      // Clear individual post caches (handle R2 pagination)
+      let cursor = undefined;
+      let truncated = true;
+      while (truncated) {
+        const list = await bucket.list({ prefix: 'cache/post/', cursor });
+        for (const obj of list.objects) {
+          await bucket.delete(obj.key);
+        }
+        truncated = list.truncated;
+        cursor = list.cursor;
       }
       cleared.push('post_detail');
     }
@@ -321,9 +327,15 @@ settingsRoutes.get('/cache/stats', requireAdmin, async (c) => {
     const items = [];
     const prefixes = ['cache/'];
     for (const prefix of prefixes) {
-      const list = await bucket.list({ prefix });
-      for (const obj of list.objects) {
-        items.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded });
+      let cursor = undefined;
+      let truncated = true;
+      while (truncated) {
+        const list = await bucket.list({ prefix, cursor });
+        for (const obj of list.objects) {
+          items.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded });
+        }
+        truncated = list.truncated;
+        cursor = list.cursor;
       }
     }
 

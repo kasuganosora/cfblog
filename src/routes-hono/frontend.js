@@ -206,83 +206,39 @@ async function handleRSS(c) {
   const bucket = c.env?.BUCKET;
   const db = c.env?.DB;
 
-  if (db) {
+  // Cache-first: try reading from R2
+  if (bucket) {
     try {
-      const { Post } = await import('../models/Post.js');
-      const { Settings } = await import('../models/Settings.js');
-      const settingsModel = new Settings(db);
-      const postModel = new Post(db);
-
-      const settings = await settingsModel.getAllSettings();
-      const blogTitle = settings.blog_title || 'CFBlog';
-      const blogDesc = settings.blog_description || '';
-      const url = new URL(c.req.url).origin;
-
-      const result = await postModel.getPostList({ page: 1, limit: 20, status: 1 });
-      const posts = result.data || [];
-
-      const escXml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-      const toRFC822 = (d) => {
-        if (!d) return new Date().toUTCString();
-        const date = new Date(d);
-        if (isNaN(date.getTime())) return new Date().toUTCString();
-        return date.toUTCString();
-      };
-      const encodePath = (path) => String(path || '').split('/').map(s => encodeURIComponent(s)).join('/');
-
-      const lastBuildDate = toRFC822(posts[0]?.updated_at || posts[0]?.published_at || new Date().toISOString());
-
-      const items = posts.map(p => {
-        const postUrl = `${url}/post/${encodePath(p.slug)}`;
-        return `    <item>
-      <title>${escXml(p.title)}</title>
-      <link>${escXml(postUrl)}</link>
-      <description>${escXml(p.excerpt || '')}</description>
-      <pubDate>${toRFC822(p.published_at || p.created_at)}</pubDate>
-      <guid isPermaLink="true">${escXml(postUrl)}</guid>
-    </item>`;
-      }).join('\n');
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>${escXml(blogTitle)}</title>
-    <link>${escXml(url)}</link>
-    <description>${escXml(blogDesc)}</description>
-    <language>zh-CN</language>
-    <lastBuildDate>${lastBuildDate}</lastBuildDate>
-    <atom:link href="${escXml(url)}/rss" rel="self" type="application/rss+xml"/>
-${items}
-  </channel>
-</rss>`;
-
-      if (bucket) {
-        bucket.put('cache/rss.xml', xml, {
-          httpMetadata: { contentType: 'application/xml; charset=utf-8' }
-        }).catch(e => console.error('RSS cache put error:', e));
+      const { getCachedRSS } = await import('../utils/cache.js');
+      const xml = await getCachedRSS(bucket);
+      if (xml) {
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=600'
+          }
+        });
       }
-
-      return new Response(xml, {
-        headers: {
-          'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=600'
-        }
-      });
-    } catch (e) {
-      console.error('Generate RSS error:', e);
-    }
+    } catch (_e) { /* cache miss — fall through to regenerate */ }
   }
 
-  if (bucket) {
-    const { getCachedRSS } = await import('../utils/cache.js');
-    const xml = await getCachedRSS(bucket);
-    if (xml) {
-      return new Response(xml, {
-        headers: {
-          'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=600'
-        }
-      });
+  // Cache miss: regenerate from DB and store in R2
+  if (db && bucket) {
+    try {
+      const { refreshRSSCache, getCachedRSS } = await import('../utils/cache.js');
+      const siteUrl = new URL(c.req.url).origin;
+      await refreshRSSCache(bucket, db, siteUrl);
+      const xml = await getCachedRSS(bucket);
+      if (xml) {
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=600'
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Generate RSS error:', e);
     }
   }
 
@@ -300,7 +256,24 @@ frontendRoutes.get('/sitemap.xml', async (c) => {
   const bucket = c.env?.BUCKET;
   const db = c.env?.DB;
 
-  if (db) {
+  // Cache-first: try reading from R2
+  if (bucket) {
+    try {
+      const { getCachedSitemap } = await import('../utils/cache.js');
+      const xml = await getCachedSitemap(bucket);
+      if (xml) {
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600'
+          }
+        });
+      }
+    } catch (_e) { /* cache miss — fall through to regenerate */ }
+  }
+
+  // Cache miss: regenerate from DB and store in R2
+  if (db && bucket) {
     try {
       const { refreshSitemapCache, getCachedSitemap } = await import('../utils/cache.js');
       const siteUrl = new URL(c.req.url).origin;
@@ -316,19 +289,6 @@ frontendRoutes.get('/sitemap.xml', async (c) => {
       }
     } catch (e) {
       console.error('Generate sitemap error:', e);
-    }
-  }
-
-  if (bucket) {
-    const { getCachedSitemap } = await import('../utils/cache.js');
-    const xml = await getCachedSitemap(bucket);
-    if (xml) {
-      return new Response(xml, {
-        headers: {
-          'Content-Type': 'application/xml; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600'
-        }
-      });
     }
   }
 
