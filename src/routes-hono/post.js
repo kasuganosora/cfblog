@@ -172,6 +172,9 @@ postRoutes.get('/:id', async (c) => {
       if (!currentUserId || currentUserId !== post.author_id) {
         await postModel.incrementViewCount(id);
         post.view_count = (post.view_count || 0) + 1;
+        // Refresh post list cache so view_count stays current on homepage
+        const bucket = c.env?.BUCKET;
+        if (bucket) refreshPostListCache(bucket, db).catch(() => {});
       }
     }
 
@@ -204,6 +207,8 @@ postRoutes.get('/slug/:slug', async (c) => {
           const postModel = new Post(db);
           postModel.incrementViewCount(cached.id).catch(() => {});
           cached.view_count = (cached.view_count || 0) + 1;
+          // Refresh post list cache so view_count stays current on homepage
+          if (bucket) refreshPostListCache(bucket, db).catch(() => {});
         }
       }
       return c.json(cached);
@@ -235,6 +240,8 @@ postRoutes.get('/slug/:slug', async (c) => {
       if (!currentUserId || currentUserId !== post.author_id) {
         await postModel.incrementViewCount(post.id);
         post.view_count = (post.view_count || 0) + 1;
+        // Refresh post list cache so view_count stays current on homepage
+        if (bucket) refreshPostListCache(bucket, db).catch(() => {});
       }
     }
 
