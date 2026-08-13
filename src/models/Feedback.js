@@ -22,7 +22,7 @@ export class Feedback extends BaseModel {
       email: email || null,
       ip: ip || null,
       content,
-      status: 1 // Default to processed
+      status: 0 // Default to pending
     });
 
     return feedback;

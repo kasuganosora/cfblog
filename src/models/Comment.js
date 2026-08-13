@@ -73,12 +73,12 @@ export class Comment extends BaseModel {
    * Get comments for a post
    */
   async getCommentsByPost(postId, options = {}) {
-    const { page = 1, limit = 20 } = options;
+    const { page = 1, limit = 20, status = 1 } = options;
 
     // Count total
     const countResult = await this.query(`
-      SELECT COUNT(*) as count FROM comments WHERE post_id = ? AND parent_id IS NULL
-    `, [postId]);
+      SELECT COUNT(*) as count FROM comments WHERE post_id = ? AND parent_id IS NULL AND status = ?
+    `, [postId, status]);
 
     const total = countResult[0]?.count || 0;
 
@@ -86,18 +86,19 @@ export class Comment extends BaseModel {
     const offset = (page - 1) * limit;
     const comments = await this.query(`
       SELECT c.* FROM comments c
-      WHERE c.post_id = ? AND c.parent_id IS NULL
+      WHERE c.post_id = ? AND c.parent_id IS NULL AND c.status = ?
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
-    `, [postId, limit, offset]);
+    `, [postId, status, limit, offset]);
 
     // Batch-fetch all replies for the fetched comments (avoids N+1 queries)
+    // Only fetch approved replies to match the top-level status filter.
     const commentIds = comments.map(c => c.id);
     let repliesMap = {};
     if (commentIds.length > 0) {
       const allReplies = await this.query(`
-        SELECT * FROM comments WHERE parent_id IN (${commentIds.map(() => '?').join(',')}) ORDER BY created_at ASC
-      `, commentIds);
+        SELECT * FROM comments WHERE parent_id IN (${commentIds.map(() => '?').join(',')}) AND status = ? ORDER BY created_at ASC
+      `, [...commentIds, status]);
       for (const reply of allReplies) {
         if (!repliesMap[reply.parent_id]) {
           repliesMap[reply.parent_id] = [];

@@ -70,8 +70,8 @@ feedbackRoutes.post('/create', async (c) => {
 
     const feedbackModel = new Feedback(db);
     // Whitelist only allowed fields to prevent mass assignment
-    const { name, email, content, website } = body;
-    const feedback = await feedbackModel.createFeedback({ name, email, content, website, ip });
+    const { name, email, content } = body;
+    const feedback = await feedbackModel.createFeedback({ name, email, content, ip });
 
     return c.json(feedback, 201);
   } catch (error) {

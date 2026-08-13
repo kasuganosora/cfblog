@@ -67,7 +67,11 @@ export class LoginAudit extends BaseModel {
    * Clear failed attempts for an IP (call on successful login)
    */
   async clearFailedAttempts(ip) {
-    const since = new Date(Date.now() - BLOCK_DURATION_HOURS * 60 * 60 * 1000).toISOString();
+    // Use the same SQLite datetime format as _sqliteNow() for consistency.
+    // The login_audit table stores created_at as 'YYYY-MM-DD HH:MM:SS' (via
+    // datetime('now')), so the comparison value must use the same format —
+    // not ISO 8601 — otherwise string comparison yields wrong results.
+    const since = this._sqliteNow(-BLOCK_DURATION_HOURS * 60 * 60 * 1000);
     await this.execute(
       `DELETE FROM login_audit WHERE ip = ? AND success = 0 AND created_at > ?`,
       [ip, since]

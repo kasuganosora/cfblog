@@ -263,6 +263,7 @@ commentRoutes.get('/post/:postId', async (c) => {
 });
 
 // GET /api/comment/:id - 根据ID获取评论
+// SECURITY: Only approved comments are visible to the public.
 commentRoutes.get('/:id', async (c) => {
   try {
     const db = c.env?.DB;
@@ -277,7 +278,7 @@ commentRoutes.get('/:id', async (c) => {
     const commentModel = new Comment(db);
     const comment = await commentModel.getCommentById(id);
 
-    if (!comment) {
+    if (!comment || comment.status !== 1) {
       return c.json(notFoundResponse('Comment not found').json(), 404);
     }
 

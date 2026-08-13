@@ -52,7 +52,7 @@ searchRoutes.get('/', async (c) => {
     if (type === 'all' || type === 'categories') {
       const categoryModel = new Category(db);
       const categories = await categoryModel.query(
-        `SELECT * FROM categories WHERE name LIKE ? OR description LIKE ? LIMIT 10`,
+        `SELECT * FROM categories WHERE name LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\' LIMIT 10`,
         [searchPattern, searchPattern]
       );
       results = [
@@ -66,7 +66,7 @@ searchRoutes.get('/', async (c) => {
     if (type === 'all' || type === 'tags') {
       const tagModel = new Tag(db);
       const tags = await tagModel.query(
-        `SELECT * FROM tags WHERE name LIKE ? LIMIT 10`,
+        `SELECT * FROM tags WHERE name LIKE ? ESCAPE '\\' LIMIT 10`,
         [searchPattern]
       );
       results = [
