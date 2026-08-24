@@ -8,7 +8,7 @@ export function renderPost({ blogTitle, slug, currentUser, post, siteUrl }) {
   // If post data is available from SSR, build SEO params
   const seo = {};
   if (post) {
-    seo.description = post.excerpt || (post.content || '').replace(/[#*`>\[\]!<]/g, '').slice(0, 160).trim();
+    seo.description = post.excerpt || (post.content || '').replace(/[#*>[\]!<]/g, '').slice(0, 160).trim();
     seo.canonicalUrl = `${siteUrl}/post/${slug}`;
     seo.ogType = 'article';
     seo.siteUrl = siteUrl;

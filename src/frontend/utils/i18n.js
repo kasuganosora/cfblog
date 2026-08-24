@@ -106,8 +106,6 @@ function getSupportedLanguages() {
   return SUPPORTED_LANGUAGES;
 }
 
-// Export for use in frontend
-/* global window */
 if (typeof window !== 'undefined') {
   window.CFBlogI18n = {
     init: initI18n,
