@@ -27,7 +27,7 @@ export function renderFeedback({ blogTitle, currentUser }) {
 <div class="page narrow">
   <div class="content">
     <h1 class="pg-title">留言板</h1>
-    <div id="message"></div>
+    <div id="message" role="status" aria-live="polite"></div>
     <form class="fb-form" data-testid="feedback-form" id="feedback-form">
       ${identityFields}
       <div class="fb-row">

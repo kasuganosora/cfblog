@@ -55,7 +55,7 @@ export function renderPost({ blogTitle, slug, currentUser, post, siteUrl }) {
       <div data-testid="post-content" class="post-body"><p>内容加载中...</p></div>
       <div id="post-tags-area"></div>
     </article>
-    <div id="comments-container"></div>
+    <div id="comments-container" role="region" aria-label="评论区"></div>
   </div>
 </div>`
   });

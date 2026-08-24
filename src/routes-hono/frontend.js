@@ -104,7 +104,9 @@ frontendRoutes.get('/login', async (c) => {
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 [v-cloak]{display:none}
+.login-main{min-height:100vh;display:flex;align-items:center;justify-content:center}
 .login-wrap{width:100%;max-width:380px;padding:0 20px}
+.login-title{font-size:20px}
 .login-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:36px 32px 28px}
 .login-title{text-align:center;font-size:20px;font-weight:600;color:#333;margin-bottom:24px}
 .login-card .t-form__item,.login-card .t-form__controls,.login-card .t-form__controls-content{margin-left:0!important;width:100%!important;max-width:100%!important}
@@ -115,15 +117,16 @@ body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;m
 </head>
 <body>
 <div id="app" v-cloak>
+  <main class="login-main">
   <div class="login-wrap">
     <div class="login-card">
-      <div class="login-title">${esc(blogTitle)}</div>
+      <h1 class="login-title">${esc(blogTitle)}</h1>
       <t-form data-testid="login-form" @submit="onSubmit">
         <t-form-item name="username">
-          <t-input v-model="form.username" placeholder="用户名" data-testid="username-input"></t-input>
+          <t-input v-model="form.username" placeholder="用户名" aria-label="用户名" data-testid="username-input"></t-input>
         </t-form-item>
         <t-form-item name="password">
-          <t-input v-model="form.password" type="password" placeholder="密码" data-testid="password-input"></t-input>
+          <t-input v-model="form.password" type="password" placeholder="密码" aria-label="密码" data-testid="password-input"></t-input>
         </t-form-item>
         <t-form-item>
           <div class="login-actions">
@@ -134,6 +137,7 @@ body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;m
       </t-form>
     </div>
   </div>
+  </main>
 </div>
 <script src="/static/admin-bundle.js"></script>
 <script>

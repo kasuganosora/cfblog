@@ -17,10 +17,10 @@ export function renderSearch({ blogTitle, keyword }) {
   <div class="content">
     <h1 class="pg-title">搜索</h1>
     <form class="search-box" data-testid="search-form" method="GET" action="/search">
-      <input type="text" name="keyword" value="${esc(keyword)}" placeholder="输入关键词..." data-testid="search-input">
+      <input type="text" name="keyword" value="${esc(keyword)}" placeholder="输入关键词..." aria-label="搜索关键词" data-testid="search-input">
       <button type="submit" data-testid="search-button">搜索</button>
     </form>
-    <div data-testid="search-results" id="results"></div>
+    <div data-testid="search-results" id="results" aria-live="polite"></div>
   </div>
 </div>`
   });

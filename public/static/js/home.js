@@ -24,12 +24,12 @@ function renderPager(p){
   var c=document.getElementById('pagination');
   if(!p||p.totalPages<=1){c.innerHTML='';return}
   var h='';
-  if(p.page>1)h+='<a href="?page='+(p.page-1)+'" data-page="'+(p.page-1)+'">&laquo;</a>';
+  if(p.page>1)h+='<a href="?page='+(p.page-1)+'" data-page="'+(p.page-1)+'" aria-label="上一页">&laquo;</a>';
   for(var i=1;i<=p.totalPages;i++){
-    if(i===p.page)h+='<span class="active">'+i+'</span>';
-    else h+='<a href="?page='+i+'" data-page="'+i+'">'+i+'</a>';
+    if(i===p.page)h+='<span class="active" aria-current="page">'+i+'</span>';
+    else h+='<a href="?page='+i+'" data-page="'+i+'" aria-label="第'+i+'页">'+i+'</a>';
   }
-  if(p.page<p.totalPages)h+='<a href="?page='+(p.page+1)+'" data-page="'+(p.page+1)+'">&raquo;</a>';
+  if(p.page<p.totalPages)h+='<a href="?page='+(p.page+1)+'" data-page="'+(p.page+1)+'" aria-label="下一页">&raquo;</a>';
   c.innerHTML=h;
 }
 

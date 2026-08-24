@@ -100,14 +100,14 @@ function renderCommentsSection(pid){
     '</div>';
   }
   c.innerHTML='<section class="comments" data-testid="comments-section">'+
-    '<h2>评论</h2><div id="comment-message"></div>'+
-    '<div id="reply-hint" style="display:none"></div>'+
+    '<h2>评论</h2><div id="comment-message" role="status" aria-live="polite"></div>'+
+    '<div id="reply-hint" style="display:none" role="status"></div>'+
     '<form class="cmt-form" id="comment-form">'+
       formFields+
       '<div class="cmt-row"><label for="comment-content">评论内容</label><textarea id="comment-content" name="content" rows="4" required></textarea></div>'+
       '<button type="submit" class="cmt-btn">发表评论</button>'+
     '</form>'+
-    '<div id="comments"></div>'+
+    '<div id="comments" aria-live="polite"></div>'+
   '</section>';
   loadComments(pid);
   document.getElementById('comment-form').addEventListener('submit',handleComment);

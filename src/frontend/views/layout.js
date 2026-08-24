@@ -71,10 +71,11 @@ ${metaTags}${linkTags}${jsonLdScript}<link rel="stylesheet" href="/static/css/bl
 <script>marked.setOptions({breaks:true,gfm:true});</script>
 </head>
 <body${bodyAttrs}>
-<header class="navbar" data-testid="header">
+<a class="skip-link" href="#main-content">跳到主要内容</a>
+<header class="navbar" data-testid="header" role="banner">
 <div class="wrap">
   <a class="brand" href="/">${esc(blogTitle)}</a>
-  <nav data-testid="navigation">
+  <nav id="main-navigation" data-testid="navigation" aria-label="主导航">
     <div data-testid="desktop-navigation">
       <ul class="nav-links">
         <li><a href="/"${activePage === 'home' ? ' class="active"' : ''}>首页</a></li>
@@ -86,18 +87,18 @@ ${metaTags}${linkTags}${jsonLdScript}<link rel="stylesheet" href="/static/css/bl
   </nav>
   <div class="nav-end">
     <form class="nav-search" action="/search" method="GET" data-testid="search-form">
-      <input type="text" name="keyword" placeholder="搜索..." data-testid="search-input">
+      <input type="text" name="keyword" placeholder="搜索..." aria-label="搜索博客" data-testid="search-input">
     </form>
   </div>
-  <button class="mobile-btn" data-testid="mobile-menu-button" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+  <button class="mobile-btn" aria-label="打开菜单" aria-expanded="false" aria-controls="main-navigation" data-testid="mobile-menu-button" onclick="var nl=document.querySelector('.nav-links');nl.classList.toggle('open');this.setAttribute('aria-expanded',nl.classList.contains('open'))">&#9776;</button>
 </div>
 </header>
 
-<main data-testid="main">
+<main id="main-content" data-testid="main" role="main">
 ${content}
 </main>
 
-<footer class="footer" data-testid="footer">
+<footer class="footer" data-testid="footer" role="contentinfo">
 <p>&copy; ${y} ${esc(blogTitle)} &middot; <a href="/rss">RSS</a> &middot; <a href="/login">登录</a></p>
 </footer>
 
