@@ -50,12 +50,31 @@ app.use('*', async (c, next) => {
 app.use('*', logger());
 
 // Security response headers
+// CSP notes:
+// - script-src includes 'unsafe-inline' for login/admin inline bootstraps and marked.setOptions
+// - style-src includes 'unsafe-inline' for login page and component styles
+// - img-src allows https:/data:/blob: for remote images, markdown embeds, and lightbox
+// - No external script CDNs; marked/highlight/DOMPurify are self-hosted under /static
 app.use('*', async (c, next) => {
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
   c.header('X-Frame-Options', 'DENY');
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  c.header(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ')
+  );
 });
 
 // Health check

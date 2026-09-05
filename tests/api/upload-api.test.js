@@ -84,7 +84,7 @@ describe('POST /api/upload', () => {
     expect(json.data.url).toContain('/api/upload/file/');
   });
 
-  it('普通用户也应该可以上传', async () => {
+  it('non-admin members cannot upload (403)', async () => {
     const formData = new FormData();
     formData.append('file', new Blob(['user content'], { type: 'text/plain' }), 'user-file.txt');
 
@@ -94,9 +94,7 @@ describe('POST /api/upload', () => {
       body: formData
     }, { DB: getDB(), BUCKET: createMockBucket() });
 
-    expect(res.status).toBe(201);
-    const json = await res.json();
-    expect(json.success).toBe(true);
+    expect(res.status).toBe(403);
   });
 
   it('没有文件应该返回 400', async () => {

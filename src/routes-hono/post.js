@@ -11,9 +11,9 @@ import {
   serverErrorResponse,
   parsePagination,
   safeParseInt,
-  requireAuth
+  requireAdmin
 } from './base.js';
-import { validateSessionId } from '../utils/auth.js';
+import { validateSessionId, getSessionCookie } from '../utils/auth.js';
 import {
   getCachedPostList, refreshPostListCache,
   cachePost, getCachedPost, deleteCachedPost,
@@ -24,12 +24,25 @@ import {
 // Helper: optionally get current user ID from session cookie (no auth required)
 async function getCurrentUserId(c) {
   try {
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    const sessionId = getSessionCookie(c.req.header('Cookie'));
     if (!sessionId) return null;
     const secret = c.env?.SESSION_SECRET;
     if (!secret) return null;
     const sessionData = await validateSessionId(sessionId, secret);
     return sessionData?.userId || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Return current user row (id, role, ...) or null */
+async function getCurrentUser(c) {
+  try {
+    const userId = await getCurrentUserId(c);
+    if (!userId) return null;
+    const db = c.env?.DB;
+    if (!db) return null;
+    return await db.prepare('SELECT id, role, status FROM users WHERE id = ?').bind(userId).first();
   } catch {
     return null;
   }
@@ -54,8 +67,8 @@ const postRoutes = new Hono();
 // SECURITY: Non-admin users must never see draft posts. The `status` query
 // parameter is intentionally ignored here; the model defaults to published-only
 // when `isAdmin` is not explicitly set to true.
-// The `all=1` parameter is only honoured when the user has a valid session
-// (authenticated). Public/anonymous requests always see published posts only.
+// The `all=1` parameter is only honoured for admins (role === 'admin').
+// Authenticated non-admins and anonymous users always see published posts only.
 postRoutes.get('/list', async (c) => {
   try {
     const db = c.env?.DB;
@@ -69,16 +82,15 @@ postRoutes.get('/list', async (c) => {
     // Note: status is deliberately excluded from hasFilters — public users
     // must not be able to bypass the published-only default via query params.
     const hasFilters = params.featured !== undefined || params.category_id !== undefined || params.tag_id !== undefined;
-    const page = safeParseInt(params.page, 1);
-    const limit = safeParseInt(params.limit, 10);
+    const page = Math.max(1, safeParseInt(params.page, 1) || 1);
+    const limit = Math.min(Math.max(1, safeParseInt(params.limit, 10) || 10), 100);
     const isDefault = !hasFilters && page === 1 && limit === 10;
 
-    // SECURITY: `all=1` only works for authenticated users — shows all statuses
-    // including drafts. Anonymous users always see published only.
+    // SECURITY: `all=1` only works for admins — shows all statuses including drafts.
     let isAdmin = false;
     if (params.all === '1') {
-      const currentUserId = await getCurrentUserId(c);
-      isAdmin = !!currentUserId;
+      const currentUser = await getCurrentUser(c);
+      isAdmin = currentUser?.role === 'admin' && currentUser?.status === 1;
     }
 
     // Default request: try R2 cache first (only for public/default requests)
@@ -248,7 +260,7 @@ postRoutes.get('/slug/:slug', async (c) => {
 // POST /create - 创建文章（需登录）
 // SECURITY: author_id is taken from the authenticated session, never from the
 // request body, preventing author spoofing.
-postRoutes.post('/create', requireAuth, async (c) => {
+postRoutes.post('/create', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -309,7 +321,7 @@ postRoutes.post('/create', requireAuth, async (c) => {
 });
 
 // PUT /:id/update - 更新文章（需登录，仅作者或管理员）
-postRoutes.put('/:id/update', requireAuth, async (c) => {
+postRoutes.put('/:id/update', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {
@@ -380,7 +392,7 @@ postRoutes.put('/:id/update', requireAuth, async (c) => {
 // DELETE /:id/delete - 删除文章（需登录，仅作者或管理员）
 // FIX: Clean up post_tags and post_categories junction table entries before
 // deleting the post to prevent orphaned rows.
-postRoutes.delete('/:id/delete', requireAuth, async (c) => {
+postRoutes.delete('/:id/delete', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     if (!db) {

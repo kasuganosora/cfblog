@@ -4,7 +4,7 @@
  */
 
 import { User } from '../models/User.js';
-import { validateSessionId } from '../utils/auth.js';
+import { validateSessionId, getSessionCookie } from '../utils/auth.js';
 
 // 统一响应格式
 export const successResponse = (data, message = 'Success', status = 200) => ({
@@ -69,15 +69,17 @@ export const safeParseInt = (value, defaultValue = null) => {
 // 分页参数解析
 export const parsePagination = (c) => {
   const url = new URL(c.req.url);
-  const page = safeParseInt(url.searchParams.get('page'), 1);
-  const limit = safeParseInt(url.searchParams.get('limit'), 10);
+  const page = Math.max(1, safeParseInt(url.searchParams.get('page'), 1) || 1);
+  // Cap page size to prevent unbounded DB reads
+  const rawLimit = safeParseInt(url.searchParams.get('limit'), 10) || 10;
+  const limit = Math.min(Math.max(1, rawLimit), 100);
   return { page, limit };
 };
 
 // 用户认证中间件
 export const requireAuth = async (c, next) => {
   try {
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    const sessionId = getSessionCookie(c.req.header('Cookie'));
 
     if (!sessionId) {
       c.header('Set-Cookie', CLEAR_SESSION_COOKIE);
@@ -123,7 +125,7 @@ export const requireAuth = async (c, next) => {
 // 管理员权限中间件 (includes auth check)
 export const requireAdmin = async (c, next) => {
   try {
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    const sessionId = getSessionCookie(c.req.header('Cookie'));
 
     if (!sessionId) {
       c.header('Set-Cookie', CLEAR_SESSION_COOKIE);

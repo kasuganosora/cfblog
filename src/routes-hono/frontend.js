@@ -81,9 +81,9 @@ frontendRoutes.get('/post/:slug', async (c) => {
 frontendRoutes.get('/login', async (c) => {
   // If already logged in, redirect to admin
   try {
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    const { validateSessionId, getSessionCookie } = await import('../utils/auth.js');
+    const sessionId = getSessionCookie(c.req.header('Cookie'));
     if (sessionId) {
-      const { validateSessionId } = await import('../utils/auth.js');
       const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
       if (session?.userId) return c.redirect('/admin');
     }

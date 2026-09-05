@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import path from 'node:path';
 import { Attachment } from '../models/Attachment.js';
-import { requireAuth, requireAdmin, serverErrorResponse, errorResponse, safeParseInt } from './base.js';
+import { requireAdmin, serverErrorResponse, errorResponse, safeParseInt } from './base.js';
 
 const uploadRoutes = new Hono();
 
@@ -71,7 +71,7 @@ function detectExtensionFromMagicBytes(buffer) {
 }
 
 // POST / - Upload file (requires login)
-uploadRoutes.post('/', requireAuth, async (c) => {
+uploadRoutes.post('/', requireAdmin, async (c) => {
   try {
     const db = c.env?.DB;
     const bucket = c.env?.BUCKET;

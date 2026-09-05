@@ -8,7 +8,7 @@ function checkThumb(el,src){
   img.src=src;
 }
 function readTime(text){if(!text)return'1 min';var t=text.replace(/<[^>]+>/g,'').replace(/[#*_~>|\\[\]()-]/g,'');return Math.max(1,Math.ceil(t.length/500))+' min'}
-function renderMd(s){return typeof marked!=='undefined'?marked.parse(s||''):s||''}
+function renderMd(s){var html=typeof marked!=='undefined'?marked.parse(s||''):(s||'');return typeof DOMPurify!=='undefined'?DOMPurify.sanitize(html):html}
 function renderArticleList(container,posts,opts){
   opts=opts||{};
   if(!posts.length){container.innerHTML='<div class="empty">'+(opts.emptyText||'暂无文章')+'</div>';return}

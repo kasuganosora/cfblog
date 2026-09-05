@@ -7,8 +7,12 @@ document.addEventListener('DOMContentLoaded',async function(){
 async function loadPosts(){
   try{
     var params=new URLSearchParams(window.location.search);
+    var qs=new URLSearchParams();
+    // Only forward safe pagination params — never forward admin-only `all`
+    if(params.get('page'))qs.set('page',params.get('page'));
+    if(params.get('limit'))qs.set('limit',params.get('limit'));
     var url=API+'/post/list';
-    if(params.toString())url+='?'+params.toString();
+    if(qs.toString())url+='?'+qs.toString();
     var res=await fetch(url);var data=await res.json();
     if(data.data&&Array.isArray(data.data))renderPosts(data.data,data.pagination);
   }catch(e){console.error('Load posts:',e)}
@@ -82,7 +86,7 @@ async function loadWidgets(){
         var div=document.createElement('div');
         div.className='widget';
         div.innerHTML='<h3>'+escapeHtml(w.title||'')+'</h3>'
-          +'<div class="widget-custom">'+marked.parse(w.content||'')+'</div>';
+          +'<div class="widget-custom">'+renderMd(w.content||'')+'</div>';
         c.appendChild(div);
       });
     }

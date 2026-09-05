@@ -167,7 +167,7 @@ A serverless blog platform running entirely on [Cloudflare Workers](https://work
 - **Image lightbox** click-to-zoom on article images
 - **Chinese slug support** auto pinyin conversion for URL-friendly slugs
 - **Sidebar widgets** customizable via admin (Markdown + HTML)
-- **Dark mode** toggle with system preference detection
+- **Dark mode** via `prefers-color-scheme: dark` CSS token overrides (optional `[data-theme]`)
 - **Full-text search** across posts
 - **Session auth** with PBKDF2 password hashing, login rate limiting, audit log
 - **R2 caching layer** for settings, post lists, RSS
@@ -343,12 +343,12 @@ cfblog/
 
 ## Theming
 
-The frontend is server-rendered in `src/routes-hono/frontend.js`. The entire theme (HTML + CSS + JS) is in this single file. Customize by modifying:
+The frontend is server-rendered in `src/routes-hono/frontend.js` with views under `src/frontend/views/`.
 
-- **CSS variables** in `:root` - colors, fonts, dimensions
-- **Dark mode** via `body[data-theme="dark"]` overrides
-- **`layout()`** function - HTML shell, navbar, footer
-- **Route handlers** - individual page layouts
+- **Canonical CSS**: `public/static/css/blog.css` (CSS variables, dark mode via `prefers-color-scheme` / `[data-theme]`)
+- **Layout**: `src/frontend/views/layout.js` — HTML shell, navbar, footer, SEO
+- **Client JS**: `public/static/js/` (Markdown rendered with marked + sanitized with DOMPurify)
+- **Unused**: `src/frontend/themes/default/style.css` is legacy and not loaded
 
 No frontend build step required. Just edit and deploy.
 

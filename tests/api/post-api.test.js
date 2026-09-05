@@ -175,14 +175,14 @@ describe('POST /api/post/create', () => {
     expect(res.status).toBe(400);
   });
 
-  it('缺少作者ID应该返回 400', async () => {
+  it('author comes from session — missing authorId still creates (201)', async () => {
     const res = await request('/api/post/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cookie': adminCookie },
       body: JSON.stringify({ title: 'New Post' })
     }, { DB: getDB() });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(201);
   });
 
   it('应该支持可选字段（content, excerpt, slug等）', async () => {

@@ -49,19 +49,25 @@ export class Comment extends BaseModel {
   }
 
   /**
-   * Get comment by ID with replies
+   * Get comment by ID with replies.
+   * By default only approved replies (status=1) are included so public
+   * endpoints never leak pending/spam replies. Pass includeAllReplies
+   * for admin moderation views.
    */
-  async getCommentById(id) {
+  async getCommentById(id, { includeAllReplies = false } = {}) {
     const comment = await this.findById(id);
 
     if (!comment) {
       return null;
     }
 
-    // Get replies
-    const replies = await this.query(`
-      SELECT * FROM comments WHERE parent_id = ? ORDER BY created_at ASC
-    `, [id]);
+    const replies = includeAllReplies
+      ? await this.query(`
+          SELECT * FROM comments WHERE parent_id = ? ORDER BY created_at ASC
+        `, [id])
+      : await this.query(`
+          SELECT * FROM comments WHERE parent_id = ? AND status = 1 ORDER BY created_at ASC
+        `, [id]);
 
     return {
       ...comment,
@@ -175,7 +181,7 @@ export class Comment extends BaseModel {
       [status, id]
     );
 
-    return this.getCommentById(id);
+    return this.getCommentById(id, { includeAllReplies: true });
   }
 
   /**

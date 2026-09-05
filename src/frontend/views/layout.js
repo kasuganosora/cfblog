@@ -55,8 +55,8 @@ export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, p
   if (rssBase) {
     linkTags += `<link rel="alternate" type="application/rss+xml" title="${esc(blogTitle)} RSS" href="${esc(rssBase)}/rss">\n`;
   }
-  // JSON-LD structured data
-  const jsonLdScript = jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n` : '';
+  // JSON-LD structured data — escape like __PAGE_DATA__ so </script> cannot break out
+  const jsonLdScript = jsonLd ? `<script type="application/ld+json">${escapeJsString(jsonLd)}</script>\n` : '';
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -67,6 +67,7 @@ export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, p
 ${metaTags}${linkTags}${jsonLdScript}<link rel="stylesheet" href="/static/css/blog.css">
 <link rel="stylesheet" href="/static/hljs-github-dark.css">
 <script src="/static/marked.min.js"></script>
+<script src="/static/purify.min.js"></script>
 <script src="/static/highlight.min.js"></script>
 <script>marked.setOptions({breaks:true,gfm:true});</script>
 </head>

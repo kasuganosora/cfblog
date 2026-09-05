@@ -23,9 +23,9 @@ export async function getSettings(c) {
 
 export async function getCurrentUser(c) {
   try {
-    const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+    const { validateSessionId, getSessionCookie } = await import('../../utils/auth.js');
+    const sessionId = getSessionCookie(c.req.header('Cookie'));
     if (sessionId) {
-      const { validateSessionId } = await import('../../utils/auth.js');
       const session = await validateSessionId(sessionId, c.env?.SESSION_SECRET);
       if (session?.userId && c.env?.DB) {
         const { User } = await import('../../models/User.js');

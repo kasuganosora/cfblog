@@ -5,7 +5,7 @@
 import { Hono } from 'hono';
 import { Comment } from '../models/Comment.js';
 import { Settings } from '../models/Settings.js';
-import { validateSessionId } from '../utils/auth.js';
+import { validateSessionId, getSessionCookie } from '../utils/auth.js';
 import {
   serverErrorResponse,
   errorResponse,
@@ -161,7 +161,7 @@ commentRoutes.post('/create', async (c) => {
     const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For')?.split(',')[0]?.trim() || '0.0.0.0';
     let isLoggedIn = false;
     try {
-      const sessionId = c.req.header('Cookie')?.match(/session=([^;]+)/)?.[1];
+      const sessionId = getSessionCookie(c.req.header('Cookie'));
       if (sessionId && c.env?.SESSION_SECRET) {
         isLoggedIn = !!(await validateSessionId(sessionId, c.env.SESSION_SECRET));
       }
