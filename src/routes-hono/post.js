@@ -18,6 +18,7 @@ import {
   getCachedPostList, refreshPostListCache,
   cachePost, getCachedPost, deleteCachedPost,
   refreshAllPostCaches,
+  refreshRSSCache, refreshSitemapCache,
   savePostAsHexoMd, deleteHexoMd
 } from '../utils/cache.js';
 
@@ -105,6 +106,17 @@ async function getCurrentUser(c) {
   } catch {
     return null;
   }
+}
+
+/** Keep background work alive after the HTTP response (CF Workers). */
+function scheduleBackground(c, promise, label = 'background') {
+  const p = Promise.resolve(promise).catch((e) => console.error(label + ' error:', e));
+  try {
+    if (c.executionCtx && typeof c.executionCtx.waitUntil === 'function') {
+      c.executionCtx.waitUntil(p);
+    }
+  } catch (_e) { /* executionCtx unavailable */ }
+  return p;
 }
 
 // Helper: check if current user can view a draft post (must be author or admin)
@@ -395,15 +407,24 @@ postRoutes.post('/create', requireAdmin, async (c) => {
     const postModel = new Post(db);
     const post = await postModel.createPost(postData, authorId);
 
-    // Refresh caches (published only for public lists)
+    // Refresh caches: await list (homepage), waitUntil the rest so Workers do not drop them
     const bucket = c.env?.BUCKET;
     if (bucket) {
       const origin = new URL(c.req.url).origin;
       if (post.status === 1) {
-        cachePost(bucket, post.slug, post).catch(e => console.error('cachePost error:', e));
-        savePostAsHexoMd(bucket, post).catch(e => console.error('savePostAsHexoMd error:', e));
+        scheduleBackground(c, cachePost(bucket, post.slug, post), 'cachePost');
+        scheduleBackground(c, savePostAsHexoMd(bucket, post), 'savePostAsHexoMd');
       }
-      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
+      // Homepage reads R2 list cache — must finish before we return
+      await refreshPostListCache(bucket, db);
+      scheduleBackground(
+        c,
+        Promise.all([
+          refreshRSSCache(bucket, db, origin),
+          refreshSitemapCache(bucket, db, origin),
+        ]),
+        'refreshRSSSitemap'
+      );
     }
 
     return c.json(post, 201);
@@ -459,20 +480,26 @@ postRoutes.put('/:id/update', requireAdmin, async (c) => {
 
     const post = await postModel.updatePost(id, postData);
 
-    // Refresh caches
+    // Refresh caches: await list, waitUntil secondary work
     const bucket = c.env?.BUCKET;
     if (bucket) {
       const origin = new URL(c.req.url).origin;
       if (post.status === 1) {
-        // Published: cache the post and refresh lists
-        cachePost(bucket, post.slug, post).catch(e => console.error('cachePost error:', e));
-        savePostAsHexoMd(bucket, post).catch(e => console.error('savePostAsHexoMd error:', e));
+        scheduleBackground(c, cachePost(bucket, post.slug, post), 'cachePost');
+        scheduleBackground(c, savePostAsHexoMd(bucket, post), 'savePostAsHexoMd');
       } else if (existingPost.status === 1) {
-        // Was published, now draft: remove caches
-        deleteCachedPost(bucket, existingPost.slug).catch(e => console.error('deleteCachedPost error:', e));
-        deleteHexoMd(bucket, existingPost.slug).catch(e => console.error('deleteHexoMd error:', e));
+        scheduleBackground(c, deleteCachedPost(bucket, existingPost.slug), 'deleteCachedPost');
+        scheduleBackground(c, deleteHexoMd(bucket, existingPost.slug), 'deleteHexoMd');
       }
-      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
+      await refreshPostListCache(bucket, db);
+      scheduleBackground(
+        c,
+        Promise.all([
+          refreshRSSCache(bucket, db, origin),
+          refreshSitemapCache(bucket, db, origin),
+        ]),
+        'refreshRSSSitemap'
+      );
     }
 
     return c.json(post);
@@ -514,15 +541,23 @@ postRoutes.delete('/:id/delete', requireAdmin, async (c) => {
 
     await postModel.deletePost(id);
 
-    // Refresh caches
+    // Refresh caches: await list, waitUntil secondary work
     const bucket = c.env?.BUCKET;
     if (bucket) {
       if (existingPost.slug) {
-        deleteCachedPost(bucket, existingPost.slug).catch(e => console.error('deleteCachedPost error:', e));
-        deleteHexoMd(bucket, existingPost.slug).catch(e => console.error('deleteHexoMd error:', e));
+        scheduleBackground(c, deleteCachedPost(bucket, existingPost.slug), 'deleteCachedPost');
+        scheduleBackground(c, deleteHexoMd(bucket, existingPost.slug), 'deleteHexoMd');
       }
       const origin = new URL(c.req.url).origin;
-      refreshAllPostCaches(bucket, db, origin).catch(e => console.error('refreshAllPostCaches error:', e));
+      await refreshPostListCache(bucket, db);
+      scheduleBackground(
+        c,
+        Promise.all([
+          refreshRSSCache(bucket, db, origin),
+          refreshSitemapCache(bucket, db, origin),
+        ]),
+        'refreshRSSSitemap'
+      );
     }
 
     return c.json({ success: true, message: 'Post deleted successfully' });
