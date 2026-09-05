@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded',async function(){
       metaHtml+='<span>'+readTime(result.content)+'</span>';
       metaHtml+='<span>阅读 '+(result.view_count||0)+'</span>';
       document.querySelector('[data-testid="post-meta"]').innerHTML=metaHtml;
+      fetch(API+'/post/'+result.id+'/view',{method:'POST'}).then(function(r){return r.json()}).then(function(v){
+        if(v&&typeof v.view_count==='number'){
+          var meta=document.querySelector('[data-testid="post-meta"]');
+          if(!meta)return;
+          var spans=meta.querySelectorAll('span');
+          var last=spans[spans.length-1];
+          if(last)last.textContent=last.textContent.replace(/\d+$/,String(v.view_count));
+        }
+      }).catch(function(){});
 
       // Content - parse markdown to HTML
       var contentEl=document.querySelector('[data-testid="post-content"]');

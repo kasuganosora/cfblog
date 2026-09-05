@@ -35,6 +35,65 @@ async function getCurrentUserId(c) {
   }
 }
 
+function sameUserId(a, b) {
+  return Number(a) === Number(b);
+}
+
+/** Count a view for anonymous visitors and non-authors (Number-safe). */
+async function shouldCountView(c, authorId) {
+  const userId = await getCurrentUserId(c);
+  return !userId || !sameUserId(userId, authorId);
+}
+
+/** Fire-and-forget increment; use waitUntil on Workers when available. */
+function scheduleIncrement(c, postModel, id) {
+  const promise = postModel.incrementViewCount(id)
+    .catch(e => console.error('incrementViewCount error:', e));
+  if (c.executionCtx?.waitUntil) {
+    c.executionCtx.waitUntil(promise);
+  } else {
+    void promise;
+  }
+  return promise;
+}
+
+async function fetchViewCount(db, id) {
+  try {
+    const row = await db.prepare('SELECT view_count FROM posts WHERE id = ?').bind(id).first();
+    return row?.view_count;
+  } catch (e) {
+    console.error('fetchViewCount error:', e);
+    return null;
+  }
+}
+
+/** Overlay fresh D1 view_count onto a cached list result (immutable). */
+async function overlayListViewCounts(db, result) {
+  if (!result?.data?.length) return result;
+  const ids = result.data.map((p) => p.id).filter((id) => id != null);
+  if (!ids.length) return result;
+  try {
+    const placeholders = ids.map(() => '?').join(',');
+    const { results } = await db
+      .prepare(`SELECT id, view_count FROM posts WHERE id IN (${placeholders})`)
+      .bind(...ids)
+      .all();
+    const map = new Map((results || []).map((r) => [Number(r.id), r.view_count]));
+    return {
+      ...result,
+      data: result.data.map((item) => {
+        const key = Number(item.id);
+        return map.has(key)
+          ? { ...item, view_count: map.get(key) }
+          : { ...item };
+      })
+    };
+  } catch (e) {
+    console.error('overlayListViewCounts error:', e);
+    return result;
+  }
+}
+
 /** Return current user row (id, role, ...) or null */
 async function getCurrentUser(c) {
   try {
@@ -52,7 +111,7 @@ async function getCurrentUser(c) {
 async function canViewDraft(c, post) {
   const currentUserId = await getCurrentUserId(c);
   if (!currentUserId) return false;
-  if (post.author_id === currentUserId) return true;
+  if (sameUserId(post.author_id, currentUserId)) return true;
   const db = c.env?.DB;
   if (db) {
     const user = await db.prepare('SELECT role FROM users WHERE id = ?').bind(currentUserId).first();
@@ -96,7 +155,7 @@ postRoutes.get('/list', async (c) => {
     // Default request: try R2 cache first (only for public/default requests)
     if (isDefault && !isAdmin && bucket) {
       const cached = await getCachedPostList(bucket);
-      if (cached) return c.json(cached);
+      if (cached) return c.json(await overlayListViewCounts(db, cached));
     }
 
     const postModel = new Post(db);
@@ -151,6 +210,105 @@ postRoutes.get('/search', async (c) => {
   }
 });
 
+// GET /slug/:slug - 根据slug获取文章（已发布文章从 R2 缓存读取）
+// Must be registered BEFORE /:id so "slug" is not captured as an id.
+// SECURITY: Draft posts are only returned to the post author or an admin.
+postRoutes.get('/slug/:slug', async (c) => {
+  try {
+    const db = c.env?.DB;
+    const bucket = c.env?.BUCKET;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const slug = c.req.param('slug');
+    const postModel = new Post(db);
+
+    // Try R2 cache first (only published posts are ever cached)
+    let cached = await getCachedPost(bucket, slug);
+    if (cached) {
+      let view_count = cached.view_count;
+      if (cached.status === 1) {
+        if (await shouldCountView(c, cached.author_id)) {
+          view_count = await postModel.incrementViewCount(cached.id);
+        } else {
+          const n = await fetchViewCount(db, cached.id);
+          view_count = n ?? cached.view_count;
+        }
+      }
+      return c.json({ ...cached, view_count });
+    }
+
+    // Cache miss: query D1
+    const post = await postModel.getPostBySlug(slug);
+
+    if (!post) {
+      return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+
+    // SECURITY: Block draft posts for non-author/non-admin users
+    if (post.status !== 1) {
+      if (!await canViewDraft(c, post)) {
+        return c.json(notFoundResponse('Post not found').json(), 404);
+      }
+    }
+
+    // Cache published posts in R2
+    if (post.status === 1 && bucket) {
+      cachePost(bucket, slug, post).catch(e => console.error('cachePost error:', e));
+    }
+
+    let view_count = post.view_count;
+    if (post.status === 1) {
+      if (await shouldCountView(c, post.author_id)) {
+        view_count = await postModel.incrementViewCount(post.id);
+      } else {
+        const n = await fetchViewCount(db, post.id);
+        view_count = n ?? post.view_count;
+      }
+    }
+
+    return c.json({ ...post, view_count });
+  } catch (error) {
+    console.error('Get post by slug error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
+// POST /:id/view - explicit view ping (belt-and-suspenders for clients)
+postRoutes.post('/:id/view', async (c) => {
+  try {
+    const db = c.env?.DB;
+    if (!db) {
+      return c.json(serverErrorResponse('Database not available').json(), 500);
+    }
+
+    const id = safeParseInt(c.req.param('id'));
+    if (id === null) {
+      return c.json(errorResponse('Invalid post ID').json(), 400);
+    }
+
+    const postModel = new Post(db);
+    const post = await postModel.findById(id);
+    if (!post || post.status !== 1) {
+      return c.json(notFoundResponse('Post not found').json(), 404);
+    }
+
+    let view_count = post.view_count || 0;
+    if (await shouldCountView(c, post.author_id)) {
+      view_count = await postModel.incrementViewCount(id);
+    } else {
+      const n = await fetchViewCount(db, id);
+      view_count = n ?? view_count;
+    }
+
+    return c.json({ view_count });
+  } catch (error) {
+    console.error('Post view ping error:', error);
+    return c.json(serverErrorResponse('Internal server error').json(), 500);
+  }
+});
+
 // GET /:id - 根据ID获取文章
 // SECURITY: Draft posts are only returned to the post author or an admin.
 postRoutes.get('/:id', async (c) => {
@@ -178,81 +336,16 @@ postRoutes.get('/:id', async (c) => {
       }
     }
 
-    // Increment view count only for published posts and non-author visitors
+    let view_count = post.view_count;
     if (post.status === 1) {
-      const currentUserId = await getCurrentUserId(c);
-      if (!currentUserId || currentUserId !== post.author_id) {
-        await postModel.incrementViewCount(id);
-        post.view_count = (post.view_count || 0) + 1;
+      if (await shouldCountView(c, post.author_id)) {
+        view_count = await postModel.incrementViewCount(id);
       }
     }
 
-    return c.json(post);
+    return c.json({ ...post, view_count });
   } catch (error) {
     console.error('Get post error:', error);
-    return c.json(serverErrorResponse('Internal server error').json(), 500);
-  }
-});
-
-// GET /slug/:slug - 根据slug获取文章（已发布文章从 R2 缓存读取）
-// SECURITY: Draft posts are only returned to the post author or an admin.
-postRoutes.get('/slug/:slug', async (c) => {
-  try {
-    const db = c.env?.DB;
-    const bucket = c.env?.BUCKET;
-    if (!db) {
-      return c.json(serverErrorResponse('Database not available').json(), 500);
-    }
-
-    const slug = c.req.param('slug');
-
-    // Try R2 cache first (only published posts are ever cached)
-    const cached = await getCachedPost(bucket, slug);
-    if (cached) {
-      // Increment view count asynchronously (non-blocking)
-      if (cached.status === 1) {
-        const currentUserId = await getCurrentUserId(c);
-        if (!currentUserId || currentUserId !== cached.author_id) {
-          const postModel = new Post(db);
-          postModel.incrementViewCount(cached.id).catch(() => {});
-          cached.view_count = (cached.view_count || 0) + 1;
-        }
-      }
-      return c.json(cached);
-    }
-
-    // Cache miss: query D1
-    const postModel = new Post(db);
-    const post = await postModel.getPostBySlug(slug);
-
-    if (!post) {
-      return c.json(notFoundResponse('Post not found').json(), 404);
-    }
-
-    // SECURITY: Block draft posts for non-author/non-admin users
-    if (post.status !== 1) {
-      if (!await canViewDraft(c, post)) {
-        return c.json(notFoundResponse('Post not found').json(), 404);
-      }
-    }
-
-    // Cache published posts in R2
-    if (post.status === 1 && bucket) {
-      cachePost(bucket, slug, post).catch(e => console.error('cachePost error:', e));
-    }
-
-    // Increment view count only for published posts and non-author visitors
-    if (post.status === 1) {
-      const currentUserId = await getCurrentUserId(c);
-      if (!currentUserId || currentUserId !== post.author_id) {
-        await postModel.incrementViewCount(post.id);
-        post.view_count = (post.view_count || 0) + 1;
-      }
-    }
-
-    return c.json(post);
-  } catch (error) {
-    console.error('Get post by slug error:', error);
     return c.json(serverErrorResponse('Internal server error').json(), 500);
   }
 });

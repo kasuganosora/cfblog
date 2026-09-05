@@ -129,16 +129,56 @@ describe('GET /api/post/:id', () => {
 // ========== Get by Slug ==========
 
 describe('GET /api/post/slug/:slug', () => {
-  it('应该根据 slug 返回文章', async () => {
+  it('should fetch post by slug', async () => {
     const res = await request('/api/post/slug/test-post', {}, { DB: getDB({ postBySlug: testPost }) });
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.title).toBe('Test Post');
   });
 
-  it('不存在的 slug 应该返回 404', async () => {
+  it('should return 404 for missing slug', async () => {
     const res = await request('/api/post/slug/nonexistent', {}, { DB: getDB({ postBySlug: null }) });
     expect(res.status).toBe(404);
+  });
+
+  it('should increment view_count for anonymous slug views', async () => {
+    let views = 10;
+    const post = { ...testPost, view_count: views };
+    const db = createMockDB([
+      {
+        match: 'FROM users WHERE id',
+        result: null
+      },
+      {
+        match: 'FROM posts WHERE slug',
+        result: (sql, params) => (params[0] === 'test-post' ? { ...post, view_count: views } : null)
+      },
+      {
+        match: 'SELECT view_count FROM posts WHERE id',
+        result: () => ({ view_count: views })
+      },
+      {
+        match: 'FROM posts WHERE id',
+        result: () => ({ ...post, view_count: views })
+      },
+      {
+        match: 'UPDATE posts SET view_count',
+        result: () => {
+          views += 1;
+          return null;
+        }
+      },
+      { match: 'post_categories', result: [] },
+      { match: 'post_tags', result: [] },
+      { match: 'FROM categories c', result: [] },
+      { match: 'FROM tags t', result: [] },
+    ]);
+
+    const res = await request('/api/post/slug/test-post', {}, { DB: db });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.view_count).toBe(11);
+    expect(views).toBe(11);
   });
 });
 
