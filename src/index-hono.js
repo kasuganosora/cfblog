@@ -52,6 +52,7 @@ app.use('*', logger());
 // Security response headers
 // CSP notes:
 // - script-src includes 'unsafe-inline' for login/admin inline bootstraps and marked.setOptions
+// - script-src includes 'unsafe-eval' for Vue runtime template compiler (login/admin in-DOM templates)
 // - style-src includes 'unsafe-inline' for login page and component styles
 // - img-src allows https:/data:/blob: for remote images, markdown embeds, and lightbox
 // - No external script CDNs; marked/highlight/DOMPurify are self-hosted under /static
@@ -65,7 +66,7 @@ app.use('*', async (c, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
