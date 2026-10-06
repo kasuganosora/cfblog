@@ -1,7 +1,7 @@
 var API='/api';
 document.addEventListener('DOMContentLoaded',async function(){
   try{
-    var res=await fetch(API+'/category/list');var data=await res.json();
+    var res=await fetch(API+'/category/list?limit=100');var data=await res.json();
     if(data.data&&Array.isArray(data.data))renderCats(data.data);
   }catch(e){console.error(e)}
 });

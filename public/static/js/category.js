@@ -9,19 +9,25 @@ document.addEventListener('DOMContentLoaded',async function(){
     var res=await fetch(url);var result=await res.json();
     if(result&&result.id){
       document.querySelector('h1').textContent='分类: '+result.name;
+      var postRes=await fetch(API+'/post/list?category_id='+result.id+'&status=1&limit=100');
+      var postData=await postRes.json();
       var c=document.getElementById('posts-list');
       var desc=result.description?'<p>'+escapeHtml(result.description)+'</p>':'';
-      c.innerHTML=desc+'<p style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">共 '+(result.post_count||0)+' 篇文章</p><div id="article-list"><p style="color:var(--muted)">加载文章中...</p></div>';
-      var postRes=await fetch(API+'/post/list?category_id='+result.id+'&status=1');
-      var postData=await postRes.json();
+      var total=(postData.pagination&&postData.pagination.total)||result.post_count||0;
+      c.innerHTML=desc+'<p style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">共 '+total+' 篇文章</p><div id="article-list"></div>';
       var listEl=document.getElementById('article-list');
       if(postData.data&&postData.data.length){
         renderArticleList(listEl,postData.data,{prefix:'cat',emptyText:'该分类下暂无文章'});
       }else{
         listEl.innerHTML='<p class="empty">该分类下暂无文章</p>';
       }
-    }else{
+    }else if(document.getElementById('posts-list').getAttribute('data-ssr')!=='1'){
       document.getElementById('posts-list').innerHTML='<p class="empty">分类不存在</p>';
     }
-  }catch(e){console.error(e);document.getElementById('posts-list').innerHTML='<p class="empty">加载失败</p>'}
+  }catch(e){
+    console.error(e);
+    var el=document.getElementById('posts-list');
+    if(el && el.getAttribute('data-ssr')==='1')return;
+    if(el)el.innerHTML='<p class="empty">加载失败</p>';
+  }
 });

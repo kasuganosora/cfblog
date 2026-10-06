@@ -39,7 +39,7 @@ function renderPager(p){
 
 async function loadCategories(){
   try{
-    var res=await fetch(API+'/category/list');var data=await res.json();
+    var res=await fetch(API+'/category/list?limit=100');var data=await res.json();
     if(data.data&&Array.isArray(data.data)){
       var c=document.getElementById('categories');
       if(!data.data.length){c.innerHTML='<li>暂无分类</li>';return}
@@ -59,7 +59,7 @@ async function loadCategories(){
 
 async function loadTags(){
   try{
-    var res=await fetch(API+'/tag/list');var data=await res.json();
+    var res=await fetch(API+'/tag/list?limit=100');var data=await res.json();
     if(data.data&&Array.isArray(data.data)){
       var c=document.getElementById('tags');
       if(!data.data.length){c.innerHTML='<span>暂无标签</span>';return}

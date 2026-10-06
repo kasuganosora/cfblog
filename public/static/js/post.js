@@ -85,13 +85,15 @@ document.addEventListener('DOMContentLoaded',async function(){
       }else{
         renderCommentsSection(result.id);
       }
-    }else{
+    }else if(!document.querySelector('[data-testid="post-content"][data-ssr="1"]')){
       document.querySelector('[data-testid="post-title"]').textContent='文章不存在';
       document.querySelector('[data-testid="post-content"]').innerHTML='';
     }
   }catch(e){
     console.error('Load post:',e);
-    document.querySelector('[data-testid="post-content"]').innerHTML='<p>加载失败</p>';
+    var failed=document.querySelector('[data-testid="post-content"]');
+    if(failed && failed.getAttribute('data-ssr')==='1')return;
+    if(failed)failed.innerHTML='<p>加载失败</p>';
   }
 });
 

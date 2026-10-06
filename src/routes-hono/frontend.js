@@ -13,8 +13,64 @@ import { renderCategories } from '../frontend/views/categories.js';
 import { renderCategory } from '../frontend/views/category.js';
 import { renderTags } from '../frontend/views/tags.js';
 import { renderTag } from '../frontend/views/tag.js';
+import { parseWidgets } from '../frontend/utils/content.js';
 
 const frontendRoutes = new Hono();
+
+function positiveInt(value, fallback) {
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return parsed;
+}
+
+async function loadPublishedPosts(c, { page = 1, limit = 10, categoryId, tagId } = {}) {
+  try {
+    const db = c.env?.DB;
+    const bucket = c.env?.BUCKET;
+    if (!db && !bucket) return null;
+    const isDefault = page === 1 && limit === 10 && categoryId == null && tagId == null;
+    if (isDefault && bucket) {
+      const { getCachedPostList } = await import('../utils/cache.js');
+      const cached = await getCachedPostList(bucket);
+      if (cached?.data) return cached;
+    }
+    if (!db) return null;
+    const { Post } = await import('../models/Post.js');
+    const postModel = new Post(db);
+    return await postModel.getPostList({ page, limit, categoryId, tagId });
+  } catch (e) {
+    console.error('SSR post list error:', e);
+    return null;
+  }
+}
+
+async function loadCategories(c) {
+  try {
+    const db = c.env?.DB;
+    if (!db) return null;
+    const { Category } = await import('../models/Category.js');
+    const categoryModel = new Category(db);
+    const result = await categoryModel.getCategoryList({ page: 1, limit: 100 });
+    return result.data || [];
+  } catch (e) {
+    console.error('SSR category list error:', e);
+    return null;
+  }
+}
+
+async function loadTags(c) {
+  try {
+    const db = c.env?.DB;
+    if (!db) return null;
+    const { Tag } = await import('../models/Tag.js');
+    const tagModel = new Tag(db);
+    const result = await tagModel.getTagList({ page: 1, limit: 100 });
+    return result.data || [];
+  } catch (e) {
+    console.error('SSR tag list error:', e);
+    return null;
+  }
+}
 
 // ═════════════════════════════════════════════════════════════
 // robots.txt
@@ -35,7 +91,32 @@ frontendRoutes.get('/robots.txt', (c) => {
 frontendRoutes.get('/', async (c) => {
   const settings = await getSettings(c);
   const siteUrl = new URL(c.req.url).origin;
-  return c.html(renderHome({ blogTitle: settings.blog_title || 'CFBlog', siteUrl }));
+  const blogTitle = settings.blog_title || 'CFBlog';
+  const page = positiveInt(c.req.query('page'), 1);
+  const limit = Math.min(positiveInt(c.req.query('limit'), 10), 100);
+  let list = null;
+  let categories = null;
+  let tags = null;
+  try {
+    [list, categories, tags] = await Promise.all([
+      loadPublishedPosts(c, { page, limit }),
+      loadCategories(c),
+      loadTags(c),
+    ]);
+  } catch (e) {
+    console.error('SSR home error:', e);
+  }
+  return c.html(renderHome({
+    blogTitle,
+    siteUrl,
+    description: settings.meta_description || settings.blog_description || blogTitle,
+    posts: list?.data ?? null,
+    pagination: list?.pagination || null,
+    categories,
+    tags,
+    widgets: parseWidgets(settings.sidebar_widgets),
+    page,
+  }));
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -49,8 +130,9 @@ frontendRoutes.get('/post/:slug', async (c) => {
   const siteUrl = new URL(c.req.url).origin;
   const blogTitle = settings.blog_title || 'CFBlog';
 
-  // SSR: pre-fetch post data for SEO meta tags
+  // The article text has to be in this response. Client JS only refreshes it.
   let post = null;
+  let missing = false;
   try {
     const bucket = c.env?.BUCKET;
     const db = c.env?.DB;
@@ -60,10 +142,14 @@ frontendRoutes.get('/post/:slug', async (c) => {
       const { Post } = await import('../models/Post.js');
       const postModel = new Post(db);
       post = await postModel.getPostBySlug(slug);
-      // Only expose published posts for SEO
-      if (post && post.status !== 1) post = null;
     }
-  } catch (_e) { /* non-critical: fallback to client-render */ }
+    if (post && Number(post.status) !== 1) post = null;
+    if ((bucket || db) && !post) missing = true;
+  } catch (e) {
+    console.error('SSR post error:', e);
+    post = null;
+    missing = false;
+  }
 
   return c.html(renderPost({
     blogTitle,
@@ -71,7 +157,7 @@ frontendRoutes.get('/post/:slug', async (c) => {
     currentUser,
     post,
     siteUrl,
-  }));
+  }), missing ? 404 : 200);
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -199,7 +285,18 @@ frontendRoutes.get('/feedback', async (c) => {
 
 frontendRoutes.get('/categories', async (c) => {
   const settings = await getSettings(c);
-  return c.html(renderCategories({ blogTitle: settings.blog_title || 'CFBlog' }));
+  const siteUrl = new URL(c.req.url).origin;
+  let categories = null;
+  try {
+    categories = await loadCategories(c);
+  } catch (e) {
+    console.error('SSR categories error:', e);
+  }
+  return c.html(renderCategories({
+    blogTitle: settings.blog_title || 'CFBlog',
+    categories,
+    siteUrl,
+  }));
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -209,10 +306,40 @@ frontendRoutes.get('/categories', async (c) => {
 frontendRoutes.get('/category/:slug', async (c) => {
   const slug = c.req.param('slug');
   const settings = await getSettings(c);
+  const siteUrl = new URL(c.req.url).origin;
+  const db = c.env?.DB;
+  let category = null;
+  let posts = null;
+  let pagination = null;
+  let missing = false;
+  try {
+    if (db) {
+      const { Category } = await import('../models/Category.js');
+      const categoryModel = new Category(db);
+      category = await categoryModel.findBySlug(slug);
+      if (!category) {
+        missing = true;
+      } else {
+        const list = await loadPublishedPosts(c, { page: 1, limit: 100, categoryId: category.id });
+        posts = list?.data || [];
+        pagination = list?.pagination || null;
+      }
+    }
+  } catch (e) {
+    console.error('SSR category error:', e);
+    category = null;
+    posts = null;
+    missing = false;
+  }
   return c.html(renderCategory({
     blogTitle: settings.blog_title || 'CFBlog',
     slug,
-  }));
+    category,
+    posts,
+    pagination,
+    siteUrl,
+    missing,
+  }), missing ? 404 : 200);
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -221,7 +348,18 @@ frontendRoutes.get('/category/:slug', async (c) => {
 
 frontendRoutes.get('/tags', async (c) => {
   const settings = await getSettings(c);
-  return c.html(renderTags({ blogTitle: settings.blog_title || 'CFBlog' }));
+  const siteUrl = new URL(c.req.url).origin;
+  let tags = null;
+  try {
+    tags = await loadTags(c);
+  } catch (e) {
+    console.error('SSR tags error:', e);
+  }
+  return c.html(renderTags({
+    blogTitle: settings.blog_title || 'CFBlog',
+    tags,
+    siteUrl,
+  }));
 });
 
 // ═════════════════════════════════════════════════════════════
@@ -231,10 +369,40 @@ frontendRoutes.get('/tags', async (c) => {
 frontendRoutes.get('/tag/:slug', async (c) => {
   const slug = c.req.param('slug');
   const settings = await getSettings(c);
+  const siteUrl = new URL(c.req.url).origin;
+  const db = c.env?.DB;
+  let tag = null;
+  let posts = null;
+  let pagination = null;
+  let missing = false;
+  try {
+    if (db) {
+      const { Tag } = await import('../models/Tag.js');
+      const tagModel = new Tag(db);
+      tag = await tagModel.findBySlug(slug);
+      if (!tag) {
+        missing = true;
+      } else {
+        const list = await loadPublishedPosts(c, { page: 1, limit: 100, tagId: tag.id });
+        posts = list?.data || [];
+        pagination = list?.pagination || null;
+      }
+    }
+  } catch (e) {
+    console.error('SSR tag error:', e);
+    tag = null;
+    posts = null;
+    missing = false;
+  }
   return c.html(renderTag({
     blogTitle: settings.blog_title || 'CFBlog',
     slug,
-  }));
+    tag,
+    posts,
+    pagination,
+    siteUrl,
+    missing,
+  }), missing ? 404 : 200);
 });
 
 // ═════════════════════════════════════════════════════════════

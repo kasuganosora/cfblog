@@ -2,39 +2,56 @@
  * Post Detail View
  */
 
+import { esc } from '../utils/helpers.js';
+import {
+  formatPostDate,
+  readTime,
+  renderMarkdown,
+  renderPostTags,
+  toIsoDate,
+} from '../utils/content.js';
 import { renderLayout } from './layout.js';
 
 export function renderPost({ blogTitle, slug, currentUser, post, siteUrl }) {
-  // If post data is available from SSR, build SEO params
-  const seo = {};
+  const seo = { siteUrl };
+  const canonicalUrl = `${siteUrl}/post/${encodeURIComponent(slug)}`;
+  seo.canonicalUrl = canonicalUrl;
+
   if (post) {
     seo.description = post.excerpt || (post.content || '').replace(/[#*>[\]!<]/g, '').slice(0, 160).trim();
-    seo.canonicalUrl = `${siteUrl}/post/${slug}`;
     seo.ogType = 'article';
-    seo.siteUrl = siteUrl;
     if (post.cover_image) seo.ogImage = post.cover_image;
-    if (post.published_at) seo.publishedTime = post.published_at;
-    if (post.updated_at) seo.modifiedTime = post.updated_at;
+    const published = toIsoDate(post.published_at || post.created_at);
+    const modified = toIsoDate(post.updated_at || post.published_at || post.created_at);
+    if (published) seo.publishedTime = published;
+    if (modified) seo.modifiedTime = modified;
     if (post.author_name) seo.author = post.author_name;
-    // JSON-LD Article schema
     seo.jsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: post.title,
-      datePublished: post.published_at || post.created_at,
-      dateModified: post.updated_at || post.published_at || post.created_at,
       author: { '@type': 'Person', name: post.author_name || blogTitle },
       publisher: { '@type': 'Organization', name: blogTitle },
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `${siteUrl}/post/${slug}` },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     };
+    if (published) seo.jsonLd.datePublished = published;
+    if (modified) seo.jsonLd.dateModified = modified;
     if (post.excerpt) seo.jsonLd.description = post.excerpt;
     if (post.cover_image) seo.jsonLd.image = post.cover_image;
   } else {
-    seo.siteUrl = siteUrl;
-    seo.canonicalUrl = `${siteUrl}/post/${slug}`;
+    seo.noindex = true;
   }
 
-  const postTitle = post?.title || '文章详情';
+  const postTitle = post?.title || '文章不存在';
+  const date = post ? formatPostDate(post.published_at || post.created_at) : '';
+  const author = post?.author_name ? `<span>${esc(post.author_name)}</span>` : '';
+  const body = post
+    ? (renderMarkdown(post.content) || '<p>暂无内容</p>')
+    : '<p>文章不存在</p>';
+  const meta = post
+    ? `<span>${esc(date)}</span>${author}<span>${esc(readTime(post.content))}</span><span>阅读 ${Number(post.view_count) || 0}</span>`
+    : '';
+  const ssr = post ? ' data-ssr="1"' : '';
 
   return renderLayout({
     title: postTitle,
@@ -49,11 +66,11 @@ export function renderPost({ blogTitle, slug, currentUser, post, siteUrl }) {
     <article data-testid="post-article">
       <img class="post-hero" id="hero" style="display:none" alt="">
       <div class="post-header">
-        <h1 data-testid="post-title">加载中...</h1>
-        <div data-testid="post-meta" class="article-meta"></div>
+        <h1 data-testid="post-title">${esc(postTitle)}</h1>
+        <div data-testid="post-meta" class="article-meta">${meta}</div>
       </div>
-      <div data-testid="post-content" class="post-body"><p>内容加载中...</p></div>
-      <div id="post-tags-area"></div>
+      <div data-testid="post-content" class="post-body"${ssr}>${body}</div>
+      <div id="post-tags-area">${post ? renderPostTags(post.tags) : ''}</div>
     </article>
     <div id="comments-container" role="region" aria-label="评论区"></div>
   </div>

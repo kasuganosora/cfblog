@@ -1,7 +1,7 @@
 var API='/api';
 document.addEventListener('DOMContentLoaded',async function(){
   try{
-    var res=await fetch(API+'/tag/list');var data=await res.json();
+    var res=await fetch(API+'/tag/list?limit=100');var data=await res.json();
     if(data.data&&Array.isArray(data.data))renderTags(data.data);
   }catch(e){console.error(e)}
 });
