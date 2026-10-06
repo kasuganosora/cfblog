@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { renderMarkdown, renderArticleCards, toIsoDate } from '../../src/frontend/utils/content.js';
+import { renderMarkdown, renderArticleCards, toIsoDate, shareImage } from '../../src/frontend/utils/content.js';
 import { renderPost } from '../../src/frontend/views/post.js';
 import { renderHome } from '../../src/frontend/views/home.js';
+import { renderTag } from '../../src/frontend/views/tag.js';
+import { renderFeedback } from '../../src/frontend/views/feedback.js';
 
 describe('server-rendered article HTML', () => {
   it('converts stored UTC datetimes to ISO 8601', () => {
@@ -38,6 +40,10 @@ describe('server-rendered article HTML', () => {
     expect(html).toContain('href="/post/thinkbot-note"');
     expect(html).toContain('ThinkBot 笔记');
     expect(html).toContain('href="/category/dev"');
+    expect(html).toContain('<h1 class="pg-title">露娜的咖啡店</h1>');
+    expect(html).toContain('<title>露娜的咖啡店 - 开发相关的笔记</title>');
+    expect(html).toContain('露娜的咖啡店：开发相关的笔记。');
+    expect(html).not.toContain('首页 -');
     expect(html).toContain('href="/tag/agent"');
     expect(html).not.toContain('加载中');
   });
@@ -65,8 +71,49 @@ describe('server-rendered article HTML', () => {
     expect(html).toContain('这里是正文');
     expect(html).toContain('2026-09-05T10:27:02.000Z');
     expect(html).toContain('href="/tag/agent"');
+    expect(html).toContain('BreadcrumbList');
+    expect(html).toContain('og-default.png');
     expect(html).not.toContain('加载中');
     expect(html).not.toContain('内容加载中');
+  });
+
+  it('uses the first article image and lists related posts', () => {
+    const html = renderPost({
+      blogTitle: '露娜的咖啡店',
+      slug: 'thinkbot-note',
+      currentUser: null,
+      siteUrl: 'https://blog.hime.at',
+      category: { slug: 'dev', name: '开发' },
+      related: [{ slug: 'other-note', title: '另一篇' }],
+      post: {
+        title: 'ThinkBot 笔记',
+        excerpt: '摘要',
+        content: '正文 ![示意图](/static/uploads/diagram.png)',
+        published_at: '2026-09-05 10:27:02',
+        author_name: '露娜',
+        status: 1,
+        tags: [{ slug: 'agent', name: 'Agent' }],
+      },
+    });
+    expect(html).toContain('https://blog.hime.at/static/uploads/diagram.png');
+    expect(html).toContain('href="/category/dev"');
+    expect(html).toContain('另一篇');
+    expect(shareImage({ content: '![图](https://cdn.example/a.png)' }, 'https://blog.hime.at'))
+      .toBe('https://cdn.example/a.png');
+  });
+
+  it('keeps thin tag archives and the feedback form out of the index', () => {
+    const tagHtml = renderTag({
+      blogTitle: '露娜的咖啡店',
+      slug: 'ble',
+      siteUrl: 'https://blog.hime.at',
+      tag: { name: 'BLE', slug: 'ble' },
+      posts: [{ id: 1, slug: 'one', title: '仅此一篇', excerpt: '短' }],
+      pagination: { total: 1 },
+    });
+    expect(tagHtml).toContain('noindex');
+    const feedback = renderFeedback({ blogTitle: '露娜的咖啡店', currentUser: null });
+    expect(feedback).toContain('noindex');
   });
 
   it('lists every supplied post as a crawlable card', () => {

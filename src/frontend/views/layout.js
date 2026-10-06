@@ -12,10 +12,22 @@ function escapeJsString(json) {
   return JSON.stringify(json).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 }
 
-export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, pageScript, activePage = '', bodyAttrs = '', seo = {} }) {
+function absoluteAsset(url, siteUrl) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (!siteUrl) return url;
+  try {
+    return new URL(url, siteUrl.endsWith('/') ? siteUrl : `${siteUrl}/`).href;
+  } catch {
+    return url;
+  }
+}
+
+export function renderLayout({ title, blogTitle = 'CFBlog', documentTitle = '', content, pageData, pageScript, activePage = '', bodyAttrs = '', seo = {} }) {
   const y = new Date().getFullYear();
   const pageDataScript = pageData ? `<script>window.__PAGE_DATA__=${escapeJsString(pageData)};</script>\n` : '';
   const pageJsTag = pageScript ? `<script src="/static/js/${pageScript}"></script>\n` : '';
+  const fullTitle = documentTitle || `${title} - ${blogTitle}`;
 
   // SEO meta tags
   const { description, canonicalUrl, ogType, ogImage, publishedTime, modifiedTime, author, noindex, jsonLd, siteUrl } = seo;
@@ -28,13 +40,16 @@ export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, p
     metaTags += `<meta property="og:description" content="${esc(description)}">\n`;
     metaTags += `<meta name="twitter:description" content="${esc(description)}">\n`;
   }
-  metaTags += `<meta property="og:title" content="${esc(title)} - ${esc(blogTitle)}">\n`;
+  metaTags += `<meta property="og:title" content="${esc(fullTitle)}">\n`;
+  metaTags += `<meta property="og:site_name" content="${esc(blogTitle)}">\n`;
+  metaTags += '<meta property="og:locale" content="zh_CN">\n';
   metaTags += `<meta property="og:type" content="${ogType || 'website'}">\n`;
   metaTags += '<meta name="twitter:card" content="summary_large_image">\n';
-  metaTags += `<meta name="twitter:title" content="${esc(title)} - ${esc(blogTitle)}">\n`;
-  if (ogImage) {
-    metaTags += `<meta property="og:image" content="${esc(ogImage)}">\n`;
-    metaTags += `<meta name="twitter:image" content="${esc(ogImage)}">\n`;
+  metaTags += `<meta name="twitter:title" content="${esc(fullTitle)}">\n`;
+  const imageUrl = absoluteAsset(ogImage || '/static/og-default.png', siteUrl);
+  if (imageUrl) {
+    metaTags += `<meta property="og:image" content="${esc(imageUrl)}">\n`;
+    metaTags += `<meta name="twitter:image" content="${esc(imageUrl)}">\n`;
   }
   if (publishedTime) {
     metaTags += `<meta property="article:published_time" content="${esc(publishedTime)}">\n`;
@@ -56,14 +71,18 @@ export function renderLayout({ title, blogTitle = 'CFBlog', content, pageData, p
     linkTags += `<link rel="alternate" type="application/rss+xml" title="${esc(blogTitle)} RSS" href="${esc(rssBase)}/rss">\n`;
   }
   // JSON-LD structured data — escape like __PAGE_DATA__ so </script> cannot break out
-  const jsonLdScript = jsonLd ? `<script type="application/ld+json">${escapeJsString(jsonLd)}</script>\n` : '';
+  const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const jsonLdScript = jsonLdBlocks
+    .map((block) => `<script type="application/ld+json">${escapeJsString(block)}</script>\n`)
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${esc(title)} - ${esc(blogTitle)}</title>
+<title>${esc(fullTitle)}</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 ${metaTags}${linkTags}${jsonLdScript}<link rel="stylesheet" href="/static/css/blog.css">
 <link rel="stylesheet" href="/static/hljs-github-dark.css">
 <script src="/static/marked.min.js"></script>

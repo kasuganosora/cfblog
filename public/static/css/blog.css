@@ -214,6 +214,14 @@ img{max-width:100%;height:auto}
 
 /* ── Misc ── */
 .pg-title{font-size:1.4rem;font-weight:700;margin-bottom:1.5rem;padding-bottom:.6rem;border-bottom:2px solid var(--border2)}
+.site-intro{color:var(--text2);margin:-.8rem 0 1.4rem}
+.crumbs{font-size:.85rem;color:var(--muted);margin-bottom:.9rem}
+.crumbs a{color:var(--text2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.related{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border)}
+.related h2{font-size:1.05rem;margin-bottom:.6rem}
+.related ul{padding-left:1.2rem}
+.related li{margin:.35rem 0}
 .empty{padding:2rem;text-align:center;color:var(--muted)}
 .footer{margin-top:3rem;padding:1.25rem 0;border-top:1px solid var(--border2);text-align:center;font-size:.8rem;color:var(--muted)}
 .footer a{color:var(--muted);margin:0 .35rem}.footer a:hover{color:var(--accent)}

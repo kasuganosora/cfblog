@@ -151,12 +151,27 @@ frontendRoutes.get('/post/:slug', async (c) => {
     missing = false;
   }
 
+  let related = [];
+  if (post && c.env?.DB) {
+    try {
+      const { Post } = await import('../models/Post.js');
+      const tagIds = (post.tags || []).map((tag) => tag.id).filter((id) => id != null);
+      if (tagIds.length) {
+        related = await new Post(c.env.DB).getRelatedPosts(post.id, tagIds, 3);
+      }
+    } catch (e) {
+      console.error('SSR related posts error:', e);
+    }
+  }
+
   return c.html(renderPost({
     blogTitle,
     slug,
     currentUser,
     post,
     siteUrl,
+    category: post?.categories?.[0] || null,
+    related,
   }), missing ? 404 : 200);
 });
 

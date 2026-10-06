@@ -8,9 +8,10 @@ document.addEventListener('DOMContentLoaded',async function(){
 
 function renderTags(tags){
   var c=document.getElementById('tags-list');
-  if(!tags.length){c.innerHTML='<p class="empty">暂无标签</p>';return}
+  var visible=(tags||[]).filter(function(tag){ return tag.post_count == null || Number(tag.post_count); });
+  if(!visible.length){c.innerHTML='<p class="empty">暂无标签</p>';return}
   c.innerHTML='';
-  tags.forEach(function(tag){
+  visible.forEach(function(tag){
     var slug=tag.slug||tag.id;
     var a=document.createElement('a');
     a.href='/tag/'+slug;

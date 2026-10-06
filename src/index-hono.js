@@ -49,6 +49,17 @@ app.use('*', async (c, next) => {
 });
 app.use('*', logger());
 
+// One canonical URL. A trailing slash is a different address and was returning 404.
+app.use('*', async (c, next) => {
+  if (c.req.method !== 'GET' && c.req.method !== 'HEAD') return next();
+  const url = new URL(c.req.url);
+  if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.replace(/\/+$/, '') || '/';
+    return c.redirect(`${url.pathname}${url.search}`, 301);
+  }
+  return next();
+});
+
 // Security response headers
 // CSP notes:
 // - script-src includes 'unsafe-inline' for login/admin inline bootstraps and marked.setOptions

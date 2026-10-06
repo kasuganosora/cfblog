@@ -62,9 +62,10 @@ async function loadTags(){
     var res=await fetch(API+'/tag/list?limit=100');var data=await res.json();
     if(data.data&&Array.isArray(data.data)){
       var c=document.getElementById('tags');
-      if(!data.data.length){c.innerHTML='<span>暂无标签</span>';return}
+      var visible=data.data.filter(function(tag){ return tag.post_count == null || Number(tag.post_count); });
+      if(!visible.length){c.innerHTML='<span>暂无标签</span>';return}
       c.innerHTML='';
-      data.data.forEach(function(tag){
+      visible.forEach(function(tag){
         var a=document.createElement('a');
         var slug=tag.slug||tag.id;
         a.href='/tag/'+slug;

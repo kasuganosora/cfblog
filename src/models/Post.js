@@ -371,4 +371,21 @@ export class Post extends BaseModel {
       }
     };
   }
+
+  /**
+   * Published posts that share the most tags with this post.
+   */
+  async getRelatedPosts(postId, tagIds, limit = 3) {
+    if (!postId || !tagIds?.length) return [];
+    const placeholders = tagIds.map(() => '?').join(',');
+    return this.query(`
+      SELECT p.id, p.slug, p.title, p.excerpt, p.published_at, p.created_at
+      FROM posts p
+      JOIN post_tags pt ON pt.post_id = p.id
+      WHERE p.status = 1 AND p.id != ? AND pt.tag_id IN (${placeholders})
+      GROUP BY p.id
+      ORDER BY COUNT(*) DESC, p.published_at DESC
+      LIMIT ?
+    `, [postId, ...tagIds, limit]);
+  }
 }

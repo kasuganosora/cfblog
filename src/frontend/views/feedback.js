@@ -23,6 +23,7 @@ export function renderFeedback({ blogTitle, currentUser }) {
     activePage: 'feedback',
     pageData: { currentUser },
     pageScript: 'feedback.js',
+    seo: { noindex: true },
     content: `
 <div class="page narrow">
   <div class="content">

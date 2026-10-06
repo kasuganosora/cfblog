@@ -27,7 +27,7 @@ export function renderTag({ blogTitle, slug, tag = null, posts = null, paginatio
       canonicalUrl,
       siteUrl,
       description: name,
-      noindex: missing,
+      noindex: missing || (found && Number(count) < 2),
     },
     content: `
 <div class="page narrow">

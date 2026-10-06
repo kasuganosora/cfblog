@@ -58,7 +58,7 @@ export const refreshSettingsCache = async (bucket, db) => {
 
 const POSTS_DEFAULT_KEY = 'cache/posts-default.json';
 const RSS_CACHE_KEY = 'cache/rss.xml';
-const SITEMAP_CACHE_KEY = 'cache/sitemap.xml';
+const SITEMAP_CACHE_KEY = 'cache/sitemap-v2.xml';
 const POST_CACHE_PREFIX = 'cache/post/';
 
 /**
@@ -219,13 +219,16 @@ export const refreshSitemapCache = async (bucket, db, siteUrl) => {
   if (!bucket || !db) return;
   try {
     const { Post } = await import('../models/Post.js');
+    const { Category } = await import('../models/Category.js');
     const postModel = new Post(db);
+    const categoryModel = new Category(db);
 
     const url = siteUrl || '';
     const now = new Date().toISOString();
 
     const result = await postModel.getPostList({ page: 1, limit: 5000, status: 1 });
     const posts = result.data || [];
+    const categories = (await categoryModel.getCategoryList({ page: 1, limit: 100 })).data || [];
 
     // Escape special XML characters in text content
     const escXml = (s) => String(s || '')
@@ -240,8 +243,11 @@ export const refreshSitemapCache = async (bucket, db, siteUrl) => {
     const toW3CDate = (dateStr) => {
       if (!dateStr) return now;
       try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return now;
+        const raw = String(dateStr).trim();
+        const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T');
+        const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+        const d = new Date(hasZone ? normalized : `${normalized}Z`);
+        if (Number.isNaN(d.getTime())) return now;
         return d.toISOString();
       } catch {
         return now;
@@ -254,15 +260,21 @@ export const refreshSitemapCache = async (bucket, db, siteUrl) => {
     };
 
     let urls = '';
+    const latest = toW3CDate(posts[0]?.updated_at || posts[0]?.published_at || now);
 
     // Homepage
-    urls += `  <url>\n    <loc>${escXml(url)}/</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+    urls += `  <url>\n    <loc>${escXml(url)}/</loc>\n    <lastmod>${latest}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
 
-    // Category page
-    urls += `  <url>\n    <loc>${escXml(url)}/categories</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    // Category index and each category that has posts. Tag archives stay out:
+    // most tags have a single post and are marked noindex.
+    urls += `  <url>\n    <loc>${escXml(url)}/categories</loc>\n    <lastmod>${latest}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    for (const cat of categories) {
+      if (!cat?.slug || !Number(cat.post_count)) continue;
+      urls += `  <url>\n    <loc>${escXml(url)}/category/${encodePath(cat.slug)}</loc>\n    <lastmod>${latest}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    }
 
     // Tags page
-    urls += `  <url>\n    <loc>${escXml(url)}/tags</loc>\n    <lastmod>${toW3CDate(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    urls += `  <url>\n    <loc>${escXml(url)}/tags</loc>\n    <lastmod>${latest}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
 
     for (const p of posts) {
       const lastmod = toW3CDate(p.updated_at || p.published_at || p.created_at);
